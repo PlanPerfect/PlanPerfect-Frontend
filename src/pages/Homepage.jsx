@@ -1,6 +1,6 @@
 import React from 'react'
 import { Container, Stack, Heading, Text, Button, HStack, Badge, Box } from '@chakra-ui/react'
-import { toaster } from "@/components/ui/toaster"
+import ShowToast from "../Extensions/ShowToast"
 
 function Homepage() {
     return (
@@ -32,10 +32,7 @@ function Homepage() {
                     <Button
                         colorPalette={"green"}
                         onClick={() =>
-                            toaster.create({
-                                description: "Over here!",
-                                type: "success",
-                            })
+                            ShowToast("success", "Over here!", "This is a toast!")
                         }
                     >
                         Did someone say toast?
