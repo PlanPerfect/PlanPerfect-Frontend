@@ -1,8 +1,9 @@
 import React from 'react'
 import { Container, Stack, Heading, Text, Button, HStack, Badge, Box } from '@chakra-ui/react'
 import ShowToast from "../Extensions/ShowToast"
+import server from "../../networking"
 
-function Homepage() {
+function Sample() {
     return (
         <Container maxW="4xl" py={{ base: "12", md: "24" }}>
             <Stack gap="8" align="center" textAlign="center">
@@ -37,10 +38,29 @@ function Homepage() {
                     >
                         Did someone say toast?
                     </Button>
+                    <Button
+                        colorPalette={"green"}
+                        onClick={async () => {
+                            try {
+                                const response = await server.get("/sample/get-data");
+
+                                if (response.status === 200 && response.data.success === true) {
+                                    console.log("Networking successful:", response.data);
+                                    ShowToast("success", "Networking successful", "Check console for details");
+                                }
+                            } catch (error) {
+                                if (error.response) {
+                                    ShowToast("error", `${error.response.status}`, "Check console for details");
+                                }
+                            }
+                        }}
+                    >
+                        Send sample request
+                    </Button>
                 </HStack>
             </Stack>
         </Container>
     )
 }
 
-export default Homepage
+export default Sample
