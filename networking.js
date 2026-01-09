@@ -6,7 +6,7 @@ const instance = axios.create({
 
 instance.interceptors.request.use((config) => {
     config.headers["content-type"] = "application/json";
-    config.headers["x-api-key"] = import.meta.env.VITE_API_KEY;
+    config.headers["API_KEY"] = import.meta.env.VITE_API_KEY;
     return config;
 }, (err) => {
     return Promise.reject(err);

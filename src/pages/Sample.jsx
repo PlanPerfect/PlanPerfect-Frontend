@@ -42,21 +42,20 @@ function Sample() {
                         colorPalette={"green"}
                         onClick={async () => {
                             try {
-                            const data = await server.get("/sample/get-data");
-                            if (data.data.status === 200 && data.data.success == true) {
-                                console.log("Networking successful:", data.data);
-                                ShowToast("success", "Networking successful", "Check console for details");
-                            } else {
-                                console.log("Networking failed with status:", data.data.status);
-                                ShowToast("error", "Networking failed", "Check console for details");
-                            }
+                                const response = await server.get("/sample/get-data");
+
+                                if (response.status === 200 && response.data.success === true) {
+                                    console.log("Networking successful:", response.data);
+                                    ShowToast("success", "Networking successful", "Check console for details");
+                                }
                             } catch (error) {
-                                console.error("Networking error:", error);
-                                ShowToast("error", "Networking error", "Check console for details");
+                                if (error.response) {
+                                    ShowToast("error", `${error.response.status}`, "Check console for details");
+                                }
                             }
                         }}
                     >
-                        Networking Test Button!
+                        Send sample request
                     </Button>
                 </HStack>
             </Stack>
