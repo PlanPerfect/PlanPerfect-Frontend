@@ -7,15 +7,23 @@ import { MdOutlineSupportAgent } from "react-icons/md";
 import { FaCheck } from "react-icons/fa6";
 import PreferenceBudget from "@/components/newHomeOwners/preferenceBudget";
 import UploadFloorPlan from "@/components/newHomeOwners/uploadFloorPlan";
+import AiExtraction from "@/components/newHomeOwners/aiExtraction";
+import CheckResult from "@/components/newHomeOwners/checkResult";
 import { useState } from "react";
 
 function NewHomeOwnerPage() {
-	const [uploadedFloorPlan, setUploadedFloorPlan] = useState(false);
+	const [uploadedFloorPlan, setUploadedFloorPlan] = useState(null);
+	const [extractionResults, setExtractionResults] = useState(null);
 	
 	const steps = useSteps({
 		defaultStep: 0,
 		count: 5,
 	});
+
+	const handleExtractionComplete = (results) => {
+		setExtractionResults(results);
+		steps.setStep(3); // Move to step 4 (Check Details)
+	};
 
 	const items = [
 		{
@@ -31,10 +39,12 @@ function NewHomeOwnerPage() {
 		{
 			title: "AI Extraction",
 			icon: <IoSparkles />,
+			content: <AiExtraction file={uploadedFloorPlan} onComplete={handleExtractionComplete} />,
 		},
 		{
 			title: "Check Details",
 			icon: <LuFileCheck2 />,
+			content: <CheckResult extractionResults={extractionResults} />,
 		},
 		{
 			title: "Get Results!",
@@ -42,8 +52,8 @@ function NewHomeOwnerPage() {
 		},
 	];
 
-	const isNextDisabled = steps.value === 1 && !uploadedFloorPlan;
-	console.log("Uploaded Floor Plan:", uploadedFloorPlan);
+	const isNextDisabled = steps.value === 1 && uploadedFloorPlan === null;
+	const showNavigationButtons = steps.value !== 2; 
 
 	return (
 		<>
@@ -194,35 +204,37 @@ function NewHomeOwnerPage() {
 							</Steps.CompletedContent>
 						</Box>
 
-						<Flex justify="center" gap={4}>
-							{steps.value > 0 && (
-								<Steps.PrevTrigger asChild>
+						{showNavigationButtons && (
+							<Flex justify="center" gap={4}>
+								{steps.value > 0 && (
+									<Steps.PrevTrigger asChild>
+										<Button
+											size="xl"
+											borderRadius="md"
+											bg="gray.300"
+											color="black"
+											_hover={{ bg: "gray.400" }}
+										>
+											Prev
+										</Button>
+									</Steps.PrevTrigger>
+								)}
+								<Steps.NextTrigger asChild>
 									<Button
 										size="xl"
 										borderRadius="md"
-										bg="gray.300"
-										color="black"
-										_hover={{ bg: "gray.400" }}
+										bg="#D4AF37"
+										color="white"
+										disabled={isNextDisabled}
+										opacity={isNextDisabled ? 0.5 : 1}
+										cursor={isNextDisabled ? "not-allowed" : "pointer"}
+										_hover={{ bg: isNextDisabled ? "#D4AF37" : "#C9A961" }}
 									>
-										Prev
+										Next
 									</Button>
-								</Steps.PrevTrigger>
-							)}
-							<Steps.NextTrigger asChild>
-								<Button
-									size="xl"
-									borderRadius="md"
-									bg="#D4AF37"
-									color="white"
-									disabled={isNextDisabled}
-									opacity={isNextDisabled ? 0.5 : 1}
-									cursor={isNextDisabled ? "not-allowed" : "pointer"}
-									_hover={{ bg: isNextDisabled ? "#D4AF37" : "#C9A961" }}
-								>
-									Next
-								</Button>
-							</Steps.NextTrigger>
-						</Flex>
+								</Steps.NextTrigger>
+							</Flex>
+						)}
 					</Box>
 				</Steps.RootProvider>
 			</Box>

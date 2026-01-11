@@ -33,7 +33,12 @@ function UploadFloorPlan({ onFileChange }) {
 			preview: URL.createObjectURL(file),
 			file: file,
 		});
-        onFileChange(true);
+        onFileChange({
+			name: file.name,
+			size: formatFileSize(file.size),
+			preview: URL.createObjectURL(file),
+			file: file,
+		});
 	};
 
 	const handleRemoveFile = () => {
@@ -42,7 +47,7 @@ function UploadFloorPlan({ onFileChange }) {
 		}
 		setUploadedFile(null);
 		setError("");
-        onFileChange(false);
+        onFileChange(null);
 	};
 
 	const formatFileSize = (bytes) => {
