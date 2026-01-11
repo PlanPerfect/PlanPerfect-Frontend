@@ -41,7 +41,7 @@ function PreferenceBudget() {
 		<Box w="100%" maxW="800px" mx="auto" p={8}>
 			{/* Design Theme Preference Section */}
 			<Box mb={12}>
-				<Heading size="xl" textAlign="center" mb={2}>
+				<Heading size="2xl" textAlign="center" mb={2}>
 					What is your design theme preference?
 				</Heading>
 				<Text textAlign="center" color="gray.600" mb={6}>
@@ -92,7 +92,7 @@ function PreferenceBudget() {
 
 			{/* Budget Section */}
 			<Box>
-				<Heading size="xl" textAlign="center" mb={8}>
+				<Heading size="2xl" textAlign="center" mb={8}>
 					What's your renovation budget?
 				</Heading>
 

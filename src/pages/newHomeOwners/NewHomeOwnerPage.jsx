@@ -6,6 +6,7 @@ import { LuFileCheck2 } from "react-icons/lu";
 import { MdOutlineSupportAgent } from "react-icons/md";
 import { FaCheck } from "react-icons/fa6";
 import PreferenceBudget from "@/components/newHomeOwners/preferenceBudget";
+import UploadFloorPlan from "@/components/newHomeOwners/uploadFloorPlan";
 
 const items = [
 	{
@@ -16,6 +17,7 @@ const items = [
 	{
 		title: "Upload Floor Plan",
 		icon: <RiFileUploadFill />,
+		content: <UploadFloorPlan />,
 	},
 	{
 		title: "AI Extraction",
@@ -158,7 +160,6 @@ function NewHomeOwnerPage() {
 					</Box>
 					<Box
 						w="80%"
-						h="100vh"
 						mx="auto"
 						textAlign="center"
 						borderRadius="10px"
@@ -178,7 +179,7 @@ function NewHomeOwnerPage() {
 							justifyContent="center"
 						>
 							{items.map((item, index) => (
-								<Steps.Content key={index} index={index}>
+								<Steps.Content key={index} index={index} mt={8}>
 									{item.content}
 								</Steps.Content>
 							))}
