@@ -25,11 +25,16 @@ function Homepage() {
                 height="80vh"
                 gap={8}
             >
-                <img
-                    src={Logo}
-                    alt="Logo"
-                    style={{ maxWidth: '200px', height: 'auto' }}
-                />
+                <Box
+                    opacity={0}
+                    animation="fadeInDown 0.8s ease-out 0.2s forwards"
+                >
+                    <img
+                        src={Logo}
+                        alt="Logo"
+                        style={{ maxWidth: '200px', height: 'auto' }}
+                    />
+                </Box>
 
                 <Heading
                     size="3xl"
@@ -37,6 +42,8 @@ function Homepage() {
                     fontWeight="bold"
                     fontFamily="'Montserrat', sans-serif"
                     lineHeight="1.2"
+                    opacity={0}
+                    animation="fadeInUp 0.8s ease-out 0.8s forwards"
                 >
                     <Box
                         as="span"
@@ -57,25 +64,58 @@ function Homepage() {
                     </Box>
                 </Heading>
 
-                <Button
-                    size="xl"
-                    backgroundColor={"#D4AF37"}
-                    color="white"
-                    fontWeight="bold"
-                    px={12}
-                    py={7}
-                    fontSize="xl"
-                    borderRadius={20}
-                    _hover={{
-                        transform: 'scale(1.05)'
-                    }}
-                    transition="transform 0.2s"
-                    fontFamily="'Montserrat', sans-serif"
-                    textTransform="uppercase"
+                <Box
+                    opacity={0}
+                    animation="fadeInUp 1s ease-out 2.2s forwards"
                 >
-                    Get Started
-                </Button>
+                    <Button
+                        size="xl"
+                        background="linear-gradient(to right, #F4E5B2, #D4AF37, #F4E5B2)"
+                        backgroundSize="200% 100%"
+                        backgroundPosition="left"
+                        color="white"
+                        fontWeight="bold"
+                        px={12}
+                        py={7}
+                        fontSize="xl"
+                        borderRadius={20}
+                        _hover={{
+                            backgroundPosition: "right"
+                        }}
+                        transition="background-position 0.3s ease-in-out"
+                        fontFamily="'Montserrat', sans-serif"
+                        textTransform="uppercase"
+                    >
+                        Get Started
+                    </Button>
+                </Box>
             </VStack>
+
+            <style>
+                {`
+                    @keyframes fadeInDown {
+                        from {
+                            opacity: 0;
+                            transform: translateY(-20px);
+                        }
+                        to {
+                            opacity: 1;
+                            transform: translateY(0);
+                        }
+                    }
+
+                    @keyframes fadeInUp {
+                        from {
+                            opacity: 0;
+                            transform: translateY(20px);
+                        }
+                        to {
+                            opacity: 1;
+                            transform: translateY(0);
+                        }
+                    }
+                `}
+            </style>
         </>
     )
 }
