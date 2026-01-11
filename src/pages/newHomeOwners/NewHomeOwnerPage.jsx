@@ -1,4 +1,12 @@
-import { Box, Flex, Heading, Text, Button, Steps } from "@chakra-ui/react";
+import {
+	Box,
+	Flex,
+	Heading,
+	Text,
+	Button,
+	Steps,
+	useSteps,
+} from "@chakra-ui/react";
 import { BsPalette2 } from "react-icons/bs";
 import { RiFileUploadFill } from "react-icons/ri";
 import { IoSparkles } from "react-icons/io5";
@@ -6,14 +14,14 @@ import { LuFileCheck2 } from "react-icons/lu";
 import { MdOutlineSupportAgent } from "react-icons/md";
 import { FaCheck } from "react-icons/fa6";
 
-const steps = [
+const items = [
 	{
 		title: "Preference & Budget",
 		icon: <BsPalette2 />,
 	},
 	{
 		title: "Upload Floor Plan",
-		icon: <RiFileUploadFill/>,
+		icon: <RiFileUploadFill />,
 	},
 	{
 		title: "AI Extraction",
@@ -30,6 +38,11 @@ const steps = [
 ];
 
 function NewHomeOwnerPage() {
+	const steps = useSteps({
+		defaultStep: 0,
+		count: items.length,
+	});
+
 	return (
 		<>
 			{/* Hero Section */}
@@ -81,11 +94,7 @@ function NewHomeOwnerPage() {
 
 			{/* Action Steps */}
 			<Box pb={20} px={8}>
-				<Steps.Root
-					defaultValue={0}
-					count={steps.length}
-					colorPalette={"yellow"}
-				>
+				<Steps.RootProvider value={steps} colorPalette="yellow">
 					<Box
 						w="75%"
 						h="150px"
@@ -110,7 +119,7 @@ function NewHomeOwnerPage() {
 							justifyContent="space-between"
 							w="100%"
 						>
-							{steps.map((step, index) => (
+							{items.map((item, index) => (
 								<Steps.Item
 									key={index}
 									index={index}
@@ -127,7 +136,7 @@ function NewHomeOwnerPage() {
 											align="center"
 											gap={1}
 										>
-											<Steps.Trigger>
+											<Steps.Trigger cursor="pointer">
 												<Steps.Indicator
 													borderRadius="8px"
 													width="48px"
@@ -135,7 +144,7 @@ function NewHomeOwnerPage() {
 												>
 													<Steps.Status
 														complete={<FaCheck />}
-														incomplete={step.icon}
+														incomplete={item.icon}
 													/>
 												</Steps.Indicator>
 											</Steps.Trigger>
@@ -145,7 +154,7 @@ function NewHomeOwnerPage() {
 											fontSize="16px"
 											mt={2}
 										>
-											{step.title}
+											{item.title}
 										</Text>
 									</Flex>
 									<Steps.Separator mb={8} height="2px" />
@@ -158,7 +167,6 @@ function NewHomeOwnerPage() {
 						h="300px"
 						mx="auto"
 						textAlign="center"
-						border="1px solid black"
 						borderRadius="10px"
 						zIndex={0}
 						position="relative"
@@ -167,6 +175,7 @@ function NewHomeOwnerPage() {
 						flexDirection="column"
 						alignItems="center"
 						justifyContent="center"
+						boxShadow="2px 2px 1px 1px rgba(0, 0, 0, 0.10), 0px 0px 2px 1px rgba(0, 0, 0, 0.10)"
 					>
 						<Box
 							flex="1"
@@ -174,9 +183,9 @@ function NewHomeOwnerPage() {
 							alignItems="center"
 							justifyContent="center"
 						>
-							{steps.map((step, index) => (
+							{items.map((item, index) => (
 								<Steps.Content key={index} index={index}>
-									<Text>Content for {step.title}</Text>
+									<Text>Content for {item.title}</Text>
 								</Steps.Content>
 							))}
 							<Steps.CompletedContent>
@@ -185,15 +194,33 @@ function NewHomeOwnerPage() {
 						</Box>
 
 						<Flex justify="center" gap={4}>
-							<Steps.PrevTrigger asChild>
-								<Button>Prev</Button>
-							</Steps.PrevTrigger>
+							{steps.value > 0 && (
+								<Steps.PrevTrigger asChild>
+									<Button
+										size="xl"
+										borderRadius="md"
+										bg="gray.300"
+										color="black"
+										_hover={{ bg: "gray.400" }}
+									>
+										Prev
+									</Button>
+								</Steps.PrevTrigger>
+							)}
 							<Steps.NextTrigger asChild>
-								<Button>Next</Button>
+								<Button
+									size="xl"
+									borderRadius="md"
+									bg="#D4AF37"
+									color="white"
+									_hover={{ bg: "#C9A961" }}
+								>
+									Next
+								</Button>
 							</Steps.NextTrigger>
 						</Flex>
 					</Box>
-				</Steps.Root>
+				</Steps.RootProvider>
 			</Box>
 		</>
 	);
