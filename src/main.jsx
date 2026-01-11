@@ -3,6 +3,7 @@ import { createRoot } from 'react-dom/client'
 import { BrowserRouter, Routes, Route } from 'react-router-dom'
 import Layout from './Layout.jsx'
 import Sample from './pages/Sample.jsx'
+import ExistingOwnerPage from './pages/ExistingHomeOwner/step1.jsx'
 import './index.css'
 
 createRoot(document.getElementById('root')).render(
@@ -11,6 +12,7 @@ createRoot(document.getElementById('root')).render(
 			<Routes>
 				<Route path={"/"} element={<Layout />} >
 					<Route index element={<Sample />} />
+					<Route path={"existingOwner"} element={<ExistingOwnerPage />} />
 				</Route>
 			</Routes>
 		</BrowserRouter>
