@@ -11,6 +11,10 @@
   -moz-osx-font-smoothing: grayscale;
 }
 
+*:focus {
+  outline: none;
+}
+
 body {
   margin: 0;
   display: flex;
