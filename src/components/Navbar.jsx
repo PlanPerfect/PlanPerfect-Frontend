@@ -25,6 +25,8 @@ function Navbar() {
                 mb="20px"
                 p="10px"
                 overflow="hidden"
+                opacity={0}
+                animation="fadeInDown 0.8s ease-out 0.2s forwards"
             >
                 <Box onClick={handleLogoClick} cursor="pointer" ml="10px" display="flex" alignItems="center">
                     <Image src={LogoSVG} width="5%" />
@@ -77,6 +79,21 @@ function Navbar() {
                     </Button>
                 </Flex>
             </Flex>
+
+            <style>
+                {`
+                    @keyframes fadeIn {
+                        from {
+                            opacity: 0;
+                            transform: translateY(-10px);
+                        }
+                        to {
+                            opacity: 1;
+                            transform: translateY(0);
+                        }
+                    }
+                `}
+            </style>
         </>
     )
 }
