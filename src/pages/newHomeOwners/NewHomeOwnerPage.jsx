@@ -1,23 +1,17 @@
-import {
-	Box,
-	Flex,
-	Heading,
-	Text,
-	Button,
-	Steps,
-	useSteps,
-} from "@chakra-ui/react";
+import { Box, Flex, Heading, Text, Button, Steps, useSteps } from "@chakra-ui/react";
 import { BsPalette2 } from "react-icons/bs";
 import { RiFileUploadFill } from "react-icons/ri";
 import { IoSparkles } from "react-icons/io5";
 import { LuFileCheck2 } from "react-icons/lu";
 import { MdOutlineSupportAgent } from "react-icons/md";
 import { FaCheck } from "react-icons/fa6";
+import PreferenceBudget from "@/components/newHomeOwners/preferenceBudget";
 
 const items = [
 	{
 		title: "Preference & Budget",
 		icon: <BsPalette2 />,
+		content: <PreferenceBudget />,
 	},
 	{
 		title: "Upload Floor Plan",
@@ -164,7 +158,7 @@ function NewHomeOwnerPage() {
 					</Box>
 					<Box
 						w="80%"
-						h="300px"
+						h="100vh"
 						mx="auto"
 						textAlign="center"
 						borderRadius="10px"
@@ -185,7 +179,7 @@ function NewHomeOwnerPage() {
 						>
 							{items.map((item, index) => (
 								<Steps.Content key={index} index={index}>
-									<Text>Content for {item.title}</Text>
+									{item.content}
 								</Steps.Content>
 							))}
 							<Steps.CompletedContent>
