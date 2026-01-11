@@ -1,4 +1,4 @@
-import { Box, Heading } from "@chakra-ui/react"
+import { Box, Heading, Text } from "@chakra-ui/react"
 
 function AnimatedHeading() {
     return (
@@ -16,7 +16,9 @@ function AnimatedHeading() {
                 color="white"
                 display="block"
             >
-                Transform Your Floor Plans Into
+                <Text>
+                    Transform Your Floor Plans Into
+                </Text>
             </Box>
             <Box
                 as="span"
@@ -26,7 +28,9 @@ function AnimatedHeading() {
                 bgClip="text"
                 display="block"
             >
-                Dream Designs
+                <Text>
+                    Dream Designs
+                </Text>
             </Box>
         </Heading>
     )

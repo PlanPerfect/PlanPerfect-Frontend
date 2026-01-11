@@ -1,4 +1,4 @@
-import { Box } from "@chakra-ui/react"
+import { Box, Image } from "@chakra-ui/react"
 import Logo from '../../assets/Logo.svg'
 
 function AnimatedLogo() {
@@ -7,7 +7,7 @@ function AnimatedLogo() {
             opacity={0}
             animation="fadeInDown 0.8s ease-out 0.2s forwards"
         >
-            <img
+            <Image
                 src={Logo}
                 alt="Logo"
                 style={{ maxWidth: '200px', height: 'auto' }}

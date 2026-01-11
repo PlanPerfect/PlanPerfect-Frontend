@@ -1,4 +1,4 @@
-import { Box, Button } from "@chakra-ui/react"
+import { Box, Button, Text } from "@chakra-ui/react"
 
 function GetStartedButton() {
     return (
@@ -24,7 +24,9 @@ function GetStartedButton() {
                 fontFamily="'Montserrat', sans-serif"
                 textTransform="uppercase"
             >
-                Get Started
+                <Text>
+                    Get Started
+                </Text>
             </Button>
         </Box>
     )
