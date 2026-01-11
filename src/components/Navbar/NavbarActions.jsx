@@ -1,9 +1,11 @@
 import { Box, Flex, Button, Text, Menu, Portal } from '@chakra-ui/react'
 import { LuScissors, LuCopy, LuClipboardPaste } from 'react-icons/lu'
 import { FiChevronDown, FiChevronUp } from 'react-icons/fi'
+import { useNavigate } from 'react-router-dom'
 import { useState } from 'react'
 
 function NavbarActions() {
+    const navigate = useNavigate();
     const [isMenuOpen, setIsMenuOpen] = useState(false);
 
     return (
@@ -53,6 +55,7 @@ function NavbarActions() {
                 px={3}
                 _hover={{ bg: "rgba(212, 197, 160, 0.1)" }}
                 _active={{ bg: "rgba(212, 197, 160, 0.2)" }}
+                onClick={() => navigate("/onboarding")}
             >
                 <Text color="white" fontWeight={"bold"}>
                     GET STARTED

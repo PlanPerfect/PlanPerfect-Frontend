@@ -1,6 +1,9 @@
 import { Box, Button, Text } from "@chakra-ui/react"
+import { useNavigate } from "react-router-dom"
 
 function GetStartedButton() {
+    const navigate = useNavigate();
+
     return (
         <Box
             opacity={0}
@@ -23,6 +26,7 @@ function GetStartedButton() {
                 transition="background-position 0.3s ease-in-out"
                 fontFamily="'Montserrat', sans-serif"
                 textTransform="uppercase"
+                onClick={() => navigate("/onboarding")}
             >
                 <Text>
                     Get Started
