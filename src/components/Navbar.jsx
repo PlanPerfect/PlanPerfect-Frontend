@@ -37,7 +37,7 @@ function Navbar() {
                     <Menu.Root onOpenChange={(e) => setIsMenuOpen(e.open)}>
                         <Menu.Trigger asChild>
                             <Button variant="plain">
-                                <Text color="white">SERVICES</Text>{isMenuOpen ? <FiChevronUp color="white" /> : <FiChevronDown color="white" />}
+                                <Text color="white" fontWeight={"bold"}>SERVICES</Text>{isMenuOpen ? <FiChevronUp color="white" /> : <FiChevronDown color="white" />}
                             </Button>
                         </Menu.Trigger>
                         <Portal>
@@ -73,7 +73,7 @@ function Navbar() {
                         _hover={{ bg: "rgba(212, 197, 160, 0.1)" }}
                         _active={{ bg: "rgba(212, 197, 160, 0.2)" }}
                     >
-                        <Text color="white">GET STARTED</Text>
+                        <Text color="white" fontWeight={"bold"}>GET STARTED</Text>
                     </Button>
                 </Flex>
             </Flex>
