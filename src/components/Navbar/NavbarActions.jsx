@@ -7,7 +7,7 @@ function NavbarActions() {
     const [isMenuOpen, setIsMenuOpen] = useState(false);
 
     return (
-        <Flex alignItems="center" gap={2} mr="40px">
+        <Flex alignItems="center" gap={2} mr="3px">
             <Menu.Root onOpenChange={(e) => setIsMenuOpen(e.open)}>
                 <Menu.Trigger asChild>
                     <Button variant="plain">
