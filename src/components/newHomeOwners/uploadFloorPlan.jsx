@@ -2,7 +2,7 @@ import { Box, Flex, Heading, Text, IconButton, FileUpload, Image } from "@chakra
 import { useState } from "react";
 import { IoClose } from "react-icons/io5";
 
-function UploadFloorPlan() {
+function UploadFloorPlan({ onFileChange }) {
 	const [uploadedFile, setUploadedFile] = useState(null);
 	const [error, setError] = useState("");
 
@@ -33,6 +33,7 @@ function UploadFloorPlan() {
 			preview: URL.createObjectURL(file),
 			file: file,
 		});
+        onFileChange(true);
 	};
 
 	const handleRemoveFile = () => {
@@ -41,6 +42,7 @@ function UploadFloorPlan() {
 		}
 		setUploadedFile(null);
 		setError("");
+        onFileChange(false);
 	};
 
 	const formatFileSize = (bytes) => {

@@ -7,37 +7,43 @@ import { MdOutlineSupportAgent } from "react-icons/md";
 import { FaCheck } from "react-icons/fa6";
 import PreferenceBudget from "@/components/newHomeOwners/preferenceBudget";
 import UploadFloorPlan from "@/components/newHomeOwners/uploadFloorPlan";
-
-const items = [
-	{
-		title: "Preference & Budget",
-		icon: <BsPalette2 />,
-		content: <PreferenceBudget />,
-	},
-	{
-		title: "Upload Floor Plan",
-		icon: <RiFileUploadFill />,
-		content: <UploadFloorPlan />,
-	},
-	{
-		title: "AI Extraction",
-		icon: <IoSparkles />,
-	},
-	{
-		title: "Check Details",
-		icon: <LuFileCheck2 />,
-	},
-	{
-		title: "Get Results!",
-		icon: <MdOutlineSupportAgent />,
-	},
-];
+import { useState } from "react";
 
 function NewHomeOwnerPage() {
+	const [uploadedFloorPlan, setUploadedFloorPlan] = useState(false);
+	
 	const steps = useSteps({
 		defaultStep: 0,
-		count: items.length,
+		count: 5,
 	});
+
+	const items = [
+		{
+			title: "Preference & Budget",
+			icon: <BsPalette2 />,
+			content: <PreferenceBudget />,
+		},
+		{
+			title: "Upload Floor Plan",
+			icon: <RiFileUploadFill />,
+			content: <UploadFloorPlan onFileChange={setUploadedFloorPlan} />,
+		},
+		{
+			title: "AI Extraction",
+			icon: <IoSparkles />,
+		},
+		{
+			title: "Check Details",
+			icon: <LuFileCheck2 />,
+		},
+		{
+			title: "Get Results!",
+			icon: <MdOutlineSupportAgent />,
+		},
+	];
+
+	const isNextDisabled = steps.value === 1 && !uploadedFloorPlan;
+	console.log("Uploaded Floor Plan:", uploadedFloorPlan);
 
 	return (
 		<>
@@ -208,7 +214,10 @@ function NewHomeOwnerPage() {
 									borderRadius="md"
 									bg="#D4AF37"
 									color="white"
-									_hover={{ bg: "#C9A961" }}
+									disabled={isNextDisabled}
+									opacity={isNextDisabled ? 0.5 : 1}
+									cursor={isNextDisabled ? "not-allowed" : "pointer"}
+									_hover={{ bg: isNextDisabled ? "#D4AF37" : "#C9A961" }}
 								>
 									Next
 								</Button>
