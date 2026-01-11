@@ -28,9 +28,18 @@ function Navbar() {
                 opacity={0}
                 animation="fadeInDown 0.8s ease-out 0.2s forwards"
             >
-                <Box onClick={handleLogoClick} cursor="pointer" ml="10px" display="flex" alignItems="center">
-                    <Image src={LogoSVG} width="5%" />
-                    <Image src={TextPNG} width="17%" height="40%" ml={3} />
+                <Box
+                    as="button"
+                    onClick={handleLogoClick}
+                    cursor="pointer"
+                    ml="10px"
+                    display="inline-flex"
+                    alignItems="center"
+                    w="auto"
+                    p="2"
+                >
+                    <Image src={LogoSVG} boxSize="28px" objectFit="contain" alt="logo" />
+                    <Image src={TextPNG} height="24px" ml={3} objectFit="contain" alt="brand" />
                 </Box>
 
                 <Spacer />
