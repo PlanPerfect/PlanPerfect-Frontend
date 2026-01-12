@@ -5,6 +5,7 @@ import Layout from './Layout.jsx'
 import Homepage from "./pages/Homepage.jsx"
 import Services from './pages/Onboarding/Services.jsx'
 import GetStarted from './pages/StyleMatch/GetStarted.jsx'
+import Reccomendations from './pages/StyleMatch/Reccomendations.jsx'
 import './index.css'
 
 createRoot(document.getElementById('root')).render(
@@ -19,6 +20,7 @@ createRoot(document.getElementById('root')).render(
 
 					<Route path={"stylematch"}>
 						<Route index element={<GetStarted />} />
+						<Route path={"reccomendations"} element={<Reccomendations />} />
 					</Route>
 				</Route>
 			</Routes>

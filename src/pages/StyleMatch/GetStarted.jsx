@@ -1,4 +1,4 @@
-import { Card, Flex, Heading, Text, Box, Grid, Image, Avatar, Button } from "@chakra-ui/react";
+import { Card, Flex, Heading, Text, Box, Grid, Image, Avatar } from "@chakra-ui/react";
 import StyleMatchBackground from "../../assets/StyleMatchBackground.png";
 import SampleStyleBackground from "../../assets/SampleStyleBackground.png";
 import AnimatedLogo from "@/components/Homepage/AnimatedLogo";
