@@ -5,7 +5,7 @@ import { IoIosTv } from "react-icons/io";
 import { MdBalcony, MdKitchen } from "react-icons/md";
 import { FaPlus, FaMinus } from "react-icons/fa";
 
-function CheckResult({ extractionResults, unitInfo }) {
+function CheckResult({ extractionResults }) {
 	const [roomCounts, setRoomCounts] = useState({
 		bedroom: 2,
 		bathroom: 1,
@@ -14,8 +14,6 @@ function CheckResult({ extractionResults, unitInfo }) {
 		livingRoom: 1,
 		balcony: 0,
 	});
-
-	print(roomCounts);
 
 	const handleIncrement = (room) => {
 		setRoomCounts((prev) => ({
@@ -95,8 +93,7 @@ function CheckResult({ extractionResults, unitInfo }) {
 						</Text>
 					</Flex>
 					<Input
-						value="2-Bedroom"
-						isReadOnly
+						placeholder="2-Bedroom"
 						bg="white"
 						border="2px solid #D4AF37"
 						borderRadius="md"
@@ -111,8 +108,7 @@ function CheckResult({ extractionResults, unitInfo }) {
 						</Text>
 					</Flex>
 					<Input
-						value="Type B2"
-						isReadOnly
+						placeholder="Type B2"
 						bg="white"
 						border="2px solid #D4AF37"
 						borderRadius="md"
@@ -127,8 +123,7 @@ function CheckResult({ extractionResults, unitInfo }) {
 						</Text>
 					</Flex>
 					<Input
-						value="55 sq m/5922 sq ft"
-						isReadOnly
+						placeholder="55 sq m/5922 sq ft"
 						bg="white"
 						border="2px solid #D4AF37"
 						borderRadius="md"
