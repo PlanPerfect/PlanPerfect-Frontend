@@ -1,7 +1,8 @@
-import { Box, VStack } from '@chakra-ui/react'
+import { Box, VStack, SimpleGrid } from '@chakra-ui/react'
+import { Key, Home } from 'lucide-react'
 import ServicesBackground from "../../assets/ServicesBackground.png"
 import AnimatedHeading from '@/components/Onboarding/AnimatedHeading'
-import AnimatedCards from '@/components/Onboarding/AnimatedCards'
+import AnimatedCard from '@/components/Onboarding/AnimatedCard'
 
 function Services() {
     return (
@@ -30,7 +31,16 @@ function Services() {
             >
                 <AnimatedHeading />
 
-                <AnimatedCards />
+                <SimpleGrid
+                    columns={{ base: 1, md: 2 }}
+                    maxW="800px"
+                    gap={8}
+                    w="full"
+                >
+                    <AnimatedCard icon={Key} iconColor={"blue.500"} title={"New Homeowner"} description={"Let us help you design your perfect home with our AI-powered tools"} delay={0.5} />
+
+                    <AnimatedCard icon={Home} iconColor={"green.500"} title={"Existing Homeowner"} description={"Explore intelligent design solutions that breathe new life into your home"} delay={1.0} />
+                </SimpleGrid>
             </VStack>
 
             <style>
