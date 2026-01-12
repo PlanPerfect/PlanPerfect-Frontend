@@ -5,7 +5,7 @@ function AnimatedHeading() {
         <VStack gap={2} style={{ animation: 'fadeInDown 0.8s ease-out' }}>
             <Heading
                 as="h1"
-                size="4xl"
+                size={{ base: "2xl", md: "3xl", lg: "4xl" }}
                 textAlign="center"
                 color="white"
                 fontWeight="bold"
@@ -13,7 +13,7 @@ function AnimatedHeading() {
                 Our Services
             </Heading>
             <Text
-                fontSize="xl"
+                fontSize={{ base: "md", md: "lg", lg: "xl" }}
                 textAlign="center"
                 color="#F4E5B2"
                 fontWeight={"bold"}

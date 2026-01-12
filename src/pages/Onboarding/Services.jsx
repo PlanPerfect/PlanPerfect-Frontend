@@ -23,8 +23,9 @@ function Services() {
                 position="relative"
                 justify="center"
                 align="center"
-                maxHeight="70vh"
-                padding={8}
+                minHeight="calc(100vh - 100px)"
+                padding={{ base: 4, md: 8 }}
+                paddingTop={{ base: 4, md: 8 }}
                 gap={8}
             >
                 <AnimatedHeading />

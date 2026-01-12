@@ -35,7 +35,7 @@ function AnimatedCards() {
                         >
                             <Icon as={Key} boxSize={12} color="white" />
                         </Flex>
-                        <Heading size="lg" color="gray.800">
+                        <Heading size="lg" color="gray.800" textAlign={"center"}>
                             New Homeowner
                         </Heading>
                         <Text
@@ -76,7 +76,7 @@ function AnimatedCards() {
                         >
                             <Icon as={Home} boxSize={12} color="white" />
                         </Flex>
-                        <Heading size="lg" color="gray.800">
+                        <Heading size="lg" color="gray.800" textAlign={"center"}>
                             Existing Homeowner
                         </Heading>
                         <Text
