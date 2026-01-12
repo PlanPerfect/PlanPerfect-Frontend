@@ -24,7 +24,7 @@ function GetStartedButton({ width, destination, delay }) {
                 px={12}
                 py={7}
                 fontSize="xl"
-                borderRadius={23}
+                borderRadius={20}
                 _hover={{
                     backgroundPosition: "right"
                 }}
