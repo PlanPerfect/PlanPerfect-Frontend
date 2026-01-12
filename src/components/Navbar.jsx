@@ -21,15 +21,35 @@ function Navbar() {
 			as="nav"
 			alignItems="center"
 			justifyContent={justify}
-			bg="rgba(0, 0, 0, 0.5)"
+			bg="rgba(0, 0, 0, 0.8)"
 			rounded="17px"
 			mb="20px"
 			p="10px"
-			overflow="hidden"
+			overflow="visible"
+			position="relative"
 			initial={{ opacity: 0, y: -10 }}
 			animate={{ opacity: 1, y: 0 }}
 			transition={{ duration: 0.8, ease: "easeOut", delay: 0.2 }}
 			key={location.pathname}
+			boxShadow="inset 0 1px 2px rgba(255, 255, 255, 0.3), inset 0 -1px 2px rgba(0, 0, 0, 0.5), 0 2px 4px rgba(0, 0, 0, 0.3)"
+			sx={{
+				border: "1px solid transparent",
+				borderImage: "linear-gradient(135deg, rgba(255,255,255,0.4), rgba(255,255,255,0.1), rgba(0,0,0,0.3)) 1",
+				borderRadius: "17px",
+				background: "linear-gradient(145deg, #0a0a0a, #000000)",
+				"&::before": {
+					content: '""',
+					position: "absolute",
+					inset: "-1px",
+					borderRadius: "17px",
+					padding: "1px",
+					background: "linear-gradient(135deg, rgba(255,255,255,0.5) 0%, rgba(255,255,255,0.1) 50%, rgba(0,0,0,0.3) 100%)",
+					WebkitMask: "linear-gradient(#fff 0 0) content-box, linear-gradient(#fff 0 0)",
+					WebkitMaskComposite: "xor",
+					maskComposite: "exclude",
+					pointerEvents: "none"
+				}
+			}}
 		>
 			<LogoWithText />
 
