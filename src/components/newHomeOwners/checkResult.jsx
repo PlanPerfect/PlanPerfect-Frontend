@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { Box, Flex, Heading, Text, Image, IconButton, Input, Grid } from "@chakra-ui/react";
 import { IoBed, IoRestaurant, IoWater } from "react-icons/io5";
 import { IoIosTv } from "react-icons/io";
@@ -6,15 +6,30 @@ import { MdBalcony, MdKitchen } from "react-icons/md";
 import { FaPlus, FaMinus } from "react-icons/fa";
 
 function CheckResult({ extractionResults }) {
-	// Room counts state (static for now, integrate with OCR results later)
+	console.log("Extraction Results:", extractionResults);
 	const [roomCounts, setRoomCounts] = useState({
 		bedroom: 2,
 		bathroom: 1,
-		dining: 1,
+		ledge: 1,
 		kitchen: 1,
 		livingRoom: 1,
 		balcony: 0,
 	});
+
+	// Initialize room counts from extraction results
+	useEffect(() => {
+		if (extractionResults?.unitInfo?.room_counts) {
+			const counts = extractionResults.unitInfo.room_counts;
+			setRoomCounts({
+				bedroom: counts.BEDROOM || 0,
+				bathroom: (counts.BATH || 0) + (counts.WC || 0),
+				ledge: counts.LEDGE || 0,
+				kitchen: counts.KITCHEN || 0,
+				livingRoom: counts.LIVING || 0,
+				balcony: counts.BALCONY || 0,
+			});
+		}
+	}, [extractionResults]);
 
 	const handleIncrement = (room) => {
 		setRoomCounts((prev) => ({
@@ -39,12 +54,18 @@ function CheckResult({ extractionResults }) {
 	};
 
 	// Extract image URL from results
-	const imageUrl = extractionResults?.[0]?.url || null;
+	const imageUrl = extractionResults?.segmentedImage || null;
+	console.log("Extracted Image URL:", imageUrl);
+
+	// Extract unit information
+	const unitRooms = extractionResults?.unitInfo?.unit_rooms || "2-Bedroom";
+	const unitType = extractionResults?.unitInfo?.unit_types?.[0] || "Type B2";
+	const unitSize = extractionResults?.unitInfo?.unit_sizes?.[0] || "55 sq m";
 
 	const rooms = [
 		{ key: "bedroom", label: "Bedroom", icon: IoBed },
 		{ key: "bathroom", label: "Bathroom", icon: IoWater },
-		{ key: "dining", label: "Dining", icon: IoRestaurant },
+		{ key: "ledge", label: "Ledge", icon: IoRestaurant },
 		{ key: "kitchen", label: "Kitchen", icon: MdKitchen },
 		{ key: "livingRoom", label: "Living Room", icon: IoIosTv },
 		{ key: "balcony", label: "Balcony", icon: MdBalcony },
@@ -81,7 +102,7 @@ function CheckResult({ extractionResults }) {
 			</Box>
 
 			{/* Unit Information Section */}
-			<Heading size="2xl" mb={6} textAlign="center">
+			<Heading size="lg" mb={6} textAlign="center">
 				Your Unit Information
 			</Heading>
 
@@ -94,7 +115,7 @@ function CheckResult({ extractionResults }) {
 						</Text>
 					</Flex>
 					<Input
-						placeholder="2-Bedroom"
+						placeholder={unitRooms}
 						bg="white"
 						border="2px solid #D4AF37"
 						borderRadius="md"
@@ -109,7 +130,7 @@ function CheckResult({ extractionResults }) {
 						</Text>
 					</Flex>
 					<Input
-						placeholder="Type B2"
+						placeholder={unitType}
 						bg="white"
 						border="2px solid #D4AF37"
 						borderRadius="md"
@@ -120,11 +141,11 @@ function CheckResult({ extractionResults }) {
 				<Box>
 					<Flex align="center" gap={2} mb={2}>
 						<Text fontWeight="600" fontSize="lg">
-							📐 Unit
+							📐 Unit Size
 						</Text>
 					</Flex>
 					<Input
-						placeholder="55 sq m/5922 sq ft"
+						placeholder={unitSize}
 						bg="white"
 						border="2px solid #D4AF37"
 						borderRadius="md"
@@ -165,8 +186,8 @@ function CheckResult({ extractionResults }) {
 								}
 								_hover={
 									roomCounts[key] === 0
-									  ? {}
-									  : { bg: "#F4E5B2" }
+										? {}
+										: { bg: "#F4E5B2" }
 								}
 							>
 								<FaMinus />
@@ -196,8 +217,8 @@ function CheckResult({ extractionResults }) {
 								}
 								_hover={
 									roomCounts[key] === 0
-									  ? {}
-									  : { bg: "#F4E5B2" }
+										? {}
+										: { bg: "#F4E5B2" }
 								}
 							>
 								<FaPlus />

@@ -20,10 +20,10 @@ function NewHomeOwnerPage() {
 		count: 5,
 	});
 
-	const handleExtractionComplete = (results) => {
+	const handleExtractionComplete = () => (results) => {
 		setExtractionResults(results);
 		steps.setStep(3); // Move to step 4 After AI extraction is completed (Check Details)
-	};
+	}
 
 	const items = [
 		{
@@ -39,7 +39,7 @@ function NewHomeOwnerPage() {
 		{
 			title: "AI Extraction",
 			icon: <IoSparkles />,
-			content: <AiExtraction file={uploadedFloorPlan} onComplete={handleExtractionComplete} />,
+			content: <AiExtraction file={uploadedFloorPlan} onComplete={handleExtractionComplete()} />,
 		},
 		{
 			title: "Check Details",
