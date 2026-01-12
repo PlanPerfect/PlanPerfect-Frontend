@@ -6,6 +6,7 @@ import { MdBalcony, MdKitchen } from "react-icons/md";
 import { FaPlus, FaMinus } from "react-icons/fa";
 
 function CheckResult({ extractionResults }) {
+	// Room counts state (static for now, integrate with OCR results later)
 	const [roomCounts, setRoomCounts] = useState({
 		bedroom: 2,
 		bathroom: 1,
@@ -80,7 +81,7 @@ function CheckResult({ extractionResults }) {
 			</Box>
 
 			{/* Unit Information Section */}
-			<Heading size="lg" mb={6} textAlign="center">
+			<Heading size="2xl" mb={6} textAlign="center">
 				Your Unit Information
 			</Heading>
 
@@ -162,12 +163,11 @@ function CheckResult({ extractionResults }) {
 										? "not-allowed"
 										: "pointer"
 								}
-								_hover={{
-									bg:
-										roomCounts[key] === 0
-											? "transparent"
-											: "gray.100",
-								}}
+								_hover={
+									roomCounts[key] === 0
+									  ? {}
+									  : { bg: "#F4E5B2" }
+								}
 							>
 								<FaMinus />
 							</IconButton>
@@ -193,6 +193,11 @@ function CheckResult({ extractionResults }) {
 									roomCounts[key] === 10
 										? "not-allowed"
 										: "pointer"
+								}
+								_hover={
+									roomCounts[key] === 0
+									  ? {}
+									  : { bg: "#F4E5B2" }
 								}
 							>
 								<FaPlus />

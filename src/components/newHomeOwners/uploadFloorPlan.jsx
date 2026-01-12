@@ -59,7 +59,7 @@ function UploadFloorPlan({ onFileChange }) {
 
 	return (
 		<Box w="100%" maxW="800px" mx="auto" p={8}>
-			<Heading size="xl" textAlign="center" mb={4}>
+			<Heading size="2xl" textAlign="center" mb={4}>
 				Upload Floor Plan
 			</Heading>
 			<Text textAlign="center" color="gray.700" mb={8} fontSize="sm">

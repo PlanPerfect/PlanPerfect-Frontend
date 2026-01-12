@@ -22,7 +22,7 @@ function NewHomeOwnerPage() {
 
 	const handleExtractionComplete = (results) => {
 		setExtractionResults(results);
-		steps.setStep(3); // Move to step 4 (Check Details)
+		steps.setStep(3); // Move to step 4 After AI extraction is completed (Check Details)
 	};
 
 	const items = [

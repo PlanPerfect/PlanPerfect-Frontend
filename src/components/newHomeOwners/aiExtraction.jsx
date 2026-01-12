@@ -8,7 +8,7 @@ function AIExtraction({ file, onComplete }) {
 	useEffect(() => {
 		if (!file) return;
 
-        // Call api call in backend later
+        // Call api in backend later
 		const runExtraction = async () => {
 			try {
 				setStatus("processing");
@@ -20,8 +20,6 @@ function AIExtraction({ file, onComplete }) {
 				const result = await client.predict("/predict", {
 					pil_img: file.file,
 				});
-
-				console.log("AI Extraction Result:", result.data);
 
 				setStatus("completed");
 
