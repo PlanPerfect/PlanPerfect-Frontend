@@ -1,4 +1,4 @@
-import { Flex, Spacer } from "@chakra-ui/react";
+import { Flex, Spacer, useMediaQuery } from "@chakra-ui/react";
 import { useLocation } from "react-router-dom";
 import { motion } from "framer-motion";
 import LogoWithText from "./Navbar/LogoWithText";
@@ -9,12 +9,18 @@ const MotionFlex = motion.create(Flex);
 function Navbar() {
 	const location = useLocation();
 	const isHome = location.pathname === "/";
+	const [isWide] = useMediaQuery("(min-width: 530px)");
+	const [isVisible] = useMediaQuery("(min-width: 325px)");
+
+	if (!isVisible) return null;
+
+	const justify = isHome && isWide ? "space-between" : "center";
 
 	return (
 		<MotionFlex
 			as="nav"
 			alignItems="center"
-			justifyContent={isHome ? "space-between" : "center"}
+			justifyContent={justify}
 			bg="rgba(0, 0, 0, 0.5)"
 			rounded="17px"
 			mb="20px"
@@ -27,7 +33,7 @@ function Navbar() {
 		>
 			<LogoWithText />
 
-			{isHome && (
+			{isHome && isWide && (
 				<>
 					<Spacer />
 					<NavbarActions />
