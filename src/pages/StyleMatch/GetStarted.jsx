@@ -58,7 +58,7 @@ function GetStarted() {
 						</Text>
 
 						<Box mt={4} display={"flex"} justifyContent={"center"}>
-							<GetStartedButton width={"90%"} destination={"/onboarding"} delay={"1s"} />
+							<GetStartedButton width={"90%"} destination={"/stylematch/reccomendations"} delay={"0.5s"} />
 						</Box>
 					</Card.Body>
 				</Card.Root>

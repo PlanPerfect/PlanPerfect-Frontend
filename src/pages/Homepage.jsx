@@ -31,7 +31,7 @@ function Homepage() {
 
                 <AnimatedHeading />
 
-                <GetStartedButton />
+                <GetStartedButton delay={"1.4s"} />
             </VStack>
 
             <style>
