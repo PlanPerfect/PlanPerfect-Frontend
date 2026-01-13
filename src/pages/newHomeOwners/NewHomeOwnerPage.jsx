@@ -15,7 +15,7 @@ function NewHomeOwnerPage() {
 	const [uploadedFloorPlan, setUploadedFloorPlan] = useState(null);
 	const [extractionResults, setExtractionResults] = useState(null);
 	const [startExtraction, setStartExtraction] = useState(false);
-	
+
 	const steps = useSteps({
 		defaultStep: 0,
 		count: 5,
@@ -64,20 +64,33 @@ function NewHomeOwnerPage() {
 	];
 
 	const isNextDisabled = steps.value === 1 && uploadedFloorPlan === null;
-	const showNavigationButtons = steps.value !== 2; 
+	const showNavigationButtons = steps.value !== 2;
 
 	return (
 		<>
+			{/* Fixed Background */}
+			<Box
+				style={{
+					position: "fixed",
+					top: 0,
+					left: 0,
+					right: 0,
+					bottom: 0,
+					backgroundImage: "url('/newHomeOwnerHero.png')",
+					backgroundSize: "cover",
+					backgroundPosition: "center",
+					backgroundRepeat: "no-repeat",
+					zIndex: -1
+				}}
+			/>
+
 			{/* Hero Section */}
 			<Box
-				bgImage="url('/newHomeOwnerHero.png')"
-				bgRepeat="no-repeat"
-				bgSize="cover"
-				bgPosition="center"
-				minH="100vh"
+				minH="80vh"
 				display="flex"
 				alignItems="center"
 				justifyContent="center"
+				mb={32}
 			>
 				<Flex
 					direction="column"
@@ -116,12 +129,12 @@ function NewHomeOwnerPage() {
 			</Box>
 
 			{/* Action Steps */}
-			<Box pb={20} px={8}>
+			<Box pb={2} px={8}>
 				<Steps.RootProvider value={steps} colorPalette="yellow">
 					<Box
 						w="75%"
 						h="150px"
-						mb={-12}
+						mb={-24}
 						mt={-20}
 						mx="auto"
 						textAlign="center"
@@ -192,11 +205,13 @@ function NewHomeOwnerPage() {
 						borderRadius="10px"
 						zIndex={0}
 						position="relative"
-						p={6}
+						px={6}
+						py={12}
 						display="flex"
 						flexDirection="column"
 						alignItems="center"
 						justifyContent="center"
+						bgColor="white"
 						boxShadow="2px 2px 1px 1px rgba(0, 0, 0, 0.10), 0px 0px 2px 1px rgba(0, 0, 0, 0.10)"
 					>
 						<Box
