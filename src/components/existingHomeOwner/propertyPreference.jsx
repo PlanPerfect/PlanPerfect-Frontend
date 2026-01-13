@@ -29,14 +29,14 @@ function PropertyPreferences({ onPreferencesChange }) {
 	}, [selectedPropertyType, selectedUnitType, selectedBudget]);
 
 	return (
-		<Box w="100%" maxW="700px" mx="auto" p={8}>
-			<Heading size="xl" textAlign="center" mb={2}>
+		<Box w="100%" maxW="800px" mx="auto" p={8}>
+			<Heading size="3xl" textAlign="center" mb={2}>
 				Tell Us About Your Property and Preferences
 			</Heading>
-			
+
 			{/* Property Type */}
 			<Box mb={8}>
-				<Text fontSize="lg" fontWeight="600" mb={4} textAlign="center">
+				<Text fontSize="2xl" fontWeight="600" mb={4} textAlign="center">
 					What is your property type?
 				</Text>
 				<Flex gap={4} justify="center" flexWrap="wrap">
@@ -66,7 +66,7 @@ function PropertyPreferences({ onPreferencesChange }) {
 
 			{/* Unit Type */}
 			<Box mb={8}>
-				<Text fontSize="lg" fontWeight="600" mb={4} textAlign="center">
+				<Text fontSize="2xl" fontWeight="600" mb={4} textAlign="center">
 					What's your unit type?
 				</Text>
 				<Flex gap={4} justify="center" flexWrap="wrap">
@@ -96,7 +96,7 @@ function PropertyPreferences({ onPreferencesChange }) {
 
 			{/* Budget */}
 			<Box>
-				<Text fontSize="lg" fontWeight="600" mb={4} textAlign="center">
+				<Text fontSize="2xl" fontWeight="600" mb={4} textAlign="center">
 					What's your estimated budget?
 				</Text>
 				<Flex gap={4} justify="center" flexWrap="wrap">

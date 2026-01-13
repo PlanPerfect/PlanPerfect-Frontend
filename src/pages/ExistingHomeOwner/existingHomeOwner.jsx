@@ -1,4 +1,4 @@
-import { Box, Flex, Heading, Text, Button, Steps, useSteps, Container, Stack, } from "@chakra-ui/react";
+import { Box, Flex, Heading, Text, Button, Steps, useSteps, Container, Stack } from "@chakra-ui/react";
 import { BsPalette2 } from "react-icons/bs";
 import { RiFileUploadFill } from "react-icons/ri";
 import { FaCheck } from "react-icons/fa6";
@@ -12,13 +12,13 @@ function ExistingHomeOwner() {
 	const [preferences, setPreferences] = useState(null);
 	const [uploadedRoomImage, setUploadedRoomImage] = useState(null);
 	const [analysisResults, setAnalysisResults] = useState(null);
-	
+
 	const steps = useSteps({
 		defaultStep: 0,
-		count: 2,
+		count: 2
 	});
 
-	const handleAnalysisComplete = (results) => {
+	const handleAnalysisComplete = results => {
 		setAnalysisResults(results);
 	};
 
@@ -26,46 +26,63 @@ function ExistingHomeOwner() {
 		{
 			title: "Preferences",
 			icon: <BsPalette2 />,
-			content: <PropertyPreferences onPreferencesChange={setPreferences} />,
+			content: <PropertyPreferences onPreferencesChange={setPreferences} />
 		},
 		{
 			title: "Upload a Photo",
 			icon: <RiFileUploadFill />,
 			content: analysisResults ? (
-				<StyleResults 
-					analysisResults={analysisResults}
-					roomImage={uploadedRoomImage?.preview}
-				/>
+				<StyleResults analysisResults={analysisResults} roomImage={uploadedRoomImage?.preview} />
 			) : uploadedRoomImage ? (
 				<StyleAnalysis file={uploadedRoomImage} onComplete={handleAnalysisComplete} />
 			) : (
 				<UploadRoomImage onFileChange={setUploadedRoomImage} />
-			),
-		},
+			)
+		}
 	];
 
 	// Disable next button if:
 	// Step 0: No preferences selected
 	// Step 1: No room image uploaded
-	const isNextDisabled = 
-		(steps.value === 0 && !preferences) ||
-		(steps.value === 1 && !uploadedRoomImage);
+	const isNextDisabled = (steps.value === 0 && !preferences) || (steps.value === 1 && !uploadedRoomImage);
 
 	// Hide navigation buttons during AI analysis
-	const showNavigationButtons = 
-		!(steps.value === 1 && uploadedRoomImage && !analysisResults);
+	const showNavigationButtons = !(steps.value === 1 && uploadedRoomImage && !analysisResults);
 
 	return (
 		<>
+			{/* Fixed Background Image */}
+			<Box
+				style={{
+					position: "fixed",
+					top: 0,
+					left: 0,
+					right: 0,
+					bottom: 0,
+					backgroundImage: `
+      linear-gradient(rgba(0,0,0,0.5), rgba(0,0,0,0.5)),
+      url('/ExistingHeroSection.png')
+    `,
+					backgroundSize: "cover",
+					backgroundPosition: "center",
+					backgroundRepeat: "no-repeat",
+					zIndex: -1
+				}}
+			/>
+
 			{/* Hero Section */}
-			<Box h="45vh" bgImage="url('/ExistingHeroSection.png')" bgSize="cover" bgPos="center">
-				<Box h="100%" bg="blackAlpha.600">
-				<Container maxW="6xl" py={24}>
-					<Stack spacing={4} color="white">
-					<Heading size="5xl">Design Your Dream Room <br /> With Our Smart Assistant</Heading>
-					<Text fontSize="md" color="yellow.400">Upload your space. Tell us your style. Get personalized renovation ideas in minutes.</Text>
-					</Stack>
-				</Container>
+			<Box h="100vh" position="relative">
+				<Box h="100%">
+					<Container maxW="6xl" py={24}>
+						<Stack spacing={4} color="white">
+							<Heading fontSize="80px" lineHeight={1.5}>
+								Design Your Dream Room <br /> With Our Smart Assistant
+							</Heading>
+							<Text fontSize="2xl" bgGradient="to-r" gradientFrom="#F4E5B2" gradientTo="#D4AF37" bgClip="text" color="transparent">
+								Upload your space. Tell us your style. Get personalized renovation ideas in minutes.
+							</Text>
+						</Stack>
+					</Container>
 				</Box>
 			</Box>
 
@@ -89,55 +106,22 @@ function ExistingHomeOwner() {
 						justifyContent="center"
 						px={8}
 					>
-						<Steps.List
-							display="flex"
-							gap={0}
-							alignItems="center"
-							justifyContent="space-between"
-							w="100%"
-						>
+						<Steps.List display="flex" gap={0} alignItems="center" justifyContent="space-between" w="100%">
 							{items.map((item, index) => (
-								<Steps.Item
-									key={index}
-									index={index}
-									display="flex"
-									alignItems="center"
-								>
-									<Flex
-										direction="column"
-										align="center"
-										mb={2}
-									>
-										<Flex
-											direction="column"
-											align="center"
-											gap={1}
-										>
+								<Steps.Item key={index} index={index} display="flex" alignItems="center">
+									<Flex direction="column" align="center" mb={2}>
+										<Flex direction="column" align="center" gap={1}>
 											<Steps.Trigger cursor="pointer">
-												<Steps.Indicator
-													borderRadius="full"
-													width="56px"
-													height="56px"
-													fontSize="24px"
-												>
-													<Steps.Status
-														complete={<FaCheck />}
-														incomplete={item.icon}
-													/>
+												<Steps.Indicator borderRadius="full" width="56px" height="56px" fontSize="24px">
+													<Steps.Status complete={<FaCheck />} incomplete={item.icon} />
 												</Steps.Indicator>
 											</Steps.Trigger>
 										</Flex>
-										<Text
-											fontWeight="600"
-											fontSize="16px"
-											mt={2}
-										>
+										<Text fontWeight="600" fontSize="16px" mt={2}>
 											{item.title}
 										</Text>
 									</Flex>
-									{index < items.length - 1 && (
-										<Steps.Separator mb={8} height="2px" />
-									)}
+									{index < items.length - 1 && <Steps.Separator mb={8} height="2px" />}
 								</Steps.Item>
 							))}
 						</Steps.List>
@@ -149,41 +133,31 @@ function ExistingHomeOwner() {
 						borderRadius="10px"
 						zIndex={0}
 						position="relative"
-						p={6}
+						px={6}
+						py={12}
+						mt={-11}
 						display="flex"
 						flexDirection="column"
 						alignItems="center"
 						justifyContent="center"
 						boxShadow="2px 2px 1px 1px rgba(0, 0, 0, 0.10), 0px 0px 2px 1px rgba(0, 0, 0, 0.10)"
 						minH="600px"
+						bg={"white"}
 					>
-						<Box
-							flex="1"
-							display="flex"
-							alignItems="center"
-							justifyContent="center"
-						>
+						<Box flex="1" display="flex" alignItems="center" justifyContent="center">
 							{items.map((item, index) => (
 								<Steps.Content key={index} index={index} mt={8} w="100%">
 									{item.content}
 								</Steps.Content>
 							))}
-							<Steps.CompletedContent>
-								All steps are complete!
-							</Steps.CompletedContent>
+							<Steps.CompletedContent>All steps are complete!</Steps.CompletedContent>
 						</Box>
 
 						{showNavigationButtons && (
 							<Flex justify="center" gap={4} mt={6}>
 								{steps.value > 0 && (
 									<Steps.PrevTrigger asChild>
-										<Button
-											size="xl"
-											borderRadius="md"
-											bg="gray.300"
-											color="black"
-											_hover={{ bg: "gray.400" }}
-										>
+										<Button size="xl" borderRadius="md" bg="gray.300" color="black" _hover={{ bg: "gray.400" }}>
 											Back
 										</Button>
 									</Steps.PrevTrigger>

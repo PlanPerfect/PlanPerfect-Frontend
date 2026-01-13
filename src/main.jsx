@@ -9,8 +9,7 @@ import Homepage from "./pages/Homepage.jsx"
 import Services from './pages/Onboarding/Services.jsx'
 import GetStarted from './pages/StyleMatch/GetStarted.jsx'
 import Reccomendations from './pages/StyleMatch/Reccomendations.jsx'
-
-import ExistingHomeOwner from './pages/ExistingHomeOwner/existingHomeOwner.jsx'
+import ExistingHomeOwner from './pages/ExistingHomeOwner/ExistingHomeOwner.jsx'
 
 createRoot(document.getElementById('root')).render(
   <Provider value={system}>
@@ -32,7 +31,9 @@ createRoot(document.getElementById('root')).render(
 						<Route path={"reccomendations"} element={<Reccomendations />} />
 					</Route>
 
-					<Route path={"existingOwner"} element={<ExistingHomeOwner />} />
+					<Route path={"existingHomeOwner"}>
+						<Route index element={<ExistingHomeOwner />} />
+					</Route>
 				</Route>
 			</Routes>
 		</BrowserRouter>
