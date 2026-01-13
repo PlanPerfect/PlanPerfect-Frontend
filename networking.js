@@ -5,9 +5,7 @@ const instance = axios.create({
 })
 
 instance.interceptors.request.use((config) => {
-    if (!(config.data instanceof FormData)) {
-        config.headers["Content-Type"] = "application/json";
-    }
+    config.headers["content-type"] = "application/json";
     config.headers["API_KEY"] = import.meta.env.VITE_API_KEY;
     return config;
 }, (err) => {
