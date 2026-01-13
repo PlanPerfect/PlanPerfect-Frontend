@@ -1,7 +1,18 @@
 'use client'
 
-import { ChakraProvider, defaultSystem } from '@chakra-ui/react'
+import { ChakraProvider, createSystem, defaultConfig } from '@chakra-ui/react'
 import { ColorModeProvider } from './color-mode'
+
+const system = createSystem(defaultConfig, {
+  theme: {
+    tokens: {
+      fonts: {
+        heading: { value: 'Montserrat, sans-serif' },
+        body: { value: 'Montserrat, sans-serif' },
+      },
+    },
+  },
+})
 
 export function Provider(props) {
   const { value = defaultSystem, children, ...rest } = props
