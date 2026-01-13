@@ -23,7 +23,7 @@ function AIExtraction({ file, onComplete }) {
 				setIsSegmenting(true);
 
 				const segmentationFormData = new FormData();
-				segmentationFormData.append("file", file.file);
+				segmentationFormData.append("fil", file.file);
 
 				const segmentationResponse = await server.post(
 					"/newHomeOwners/extraction/roomSegmentation",
@@ -31,7 +31,7 @@ function AIExtraction({ file, onComplete }) {
 				);
 
 				if (!segmentationResponse.data.success) {
-					throw new Error("Room segmentation failed");
+					console.error("Room segmentation failed:", segmentationResponse?.data);
 				}
 
 				const segmentedImage = segmentationResponse.data.result.segmented_image;
@@ -49,7 +49,7 @@ function AIExtraction({ file, onComplete }) {
 				);
 
 				if (!extractionResponse.data.success) {
-					throw new Error("Unit information extraction failed");
+					console.error("Unit information extraction failed:", extractionResponse?.data);
 				}
 
 				const unitInfo = extractionResponse.data.result;
@@ -71,8 +71,7 @@ function AIExtraction({ file, onComplete }) {
 					}
 				}, 1500);
 			} catch (error) {
-				console.error("AI Extraction Error:", error);
-				console.error("Error response:", error.response?.data);
+				console.error("AI Extraction Error Response:", error);
 				
 				setIsPreparing(false);
 				setIsSegmenting(false);
