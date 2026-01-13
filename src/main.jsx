@@ -1,20 +1,40 @@
 import { Provider } from "@/components/ui/provider"
 import { createRoot } from 'react-dom/client'
 import { BrowserRouter, Routes, Route } from 'react-router-dom'
-import Layout from './Layout.jsx'
-import Sample from './pages/Sample.jsx'
-import ExistingHomeOwner from './pages/ExistingHomeOwner/existingHomeOwner.jsx'
+import { system } from './theme'
 import './index.css'
+import Layout from './Layout.jsx'
+import NewHomeOwnerPage from './pages/newHomeOwners/NewHomeOwnerPage.jsx'
+import Homepage from "./pages/Homepage.jsx"
+import Services from './pages/Onboarding/Services.jsx'
+import GetStarted from './pages/StyleMatch/GetStarted.jsx'
+import Reccomendations from './pages/StyleMatch/Reccomendations.jsx'
+
+import ExistingHomeOwner from './pages/ExistingHomeOwner/existingHomeOwner.jsx'
 
 createRoot(document.getElementById('root')).render(
-  <Provider>
+  <Provider value={system}>
     	<BrowserRouter>
 			<Routes>
 				<Route path={"/"} element={<Layout />} >
-					<Route index element={<Sample />} />
+					<Route index element={<Homepage />} />
+
+					<Route path={"onboarding"}>
+						<Route index element={<Services />} />
+					</Route>
+
+					<Route path={"newHomeOwner"}>
+						<Route index element={<NewHomeOwnerPage />} />
+					</Route>
+
+					<Route path={"stylematch"}>
+						<Route index element={<GetStarted />} />
+						<Route path={"reccomendations"} element={<Reccomendations />} />
+					</Route>
+
 					<Route path={"existingOwner"} element={<ExistingHomeOwner />} />
 				</Route>
 			</Routes>
 		</BrowserRouter>
-  </Provider>,
+  </Provider>
 )
