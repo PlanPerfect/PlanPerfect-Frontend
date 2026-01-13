@@ -10,6 +10,8 @@ import Services from './pages/Onboarding/Services.jsx'
 import GetStarted from './pages/StyleMatch/GetStarted.jsx'
 import Reccomendations from './pages/StyleMatch/Reccomendations.jsx'
 
+import ExistingHomeOwner from './pages/ExistingHomeOwner/existingHomeOwner.jsx'
+
 createRoot(document.getElementById('root')).render(
   <Provider value={system}>
     	<BrowserRouter>
@@ -29,6 +31,8 @@ createRoot(document.getElementById('root')).render(
 						<Route index element={<GetStarted />} />
 						<Route path={"reccomendations"} element={<Reccomendations />} />
 					</Route>
+
+					<Route path={"existingOwner"} element={<ExistingHomeOwner />} />
 				</Route>
 			</Routes>
 		</BrowserRouter>
