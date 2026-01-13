@@ -6,7 +6,6 @@ import { MdBalcony, MdKitchen } from "react-icons/md";
 import { FaPlus, FaMinus } from "react-icons/fa";
 
 function CheckResult({ extractionResults }) {
-	console.log("Extraction Results:", extractionResults);
 	const [roomCounts, setRoomCounts] = useState({
 		bedroom: 2,
 		bathroom: 1,
@@ -55,7 +54,6 @@ function CheckResult({ extractionResults }) {
 
 	// Extract image URL from results
 	const imageUrl = extractionResults?.segmentedImage || null;
-	console.log("Extracted Image URL:", imageUrl);
 
 	// Extract unit information
 	const unitRooms = extractionResults?.unitInfo?.unit_rooms || "2-Bedroom";

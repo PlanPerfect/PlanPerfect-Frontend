@@ -3,21 +3,26 @@ import { Box, Text, Spinner } from "@chakra-ui/react";
 import server from "../../../networking";
 
 function AIExtraction({ file, onComplete }) {
-	const [status, setStatus] = useState("processing");
-	const [progress, setProgress] = useState("Preparing...");
+	const [isProcessing, setIsProcessing] = useState(false);
+	const [isPreparing, setIsPreparing] = useState(false);
+	const [isSegmenting, setIsSegmenting] = useState(false);
+	const [isExtracting, setIsExtracting] = useState(false);
+	const [hasCompleted, setHasCompleted] = useState(false);
+	const [hasError, setHasError] = useState(false);
 
 	useEffect(() => {
 		if (!file) return;
 
 		const runExtraction = async () => {
 			try {
-				setStatus("processing");
+				setIsProcessing(true);
+				setIsPreparing(true);
 
 				// Step 1: Room Segmentation
-				setProgress("Segmenting rooms from floor plan...");
+				setIsPreparing(false);
+				setIsSegmenting(true);
 
 				const segmentationFormData = new FormData();
-				// Append the actual File object with the correct field name
 				segmentationFormData.append("file", file.file);
 
 				const segmentationResponse = await server.post(
@@ -29,14 +34,13 @@ function AIExtraction({ file, onComplete }) {
 					throw new Error("Room segmentation failed");
 				}
 
-				const segmentedImage =
-					segmentationResponse.data.result.segmented_image;
+				const segmentedImage = segmentationResponse.data.result.segmented_image;
 
 				// Step 2: Unit Information Extraction
-				setProgress("Extracting unit information...");
+				setIsSegmenting(false);
+				setIsExtracting(true);
 
 				const extractionFormData = new FormData();
-				// Append the actual File object with the correct field name
 				extractionFormData.append("file", file.file);
 
 				const extractionResponse = await server.post(
@@ -56,7 +60,9 @@ function AIExtraction({ file, onComplete }) {
 					unitInfo: unitInfo,
 				};
 
-				setStatus("completed");
+				setIsExtracting(false);
+				setIsProcessing(false);
+				setHasCompleted(true);
 
 				// Auto-advance to next step after showing completion
 				setTimeout(() => {
@@ -67,35 +73,36 @@ function AIExtraction({ file, onComplete }) {
 			} catch (error) {
 				console.error("AI Extraction Error:", error);
 				console.error("Error response:", error.response?.data);
-				setStatus("error");
-
-				// More detailed error message
-				let errorMessage = "Extraction failed";
-				if (error.response?.data?.result) {
-					errorMessage = error.response.data.result;
-				} else if (error.response?.data?.detail) {
-					errorMessage = JSON.stringify(error.response.data.detail);
-				} else if (error.message) {
-					errorMessage = error.message;
-				}
-
-				setProgress(errorMessage);
+				
+				setIsPreparing(false);
+				setIsSegmenting(false);
+				setIsExtracting(false);
+				setIsProcessing(false);
+				setHasError(true);
 			}
 		};
 
 		runExtraction();
-	}, [file]);
+	}, [file, onComplete]);
+
+	// Generate progress message based on current stage
+	const getProgressMessage = () => {
+		if (isPreparing) return "Preparing...";
+		if (isSegmenting) return "Segmenting rooms from floor plan...";
+		if (isExtracting) return "Extracting unit information...";
+		return "";
+	};
 
 	return (
 		<Box textAlign="center" py={10}>
-			{status === "processing" && (
+			{isProcessing && (
 				<>
 					<Spinner size="xl" color="#D4AF37" mb={4} />
 					<Text fontSize="2xl" fontWeight="600">
 						Extracting rooms using AI…
 					</Text>
 					<Text fontSize="md" color="#D4AF37" mt={2} fontWeight="500">
-						{progress}
+						{getProgressMessage()}
 					</Text>
 					<Text fontSize="sm" color="gray.500" mt={2}>
 						Our AI will extract the unit information and segment out
@@ -104,7 +111,7 @@ function AIExtraction({ file, onComplete }) {
 				</>
 			)}
 
-			{status === "completed" && (
+			{hasCompleted && (
 				<>
 					<Box
 						w="48px"
@@ -130,7 +137,7 @@ function AIExtraction({ file, onComplete }) {
 				</>
 			)}
 
-			{status === "error" && (
+			{hasError && (
 				<>
 					<Box
 						w="48px"
@@ -151,7 +158,7 @@ function AIExtraction({ file, onComplete }) {
 						Extraction Failed
 					</Text>
 					<Text fontSize="sm" color="gray.500" mt={2}>
-						{progress}
+						An error occurred during extraction
 					</Text>
 					<Text fontSize="xs" color="gray.400" mt={1}>
 						Please try again or contact support
