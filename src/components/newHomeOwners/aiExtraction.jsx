@@ -23,7 +23,7 @@ function AIExtraction({ file, onComplete }) {
 				setIsSegmenting(true);
 
 				const segmentationFormData = new FormData();
-				segmentationFormData.append("fil", file.file);
+				segmentationFormData.append("file", file.file);
 
 				const segmentationResponse = await server.post(
 					"/newHomeOwners/extraction/roomSegmentation",
