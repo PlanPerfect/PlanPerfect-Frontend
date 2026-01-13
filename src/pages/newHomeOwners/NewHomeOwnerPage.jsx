@@ -14,16 +14,27 @@ import { useState } from "react";
 function NewHomeOwnerPage() {
 	const [uploadedFloorPlan, setUploadedFloorPlan] = useState(null);
 	const [extractionResults, setExtractionResults] = useState(null);
+	const [startExtraction, setStartExtraction] = useState(false);
 	
 	const steps = useSteps({
 		defaultStep: 0,
 		count: 5,
 	});
 
-	const handleExtractionComplete = () => (results) => {
+	const handleExtractionComplete = (results) => {
 		setExtractionResults(results);
 		steps.setStep(3); // Move to step 4 After AI extraction is completed (Check Details)
-	}
+	};
+
+	const handleNextClick = () => {
+		// If on upload floor plan step, trigger extraction
+		if (steps.value === 1 && uploadedFloorPlan) {
+			setStartExtraction(true);
+			steps.setStep(2); // Move to AI extraction step
+		} else {
+			steps.setStep(steps.value + 1); // Normal next step
+		}
+	};
 
 	const items = [
 		{
@@ -39,7 +50,7 @@ function NewHomeOwnerPage() {
 		{
 			title: "AI Extraction",
 			icon: <IoSparkles />,
-			content: <AiExtraction file={uploadedFloorPlan} onComplete={handleExtractionComplete()} />,
+			content:<AiExtraction file={uploadedFloorPlan}  onComplete={handleExtractionComplete} startExtraction={startExtraction} />,
 		},
 		{
 			title: "Check Details",
@@ -219,20 +230,19 @@ function NewHomeOwnerPage() {
 										</Button>
 									</Steps.PrevTrigger>
 								)}
-								<Steps.NextTrigger asChild>
-									<Button
-										size="xl"
-										borderRadius="md"
-										bg="#D4AF37"
-										color="white"
-										disabled={isNextDisabled}
-										opacity={isNextDisabled ? 0.5 : 1}
-										cursor={isNextDisabled ? "not-allowed" : "pointer"}
-										_hover={{ bg: isNextDisabled ? "#D4AF37" : "#C9A961" }}
-									>
-										Next
-									</Button>
-								</Steps.NextTrigger>
+								<Button
+									size="xl"
+									borderRadius="md"
+									bg="#D4AF37"
+									color="white"
+									disabled={isNextDisabled}
+									opacity={isNextDisabled ? 0.5 : 1}
+									cursor={isNextDisabled ? "not-allowed" : "pointer"}
+									_hover={{ bg: isNextDisabled ? "#D4AF37" : "#C9A961" }}
+									onClick={handleNextClick}
+								>
+									Next
+								</Button>
 							</Flex>
 						)}
 					</Box>

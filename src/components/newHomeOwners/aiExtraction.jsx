@@ -1,8 +1,8 @@
-import { useEffect, useState } from "react";
-import { Box, Text, Spinner } from "@chakra-ui/react";
+import { useState, useEffect } from "react";
+import { Box, Text, Spinner, Button } from "@chakra-ui/react";
 import server from "../../../networking";
 
-function AIExtraction({ file, onComplete }) {
+function AIExtraction({ file, onComplete, startExtraction }) {
 	const [isProcessing, setIsProcessing] = useState(false);
 	const [isPreparing, setIsPreparing] = useState(false);
 	const [isSegmenting, setIsSegmenting] = useState(false);
@@ -10,79 +10,85 @@ function AIExtraction({ file, onComplete }) {
 	const [hasCompleted, setHasCompleted] = useState(false);
 	const [hasError, setHasError] = useState(false);
 
+	// Automatically start extraction
 	useEffect(() => {
-		if (!file) return;
+		if (startExtraction && file && !isProcessing && !hasCompleted && !hasError) {
+			runExtraction();
+		}
+	}, [startExtraction]);
 
-		const runExtraction = async () => {
-			try {
-				setIsProcessing(true);
-				setIsPreparing(true);
+	const runExtraction = async () => {
+		try {
+			setIsProcessing(true);
+			setIsPreparing(true);
 
-				// Step 1: Room Segmentation
-				setIsPreparing(false);
-				setIsSegmenting(true);
+			// Step 1: Room Segmentation
+			setIsPreparing(false);
+			setIsSegmenting(true);
 
-				const segmentationFormData = new FormData();
-				segmentationFormData.append("file", file.file);
+			const segmentationFormData = new FormData();
+			segmentationFormData.append("file", file.file);
 
-				const segmentationResponse = await server.post(
-					"/newHomeOwners/extraction/roomSegmentation",
-					segmentationFormData
-				);
+			const segmentationResponse = await server.post(
+				"/newHomeOwners/extraction/roomSegmentation",
+				segmentationFormData
+			);
 
-				if (!segmentationResponse.data.success) {
-					console.error("Room segmentation failed:", segmentationResponse?.data);
-				}
-
-				const segmentedImage = segmentationResponse.data.result.segmented_image;
-
-				// Step 2: Unit Information Extraction
-				setIsSegmenting(false);
-				setIsExtracting(true);
-
-				const extractionFormData = new FormData();
-				extractionFormData.append("file", file.file);
-
-				const extractionResponse = await server.post(
-					"/newHomeOwners/extraction/unitInformationExtraction",
-					extractionFormData
-				);
-
-				if (!extractionResponse.data.success) {
-					console.error("Unit information extraction failed:", extractionResponse?.data);
-				}
-
-				const unitInfo = extractionResponse.data.result;
-
-				// Combine both results
-				const combinedResults = {
-					segmentedImage: segmentedImage,
-					unitInfo: unitInfo,
-				};
-
-				setIsExtracting(false);
-				setIsProcessing(false);
-				setHasCompleted(true);
-
-				// Auto-advance to next step after showing completion
-				setTimeout(() => {
-					if (onComplete) {
-						onComplete(combinedResults);
-					}
-				}, 1500);
-			} catch (error) {
-				console.error("AI Extraction Error Response:", error);
-				
-				setIsPreparing(false);
-				setIsSegmenting(false);
-				setIsExtracting(false);
-				setIsProcessing(false);
-				setHasError(true);
+			if (!segmentationResponse.data.success) {
+				console.error("Room segmentation failed:", segmentationResponse?.data);
 			}
-		};
 
+			const segmentedImage = segmentationResponse.data.result.segmented_image;
+
+			// Step 2: Unit Information Extraction
+			setIsSegmenting(false);
+			setIsExtracting(true);
+
+			const extractionFormData = new FormData();
+			extractionFormData.append("file", file.file);
+
+			const extractionResponse = await server.post(
+				"/newHomeOwners/extraction/unitInformationExtraction",
+				extractionFormData
+			);
+
+			if (!extractionResponse.data.success) {
+				console.error("Unit information extraction failed:", extractionResponse?.data);
+			}
+
+			const unitInfo = extractionResponse.data.result;
+
+			// Combine both results
+			const combinedResults = {
+				segmentedImage: segmentedImage,
+				unitInfo: unitInfo,
+			};
+
+			setIsExtracting(false);
+			setIsProcessing(false);
+			setHasCompleted(true);
+
+			// Auto-advance to next step after showing completion
+			setTimeout(() => {
+				if (onComplete) {
+					onComplete(combinedResults);
+				}
+			}, 1500);
+		} catch (error) {
+			console.error("AI Extraction Error Response:", error);
+			
+			setIsPreparing(false);
+			setIsSegmenting(false);
+			setIsExtracting(false);
+			setIsProcessing(false);
+			setHasError(true);
+		}
+	};
+
+	const handleRetry = () => {
+		setHasError(false);
 		runExtraction();
-	}, [file, onComplete]);
+	};
 
 	// Generate progress message based on current stage
 	const getProgressMessage = () => {
@@ -156,12 +162,19 @@ function AIExtraction({ file, onComplete }) {
 					<Text fontSize="2xl" fontWeight="600" color="red.600">
 						Extraction Failed
 					</Text>
-					<Text fontSize="sm" color="gray.500" mt={2}>
+					<Text fontSize="sm" color="gray.500" mt={2} mb={4}>
 						An error occurred during extraction
 					</Text>
-					<Text fontSize="xs" color="gray.400" mt={1}>
-						Please try again or contact support
-					</Text>
+					<Button
+						onClick={handleRetry}
+						bg="#D4AF37"
+						color="white"
+						size="md"
+						px={6}
+						_hover={{ bg: "#C19B2F" }}
+					>
+						Try Again
+					</Button>
 				</>
 			)}
 		</Box>
