@@ -15,9 +15,13 @@ const system = createSystem(defaultConfig, {
 })
 
 export function Provider(props) {
+  const { value = defaultSystem, children, ...rest } = props
+  
   return (
-    <ChakraProvider value={system}>
-      <ColorModeProvider {...props} />
+    <ChakraProvider value={value}>
+      <ColorModeProvider {...rest}>
+        {children}
+      </ColorModeProvider>
     </ChakraProvider>
   )
 }
