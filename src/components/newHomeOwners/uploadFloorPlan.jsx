@@ -58,11 +58,11 @@ function UploadFloorPlan({ onFileChange }) {
 	};
 
 	return (
-		<Box w="100%" maxW="800px" mx="auto" p={8}>
-			<Heading size="2xl" textAlign="center" mb={4}>
+		<Box w="100%" maxW="800px" mx="auto" py={10}>
+			<Heading size="2xl" textAlign="center" mb={2}>
 				Upload Floor Plan
 			</Heading>
-			<Text textAlign="center" color="gray.700" mb={8} fontSize="sm">
+			<Text textAlign="center" color="gray.700" mb={6} fontSize="sm">
 				Uploading your floor plan not only helps your designer
 				understand your unit, but it will also be included in your final
 				design documentation
@@ -156,7 +156,7 @@ function UploadFloorPlan({ onFileChange }) {
 					borderRadius="10px"
 					p={4}
 					bg="white"
-					mb={6}
+					mb={2}
 				>
 					<Flex align="center" justify="space-between">
 						<Flex align="center" gap={3}>
