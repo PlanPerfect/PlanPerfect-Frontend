@@ -10,6 +10,7 @@ import Services from './pages/Onboarding/Services.jsx'
 import GetStarted from './pages/StyleMatch/GetStarted.jsx'
 import Reccomendations from './pages/StyleMatch/Reccomendations.jsx'
 import ExistingHomeOwner from './pages/ExistingHomeOwner/ExistingHomeOwner.jsx'
+import ChatbotPage from "./pages/Chatbot/ChatbotPage"
 
 createRoot(document.getElementById('root')).render(
   <Provider value={system}>
@@ -33,6 +34,10 @@ createRoot(document.getElementById('root')).render(
 
 					<Route path={"existingHomeOwner"}>
 						<Route index element={<ExistingHomeOwner />} />
+					</Route>
+
+					<Route path={"chatbot"}>
+						<Route index element={<ChatbotPage />} />
 					</Route>
 				</Route>
 			</Routes>
