@@ -68,17 +68,8 @@ function UploadRoomImage({ onFileChange }) {
 
 			<FileUpload.Root accept={["image/png", "image/jpeg", "image/jpg"]} maxFiles={1} onFileAccept={handleFileAccept}>
 				{/* Drag and Drop Area */}
-				<FileUpload.Dropzone
-					border="2px dashed"
-					borderColor="gray.300"
-					borderRadius="10px"
-					bg="white"
-					p={12}
-					textAlign="center"
-					cursor="pointer"
-					transition="all 0.2s"
-					mb={6}
-					w="100%"
+				<FileUpload.Dropzone border="2px dashed" borderColor="gray.300" borderRadius="10px" bg="white" p={12} textAlign="center" cursor="pointer" 
+					transition="all 0.2s" mb={6} w="100%"
 					_hover={{
 						borderColor: "#D4AF37",
 						bg: "#FFFDF7"
@@ -108,7 +99,6 @@ function UploadRoomImage({ onFileChange }) {
 						</Box>
 					</Flex>
 				</FileUpload.Dropzone>
-
 				<FileUpload.HiddenInput />
 			</FileUpload.Root>
 

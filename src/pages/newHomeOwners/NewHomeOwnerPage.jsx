@@ -9,22 +9,33 @@ import PreferenceBudget from "@/components/newHomeOwners/preferenceBudget";
 import UploadFloorPlan from "@/components/newHomeOwners/uploadFloorPlan";
 import AiExtraction from "@/components/newHomeOwners/aiExtraction";
 import CheckResult from "@/components/newHomeOwners/checkResult";
-import { useState } from "react";
+import GenerateDesignDocument from "@/components/newHomeOwners/generateDesignDocument";
+import { useState, useCallback } from "react";
 
 function NewHomeOwnerPage() {
 	const [uploadedFloorPlan, setUploadedFloorPlan] = useState(null);
 	const [extractionResults, setExtractionResults] = useState(null);
 	const [startExtraction, setStartExtraction] = useState(false);
+	const [preferences, setPreferences] = useState(null);
+	const [budget, setBudget] = useState(null);
 
 	const steps = useSteps({
 		defaultStep: 0,
 		count: 5,
 	});
 
-	const handleExtractionComplete = (results) => {
+	const handleExtractionComplete = useCallback((results) => {
 		setExtractionResults(results);
 		steps.setStep(3); // Move to step 4 After AI extraction is completed (Check Details)
-	};
+	}, [steps]);
+	
+	const handlePreferenceChange = useCallback((preferencesData) => {
+		setPreferences(preferencesData);
+	}, []);
+	
+	const handleBudgetChange = useCallback((budgetValue) => {
+		setBudget(budgetValue);
+	}, []);
 
 	const handleNextClick = () => {
 		// If on upload floor plan step, trigger extraction
@@ -40,7 +51,7 @@ function NewHomeOwnerPage() {
 		{
 			title: "Preference & Budget",
 			icon: <BsPalette2 />,
-			content: <PreferenceBudget />,
+			content: <PreferenceBudget onPreferenceChange={handlePreferenceChange} onBudgetChange={handleBudgetChange} />
 		},
 		{
 			title: "Upload Floor Plan",
@@ -50,7 +61,7 @@ function NewHomeOwnerPage() {
 		{
 			title: "AI Extraction",
 			icon: <IoSparkles />,
-			content:<AiExtraction file={uploadedFloorPlan}  onComplete={handleExtractionComplete} startExtraction={startExtraction} />,
+			content: <AiExtraction file={uploadedFloorPlan} onComplete={handleExtractionComplete} startExtraction={startExtraction} />
 		},
 		{
 			title: "Check Details",
@@ -60,11 +71,12 @@ function NewHomeOwnerPage() {
 		{
 			title: "Get Results!",
 			icon: <MdOutlineSupportAgent />,
+			content: <GenerateDesignDocument floorPlanFile={uploadedFloorPlan} preferences={preferences} budget={budget} extractionResults={extractionResults} />
 		},
 	];
 
 	const isNextDisabled = steps.value === 1 && uploadedFloorPlan === null;
-	const showNavigationButtons = steps.value !== 2;
+	const showNavigationButtons = steps.value !== 2 && steps.value !== 4;
 
 	return (
 		<>
