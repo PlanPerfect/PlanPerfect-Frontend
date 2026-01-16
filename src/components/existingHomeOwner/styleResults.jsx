@@ -1,71 +1,42 @@
-import { useState } from "react";
-import { Box, Flex, Heading, Text, Image, Badge } from "@chakra-ui/react";
-
-function parseDetectedStyle(raw) {
-  if (!raw || typeof raw !== "string") {
-    return { style: "Unknown", confidence: 0 };
-  }
-
-  // Matches: ('minimalist', 0.6280122399330139)
-  const match = raw.match(/\(\s*'([^']+)'\s*,\s*([\d.]+)\s*\)/);
-
-  if (!match) {
-    return { style: raw, confidence: 0 };
-  }
-
-  const style = match[1];
-  const confidence = parseFloat(match[2]);
-
-  return { style, confidence: isNaN(confidence) ? 0 : confidence };
-}
+import { Box, Flex, Heading, Text, Image } from "@chakra-ui/react";
 
 function StyleResults({ analysisResults, roomImage }) {
 	console.log("Analysis Results:", analysisResults);
 
-	// Extract style information
 	const detectedStyle = analysisResults?.detected_style || "Unknown";
-	const confidence = analysisResults?.confidence || 0;
 
-	// Style descriptions mapping
 	const styleDescriptions = {
 		"Industrial": "Raw, unfinished look with exposed brick, metal, and reclaimed wood",
 		"Minimalist": "Less is more - clean, simple spaces with essential furniture only",
 		"Modern": "Sleek, streamlined design with emphasis on horizontal and vertical lines",
 		"Scandinavian": "Light, airy spaces with functional furniture and natural materials",
 		"Boho": "Eclectic, colorful style with global influences and layered textures",
+		"Boutique": "Chic, sophisticated spaces with curated designer pieces",
+		"Classical": "Timeless elegance with traditional architectural details",
+		"Contemporary": "Current, cutting-edge design with clean lines",
+		"Country": "Rustic charm with natural materials and cozy elements",
+		"Eclectic": "Mix-and-match style combining various design periods",
+		"Luxury": "Opulent, high-end finishes and premium materials",
+		"Japanese": "Zen-inspired with natural elements and minimalist aesthetics",
+		"Persian": "Rich patterns, intricate details, and luxurious textiles",
+		"Vintage": "Nostalgic pieces from past decades with character",
+		"Wabi Sabi": "Beauty in imperfection with natural, aged materials",
+		"Japandi": "Fusion of Japanese and Scandinavian minimalism",
+		"Peranakan": "Vibrant colors and ornate patterns from Southeast Asian heritage",
 	};
-
 
 	return (
 		<Box w="100%" py={8}>
 			{/* Detected Style Section */}
-			<Heading size="xl" mb={6} textAlign="center">
+			<Heading size="2xl" mb={6} textAlign="center" color="#D4AF37">
 				Style Analysis Complete!
 			</Heading>
 
-			<Flex 
-				direction={{ base: "column", md: "row" }} 
-				gap={8} 
-				mb={8}
-				align="stretch"
-			>
+			<Flex direction={{ base: "column", md: "row" }} gap={8} mb={8} align="stretch">
 				{/* Room Image */}
-				<Box 
-					flex="1"
-					border="2px solid #D4AF37"
-					borderRadius="12px"
-					p={4}
-					bg="gray.50"
-				>
+				<Box flex="1" border="2px solid #D4AF37" borderRadius="12px" p={4} bg="gray.50">
 					{roomImage ? (
-						<Image
-							src={roomImage}
-							alt="Your Room"
-							maxH="400px"
-							w="100%"
-							objectFit="contain"
-							borderRadius="8px"
-						/>
+						<Image src={roomImage}  alt="Your Room" maxH="400px" w="100%" objectFit="contain" borderRadius="8px"/>
 					) : (
 						<Box textAlign="center" py={20}>
 							<Text color="gray.500">
@@ -75,19 +46,14 @@ function StyleResults({ analysisResults, roomImage }) {
 					)}
 				</Box>
 
-				<Box 
-					flex="1"
-					border="2px solid #D4AF37"
-					borderRadius="12px"
-					p={6}
-					bg="white"
-				>
+				{/* Style Information */}
+				<Box flex="1" border="2px solid #D4AF37" borderRadius="12px" p={6} bg="white">
 					<Flex direction="column" gap={4} h="100%">
 						<Box>
 							<Text fontSize="md" color="gray.600" mb={2} fontWeight="bold">
 								Detected Style
 							</Text>
-							<Heading size="xl" color="#D4AF37">
+							<Heading size="2xl" color="#D4AF37">
 								{detectedStyle}
 							</Heading>
 						</Box>
@@ -96,7 +62,7 @@ function StyleResults({ analysisResults, roomImage }) {
 							<Text fontSize="md" color="gray.600" mb={2} fontWeight="bold">
 								About This Style
 							</Text>
-							<Text fontSize="sm" color="gray.700">
+							<Text fontSize="md" color="gray.700">
 								{styleDescriptions[detectedStyle] || "A unique interior design style"}
 							</Text>
 						</Box>
@@ -105,19 +71,13 @@ function StyleResults({ analysisResults, roomImage }) {
 			</Flex>
 
 			{/* Next Steps Info */}
-			<Box 
-				border="2px solid #D4AF37"
-				borderRadius="12px"
-				p={6}
-				bg="#FFFDF7"
-				textAlign="center"
-			>
-				<Heading size="md" mb={3}>
+			<Box border="2px solid #D4AF37" borderRadius="12px" p={6} bg="#FFFDF7" textAlign="center">
+				<Heading size="xl" mb={3}>
 					🎉 Analysis Complete!
 				</Heading>
-				<Text color="gray.700">
-					We've successfully identified your interior style as <strong>{detectedStyle}</strong>. 
-					Our team can now help you enhance and refine this style for your space.
+				<Text color="gray.700" fontSize="lg">
+					We've successfully identified your interior style as <strong>{detectedStyle}</strong>.
+					Click <strong>Next</strong> to select your preferred design themes.
 				</Text>
 			</Box>
 		</Box>

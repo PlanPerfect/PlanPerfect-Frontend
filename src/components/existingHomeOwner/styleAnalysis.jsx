@@ -74,17 +74,8 @@ function StyleAnalysis({ file, onComplete }) {
 
 			{status === "completed" && (
 				<>
-					<Box
-						w="48px"
-						h="48px"
-						borderRadius="full"
-						bg="green.500"
-						display="flex"
-						alignItems="center"
-						justifyContent="center"
-						mx="auto"
-						mb={4}
-					>
+					<Box w="48px" h="48px" borderRadius="full" bg="green.500" display="flex" alignItems="center" justifyContent="center" 
+						mx="auto" mb={4}>
 						<Text color="white" fontSize="2xl">
 							✓
 						</Text>
@@ -100,16 +91,8 @@ function StyleAnalysis({ file, onComplete }) {
 
 			{status === "error" && (
 				<>
-					<Box
-						w="48px"
-						h="48px"
-						borderRadius="full"
-						bg="red.500"
-						display="flex"
-						alignItems="center"
-						justifyContent="center"
-						mx="auto"
-						mb={4}
+					<Box w="48px" h="48px" borderRadius="full" bg="red.500" display="flex" alignItems="center" justifyContent="center" 
+						mx="auto" mb={4}
 					>
 						<Text color="white" fontSize="2xl">
 							✕
