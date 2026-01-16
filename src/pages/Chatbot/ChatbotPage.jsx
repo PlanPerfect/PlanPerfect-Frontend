@@ -1,7 +1,9 @@
 import { useState, useRef, useEffect } from "react";
 import { Box, Card, Flex, Heading, Text, Input, VStack, HStack, Avatar } from "@chakra-ui/react";
-import { Send, Bot, User, Sparkles } from "lucide-react";
+import { Send, Bot, User, Sparkles, AlertCircle } from "lucide-react";
 import LandingBackground from "../../assets/LandingBackground.png";
+import ShowToast from "@/Extensions/ShowToast";
+import server from "../../../networking";
 
 function ChatbotPage() {
 	const [messages, setMessages] = useState([
@@ -14,6 +16,7 @@ function ChatbotPage() {
 	]);
 	const [inputValue, setInputValue] = useState("");
 	const [isTyping, setIsTyping] = useState(false);
+	const [error, setError] = useState(null);
 	const messagesEndRef = useRef(null);
 	const inputRef = useRef(null);
 
@@ -46,26 +49,45 @@ function ChatbotPage() {
 		setMessages((prev) => [...prev, userMessage]);
 		setInputValue("");
 		setIsTyping(true);
+		setError(null);
 
-		// Simulate AI response
-		setTimeout(() => {
-			const aiResponses = [
-				"That's a great question! For modern interiors, I'd recommend focusing on clean lines, neutral color palettes, and incorporating natural materials like wood and stone.",
-				"Based on your preferences, I suggest creating a cohesive color scheme using the 60-30-10 rule: 60% dominant color, 30% secondary, and 10% accent.",
-				"To maximize space in a small room, consider multi-functional furniture, mirrors to create depth, and vertical storage solutions.",
-				"I'd love to help you with that! Could you tell me more about your style preferences and the room dimensions?",
-			];
+		try {
+			// Call backend API
+			const response = await server.get("/chatbot/chat-completion", {
+				query: inputValue,
+			});
 
 			const assistantMessage = {
 				role: "assistant",
-				content:
-					aiResponses[Math.floor(Math.random() * aiResponses.length)],
+				content: response.data.response,
 				timestamp: new Date(),
 			};
 
 			setMessages((prev) => [...prev, assistantMessage]);
+		} catch (err) {
+			console.error("Error calling chatbot API:", err);
+
+			const errorMessage = err.response?.data?.error || err.response?.data?.detail || "Sorry, I encountered an error. Please try again.";
+
+			setError(errorMessage);
+
+			ShowToast(
+				"error",
+				"Chatbot Error",
+				error
+			);
+
+			const errorAssistantMessage = {
+				role: "assistant",
+				content: errorMessage,
+				timestamp: new Date(),
+				isError: true,
+			};
+
+			setMessages((prev) => [...prev, errorAssistantMessage]);
+		} finally {
 			setIsTyping(false);
-		}, 1500);
+		}
 	};
 
 	const handleKeyPress = (e) => {
@@ -235,12 +257,16 @@ function ChatbotPage() {
 											bg={
 												message.role === "user"
 													? "#D4AF37"
+													: message.isError
+													? "rgba(255, 100, 100, 0.3)"
 													: "rgba(255, 240, 189, 0.3)"
 											}
 											flexShrink={0}
 										>
 											{message.role === "user" ? (
 												<User size={20} color="white" />
+											) : message.isError ? (
+												<AlertCircle size={20} color="#ff6b6b" />
 											) : (
 												<Bot
 													size={20}
@@ -255,10 +281,16 @@ function ChatbotPage() {
 												bg={
 													message.role === "user"
 														? "#C9A227"
+														: message.isError
+														? "rgba(255, 100, 100, 0.15)"
 														: "rgba(255, 255, 255, 0.15)"
 												}
 												backdropFilter="blur(10px)"
-												border="1px solid rgba(255, 255, 255, 0.2)"
+												border={
+													message.isError
+														? "1px solid rgba(255, 100, 100, 0.3)"
+														: "1px solid rgba(255, 255, 255, 0.2)"
+												}
 												borderRadius={20}
 												p={{ base: 3, md: 4 }}
 												boxShadow="0 4px 16px rgba(0, 0, 0, 0.1)"
@@ -364,6 +396,7 @@ function ChatbotPage() {
 								fontSize={{ base: "sm", md: "md" }}
 								px={{ base: 4, md: 6 }}
 								py={{ base: 5, md: 6 }}
+								disabled={isTyping}
 								_placeholder={{
 									color: "rgba(255, 255, 255, 0.5)",
 								}}
@@ -373,6 +406,10 @@ function ChatbotPage() {
 									boxShadow:
 										"0 0 0 3px rgba(255, 240, 189, 0.1)",
 								}}
+								_disabled={{
+									opacity: 0.6,
+									cursor: "not-allowed",
+								}}
 							/>
 							<Box
 								as="button"
@@ -381,14 +418,15 @@ function ChatbotPage() {
 								p={{ base: 3, md: 4 }}
 								borderRadius="full"
 								cursor={
-									inputValue.trim()
+									inputValue.trim() && !isTyping
 										? "pointer"
 										: "not-allowed"
 								}
-								opacity={inputValue.trim() ? 1 : 0.5}
+								opacity={inputValue.trim() && !isTyping ? 1 : 0.5}
 								transition="all 0.2s"
+								disabled={!inputValue.trim() || isTyping}
 								_hover={
-									inputValue.trim()
+									inputValue.trim() && !isTyping
 										? {
 												bg: "#C9A961",
 												transform: "translateY(-2px)",
@@ -398,7 +436,7 @@ function ChatbotPage() {
 										: {}
 								}
 								_active={
-									inputValue.trim()
+									inputValue.trim() && !isTyping
 										? {
 												transform: "translateY(0)",
 										  }
