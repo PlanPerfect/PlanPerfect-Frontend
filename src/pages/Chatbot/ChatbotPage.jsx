@@ -53,7 +53,7 @@ function ChatbotPage() {
 
 		try {
 			// Call backend API
-			const response = await server.get("/chatbot/chat-completion", {
+			const response = await server.post("/chatbot/chat-completion", {
 				query: inputValue,
 			});
 
