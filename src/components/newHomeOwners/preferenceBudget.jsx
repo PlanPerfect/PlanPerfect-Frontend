@@ -1,5 +1,5 @@
 import { Box, Flex, Heading, Text, Button, Slider } from "@chakra-ui/react";
-import { useState } from "react";
+import { useState, useEffect } from "react";
 
 const designThemes = [
 	{ id: 1, name: "Boutique", icon: "👗", color: "#FFB6C1" },
@@ -20,10 +20,36 @@ const designThemes = [
 	{ id: 16, name: "Peranakan", icon: "🏛️", color: "#98D8C8" },
 ];
 
-function PreferenceBudget() {
+function PreferenceBudget({ onPreferenceChange, onBudgetChange }) {
 	const [selectedThemes, setSelectedThemes] = useState([]);
 	const [budget, setBudget] = useState(250000);
 	const maxBudget = 500000;
+
+	// Notify parent component whenever preferences change
+	useEffect(() => {
+		if (onPreferenceChange) {
+			const selectedThemeObjects = designThemes.filter(theme => 
+				selectedThemes.includes(theme.id)
+			);
+			
+			const preferencesData = {
+				style: selectedThemeObjects.map(t => t.name).join(" & ") || "Not selected",
+				themes: selectedThemeObjects,
+				colors: selectedThemeObjects.map(t => t.color),
+				materials: [], // Can be extended later if needed
+				specialRequirements: ""
+			};
+			
+			onPreferenceChange(preferencesData);
+		}
+	}, [selectedThemes, onPreferenceChange]);
+
+	// Notify parent component whenever budget changes
+	useEffect(() => {
+		if (onBudgetChange) {
+			onBudgetChange(formatCurrency(budget));
+		}
+	}, [budget, onBudgetChange]);
 
 	const handleThemeSelect = (themeId) => {
 		if (selectedThemes.includes(themeId)) {
@@ -38,13 +64,13 @@ function PreferenceBudget() {
 	};
 
 	return (
-		<Box w="100%" maxW="800px" mx="auto" p={8}>
+		<Box w="100%" maxW="800px" mx="auto" py={10}>
 			{/* Design Theme Preference Section */}
 			<Box mb={12}>
 				<Heading size="2xl" textAlign="center" mb={2}>
 					What is your design theme preference?
 				</Heading>
-				<Text textAlign="center" color="gray.600" mb={6}>
+				<Text textAlign="center" color="gray.600" mb={6} fontSize="sm">
 					You can choose up to maximum 2 choices.
 				</Text>
 

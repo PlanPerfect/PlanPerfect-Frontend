@@ -15,7 +15,7 @@ function AIExtraction({ file, onComplete, startExtraction }) {
 		if (startExtraction && file && !isProcessing && !hasCompleted && !hasError) {
 			runExtraction();
 		}
-	}, [startExtraction]);
+	}, [startExtraction, file, onComplete]);
 
 	const runExtraction = async () => {
 		try {
