@@ -1,9 +1,11 @@
 import { useEffect, useState } from "react";
 import { useLocation } from "react-router-dom";
-import { Card, Flex, Box, Text, Heading, Image, Badge, Button, HStack, VStack, Icon, SimpleGrid, Carousel, IconButton } from "@chakra-ui/react";
-import { LuSparkles, LuSofa, LuShoppingCart, LuHeart, LuChevronLeft, LuChevronRight } from "react-icons/lu";
+import { Card, Flex, Box, Text, Heading, Image, Badge, Button, HStack, VStack, Icon, SimpleGrid, Carousel, IconButton, Spinner } from "@chakra-ui/react";
+import { LuSparkles, LuSofa, LuShoppingCart, LuHeart, LuChevronLeft, LuChevronRight, LuCheck, LuX } from "react-icons/lu";
 import { motion } from "framer-motion";
 import StyleMatchBackground from "../../assets/StyleMatchBackground.png";
+import server from "../../../networking";
+import ShowToast from "@/Extensions/ShowToast";
 
 function Recommendations() {
 	const location = useLocation();
@@ -12,8 +14,10 @@ function Recommendations() {
 	const [furnitureCounts, setFurnitureCounts] = useState({});
 	const [recommendations, setRecommendations] = useState([]);
 	const [loadingRecs, setLoadingRecs] = useState(false);
-
-	const UNSPLASH_ACCESS_KEY = "ijagQOFvxPTAjK3R-vEJWUw_WVzUvLT-QewMsoqUY74";
+	const [selectedFurniture, setSelectedFurniture] = useState(null);
+	const [savedRecommendations, setSavedRecommendations] = useState([]);
+	const [currentCarouselIndex, setCurrentCarouselIndex] = useState(0);
+	const [removingRecId, setRemovingRecId] = useState(null);
 
 	useEffect(() => {
 		if (furnitures && furnitures.length > 0) {
@@ -27,38 +31,116 @@ function Recommendations() {
 		}
 	}, [furnitures]);
 
-	const truncateDescription = text => {
-		if (!text) return "";
-		const sentences = text.match(/[^.!?]+[.!?]+/g) || [text];
-		return sentences.slice(0, 1).join(" ");
-	};
-
 	const fetchRecommendations = async furnitureName => {
 		setLoadingRecs(true);
-		try {
-			const searchQuery = `${style} ${furnitureName} furniture interior`;
-			const response = await fetch(`https://api.unsplash.com/search/photos?query=${encodeURIComponent(searchQuery)}&per_page=5&orientation=landscape`, {
-				headers: {
-					Authorization: `Client-ID ${UNSPLASH_ACCESS_KEY}`
+		setSelectedFurniture(furnitureName);
+
+		const fetchPromise = server
+			.post("/stylematch/recommendations/get-recommendations", {
+				style: style || "Modern",
+				furniture_name: furnitureName,
+				per_page: 5
+			})
+			.then(response => {
+				if (response.data.success) {
+					const recs = response.data.recommendations.map((rec, index) => ({
+						id: `${rec.unsplashId}-${Date.now()}-${index}`,
+						...rec
+					}));
+					setRecommendations(recs);
+					setCurrentCarouselIndex(0);
+					return response.data;
 				}
+				throw new Error("Failed to fetch recommendations");
 			});
 
-			const data = await response.json();
+		ShowToast(null, null, null, {
+			promise: fetchPromise,
+			loading: {
+				title: "Finding recommendations..."			},
+			success: {
+				title: "Recommendations found!"			},
+			error: {
+				title: "Failed to fetch recommendations",
+				description: "Please try again later"
+			}
+		});
 
-			const recs = data.results.map((result, index) => ({
-				id: result.id,
-				name: `${style} ${furnitureName} ${index + 1}`,
-				image: result.urls.regular,
-				description: truncateDescription(result.description || result.alt_description || `A beautiful ${style} style ${furnitureName}`),
-				match: Math.floor(Math.random() * 15) + 85 // Random match between 85-100%
-			}));
-
-			setRecommendations(recs);
+		try {
+			await fetchPromise;
 		} catch (error) {
 			console.error("Error fetching recommendations:", error);
+			setRecommendations([]);
 		} finally {
 			setLoadingRecs(false);
 		}
+	};
+
+	const fetchSingleRecommendation = async furnitureName => {
+		try {
+			const randomPage = Math.floor(Math.random() * 10) + 1;
+			const response = await server.post("/stylematch/recommendations/get-recommendations", {
+				style: style || "Modern",
+				furniture_name: furnitureName,
+				per_page: 1,
+				page: randomPage
+			});
+
+			if (response.data.success && response.data.recommendations.length > 0) {
+				const rec = response.data.recommendations[0];
+				return {
+					id: `${rec.unsplashId}-${Date.now()}-${Math.random()}`,
+					...rec
+				};
+			}
+			return null;
+		} catch (error) {
+			console.error("Error fetching single recommendation:", error);
+			return null;
+		}
+	};
+
+	const handleNotRelevant = async (recId, index) => {
+		setRemovingRecId(recId);
+		setSavedRecommendations(prev => prev.filter(saved => saved.id !== recId));
+
+		try {
+			const newRec = await fetchSingleRecommendation(selectedFurniture);
+
+			const updatedRecs = recommendations.filter(rec => rec.id !== recId);
+
+			if (newRec) {
+				setRecommendations([...updatedRecs, newRec]);
+				ShowToast("success", "Recommendation replaced");
+			} else {
+				setRecommendations(updatedRecs);
+				ShowToast("info", "Recommendation removed");
+			}
+
+			if (index < updatedRecs.length) {
+				setCurrentCarouselIndex(index);
+			} else if (updatedRecs.length > 0) {
+				setCurrentCarouselIndex(updatedRecs.length - 1);
+			} else {
+				setCurrentCarouselIndex(0);
+			}
+		} finally {
+			setRemovingRecId(null);
+		}
+	};
+
+	const toggleSaveRecommendation = rec => {
+		const isAlreadySaved = savedRecommendations.some(saved => saved.id === rec.id);
+
+		if (isAlreadySaved) {
+			setSavedRecommendations(savedRecommendations.filter(saved => saved.id !== rec.id));
+		} else {
+			setSavedRecommendations([...savedRecommendations, rec]);
+		}
+	};
+
+	const isRecommendationSaved = recId => {
+		return savedRecommendations.some(saved => saved.id === recId);
 	};
 
 	const glassStyle = {
@@ -206,8 +288,16 @@ function Recommendations() {
 																	<Card.Description fontSize="sm">StyleMatch is {furnitures[index].confidence} confident of this prediction!</Card.Description>
 																</Card.Body>
 																<Card.Footer gap={2} pb={3} px={4}>
-																	<Button bgColor={"#D4AF37"} borderRadius={6} leftIcon={<LuShoppingCart />} size="sm" onClick={() => fetchRecommendations(furnitures[index].name)} isLoading={loadingRecs}>
-																		Find Recommendations
+																	<Button
+																		bgColor={"#D4AF37"}
+																		borderRadius={6}
+																		leftIcon={<LuShoppingCart />}
+																		size="sm"
+																		onClick={() => fetchRecommendations(furnitures[index].name)}
+																		isLoading={loadingRecs}
+																		disabled={selectedFurniture === furnitures[index].name}
+																	>
+																		{selectedFurniture === furnitures[index].name ? "Selected" : "Find Recommendations"}
 																	</Button>
 																</Card.Footer>
 															</Box>
@@ -237,7 +327,7 @@ function Recommendations() {
 
 								<Box flex="0 0 45%" minHeight="0">
 									{recommendations.length > 0 ? (
-										<Carousel.Root slideCount={recommendations.length} display="flex" flexDirection="column" height="100%">
+										<Carousel.Root slideCount={recommendations.length} index={currentCarouselIndex} onIndexChange={(e) => setCurrentCarouselIndex(e.index)} display="flex" flexDirection="column" height="100%">
 											<Box flex={1}>
 												<Carousel.ItemGroup height="100%">
 													{recommendations.map((rec, index) => (
@@ -254,8 +344,31 @@ function Recommendations() {
 																		<Card.Description fontSize="sm">{rec.description}</Card.Description>
 																	</Card.Body>
 																	<Card.Footer gap={2} pb={3} px={4}>
-																		<Button bgColor={"#D4AF37"} borderRadius={6} leftIcon={<LuHeart />} size="sm">
-																			Save
+																		<Button
+																			bgColor={isRecommendationSaved(rec.id) ? "#4CAF50" : "#D4AF37"}
+																			borderRadius={6}
+																			leftIcon={isRecommendationSaved(rec.id) ? <LuCheck /> : <LuHeart />}
+																			size="sm"
+																			onClick={() => toggleSaveRecommendation(rec)}
+																		>
+																			{isRecommendationSaved(rec.id) ? "Saved" : "Save"}
+																		</Button>
+																		<Button
+																			bgColor="#FF6B6B"
+																			borderRadius={6}
+																			size="sm"
+																			onClick={() => handleNotRelevant(rec.id, index)}
+																			color="white"
+																			disabled={removingRecId === rec.id}
+																		>
+																			{removingRecId === rec.id ? (
+																				<Spinner size="sm" color="white" />
+																			) : (
+																				<>
+																					<Icon as={LuX} mr={1} />
+																					Not Relevant
+																				</>
+																			)}
 																		</Button>
 																	</Card.Footer>
 																</Box>
@@ -280,7 +393,7 @@ function Recommendations() {
 											</Carousel.Control>
 										</Carousel.Root>
 									) : (
-										<Flex height="100%" align="center" justify="center" bg="rgba(255, 255, 255, 0.95)" borderRadius={20}>
+										<Flex height="100%" align="center" justify="center" bg="rgba(255, 255, 255, 0.95)" borderRadius={20} mt={7}>
 											<VStack gap={3}>
 												<Icon as={LuShoppingCart} boxSize={12} color="gray.400" />
 												<Text color="gray.600" fontSize="lg" fontWeight="medium">
