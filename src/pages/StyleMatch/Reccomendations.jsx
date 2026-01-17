@@ -1,7 +1,17 @@
-import { Card, Flex, Box } from "@chakra-ui/react";
+import { useEffect } from "react";
+import { useLocation } from "react-router-dom";
+import { Card, Flex, Box, Text } from "@chakra-ui/react";
 import StyleMatchBackground from "../../assets/StyleMatchBackground.png";
 
-function GetStarted() {
+function Reccomendations() {
+    const location = useLocation();
+    const { style, furnitures } = location.state || {};
+
+    useEffect(() => {
+        console.log("Received style:", style);
+        console.log("Received furnitures:", furnitures);
+    }, [style, furnitures]);
+
     const glassStyle = {
         background: "rgba(255, 255, 255, 0.1)",
         backdropFilter: "blur(20px) saturate(180%)",
@@ -46,4 +56,4 @@ function GetStarted() {
     );
 }
 
-export default GetStarted;
+export default Reccomendations;

@@ -4,6 +4,7 @@ export default function ShowToast(type, title, description) {
     toaster.create({
         type: type !== null ? type : "info",
         title: title !== null ? title : "",
-        description: description !== null ? description : ""
+        description: description !== null ? description : "",
+        duration: 4500,
     })
 }

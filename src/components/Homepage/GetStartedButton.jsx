@@ -1,12 +1,11 @@
 import { Box, Button, Text } from "@chakra-ui/react"
 import { useNavigate } from "react-router-dom"
 
-function GetStartedButton({ width, destination, delay }) {
-    var width = width || "auto"
-    var destination = destination
-    var delay = delay || "2.2s"
+function GetStartedButton({ width, destination, delay, loading }) {
+    width = width || "auto"
+    delay = delay || "2.2s"
 
-    const navigate = useNavigate();
+    const navigate = useNavigate()
 
     return (
         <Box
@@ -25,17 +24,20 @@ function GetStartedButton({ width, destination, delay }) {
                 py={7}
                 fontSize="md"
                 borderRadius={20}
-                _hover={{
-                    backgroundPosition: "right"
-                }}
-                transition="background-position 0.3s ease-in-out"
                 fontFamily="'Montserrat', sans-serif"
                 textTransform="uppercase"
-                onClick={destination ? () => navigate(destination) : undefined}
+                isLoading={loading}
+                cursor={loading ? "not-allowed" : "pointer"}
+                _hover={
+                    loading
+                        ? {}
+                        : { backgroundPosition: "right" }
+                }
+                _active={loading ? { transform: "none" } : {}}
+                transition="background-position 0.3s ease-in-out"
+                onClick={!loading && destination ? () => navigate(destination) : undefined}
             >
-                <Text>
-                    Get Started
-                </Text>
+                <Text>Get Started</Text>
             </Button>
         </Box>
     )

@@ -1,10 +1,12 @@
 import { useState, useRef } from "react";
+import { useNavigate } from "react-router-dom";
 import { Card, Flex, Heading, Text, Box, Image, Avatar, Spinner, Grid, IconButton, Carousel } from "@chakra-ui/react";
 import { LuChevronLeft, LuChevronRight } from "react-icons/lu";
 import StyleMatchBackground from "../../assets/StyleMatchBackground.png";
 import SampleStyleBackground from "../../assets/SampleStyleBackground.png";
 import AnimatedLogo from "@/components/Homepage/AnimatedLogo";
 import GetStartedButton from "@/components/Homepage/GetStartedButton";
+import FindRecommendationsButton from "@/components/StyleMatch/FindReccomendationsButton";
 import ShowToast from "@/Extensions/ShowToast";
 import server from "../../../networking";
 
@@ -12,7 +14,10 @@ function GetStarted() {
 	const [furnitureItems, setFurnitureItems] = useState([]);
 	const [isLoading, setIsLoading] = useState(false);
 	const [roomImage, setRoomImage] = useState(SampleStyleBackground);
+	const [detectionSuccess, setDetectionSuccess] = useState(false);
+	const [roomStyle, setRoomStyle] = useState("");
 	const fileInputRef = useRef(null);
+	const navigate = useNavigate();
 
 	const glassStyle = {
 		background: "rgba(255, 255, 255, 0.1)",
@@ -48,6 +53,7 @@ function GetStarted() {
 
 		setIsLoading(true);
 		setFurnitureItems([]);
+		setDetectionSuccess(false);
 
 		try {
 			const imageUrl = URL.createObjectURL(file);
@@ -86,10 +92,12 @@ function GetStarted() {
 				});
 
 				setFurnitureItems(items);
+				setDetectionSuccess(true);
 				ShowToast("success", "Analysis Complete", `Detected ${items.length} furniture item(s) in your room.`);
 			} else {
 				ShowToast("warning", "No Furniture Detected", "We couldn't detect any furniture in this image. Try a different photo.");
 				setFurnitureItems([]);
+				setDetectionSuccess(false);
 			}
 		} catch (error) {
 			console.error("Detection error:", error);
@@ -127,6 +135,7 @@ function GetStarted() {
 
 			ShowToast("error", errorTitle, errorDescription);
 			setFurnitureItems([]);
+			setDetectionSuccess(false);
 		} finally {
 			setIsLoading(false);
 		}
@@ -141,6 +150,15 @@ function GetStarted() {
 
 	const handleUploadClick = () => {
 		fileInputRef.current?.click();
+	};
+
+	const handleFindRecommendations = () => {
+		navigate("/stylematch/reccomendations", {
+			state: {
+				style: roomStyle,
+				furnitures: furnitureItems
+			}
+		});
 	};
 
 	return (
@@ -187,9 +205,15 @@ function GetStarted() {
 						</Text>
 
 						<Box mt={4} display="flex" justifyContent="center" width="100%">
-							<Box onClick={!isLoading ? handleUploadClick : undefined} cursor={!isLoading ? "pointer" : "not-allowed"} width="90%" opacity={isLoading ? 0.5 : 1}>
-								<GetStartedButton width="100%" destination={null} delay="0.5s" />
-							</Box>
+							{!detectionSuccess ? (
+								<Box onClick={!isLoading ? handleUploadClick : undefined} width="90%" opacity={isLoading ? 0.5 : 1}>
+									<GetStartedButton width="100%" destination={null} delay="0.5s" loading={isLoading} />
+								</Box>
+							) : (
+								<Box width="90%">
+									<FindRecommendationsButton width="100%" delay="0.5s" onClick={handleFindRecommendations} />
+								</Box>
+							)}
 						</Box>
 					</Card.Body>
 				</Card.Root>
@@ -200,7 +224,7 @@ function GetStarted() {
 							<Image src={roomImage} alt="Room preview" objectFit="cover" width="100%" height="100%" opacity={0.5} />
 							<Box position="absolute" inset={0} bgGradient="to-b" gradientFrom="transparent" gradientTo="rgba(0,0,0,0.3)" />
 							<Box position="absolute" bottom={3} right={5} fontWeight="md" fontSize="2xl" color="white">
-								<Text>Modern</Text>
+								<Text>{roomStyle}</Text>
 							</Box>
 						</Box>
 					</Card.Root>
