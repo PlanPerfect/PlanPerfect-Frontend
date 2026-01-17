@@ -1,16 +1,18 @@
-import { useState } from "react";
-import { Card, Flex, Heading, Text, Box, Grid, Image, Avatar, Spinner } from "@chakra-ui/react";
+import { useState, useRef } from "react";
+import { Card, Flex, Heading, Text, Box, Image, Avatar, Spinner, Grid, IconButton, Carousel } from "@chakra-ui/react";
+import { LuChevronLeft, LuChevronRight } from "react-icons/lu";
 import StyleMatchBackground from "../../assets/StyleMatchBackground.png";
 import SampleStyleBackground from "../../assets/SampleStyleBackground.png";
 import AnimatedLogo from "@/components/Homepage/AnimatedLogo";
 import GetStartedButton from "@/components/Homepage/GetStartedButton";
+import ShowToast from "@/Extensions/ShowToast";
 import server from "../../../networking";
 
 function GetStarted() {
 	const [furnitureItems, setFurnitureItems] = useState([]);
 	const [isLoading, setIsLoading] = useState(false);
 	const [roomImage, setRoomImage] = useState(SampleStyleBackground);
-	const [error, setError] = useState(null);
+	const fileInputRef = useRef(null);
 
 	const glassStyle = {
 		background: "rgba(255, 255, 255, 0.1)",
@@ -20,43 +22,58 @@ function GetStarted() {
 		boxShadow: "0 8px 32px 0 rgba(31, 38, 135, 0.15), inset 0 1px 0 0 rgba(255, 255, 255, 0.3)"
 	};
 
-	const handleGetStarted = async () => {
+	const itemsPerPage = 6;
+	const chunkedItems = [];
+	for (let i = 0; i < furnitureItems.length; i += itemsPerPage) {
+		chunkedItems.push(furnitureItems.slice(i, i + itemsPerPage));
+	}
+
+	const processImage = async (file) => {
+		if (!file) {
+			ShowToast("error", "No File Selected", "Please select an image file to analyze.");
+			return;
+		}
+
+		const validTypes = ["image/jpeg", "image/jpg", "image/png", "image/webp", "image/avif"];
+		if (!validTypes.includes(file.type)) {
+			ShowToast("error", "Invalid File Type", "Please upload a JPEG, PNG, WEBP, or AVIF image.");
+			return;
+		}
+
+		const maxSize = 50 * 1024 * 1024;
+		if (file.size > maxSize) {
+			ShowToast("error", "File Too Large", "Please upload an image smaller than 50MB.");
+			return;
+		}
+
 		setIsLoading(true);
-		setError(null);
+		setFurnitureItems([]);
 
 		try {
-			const formData = new FormData();
+			const imageUrl = URL.createObjectURL(file);
+			setRoomImage(imageUrl);
 
-			// Fetch the sample image and convert to file
-			const response = await fetch(SampleStyleBackground);
-			const blob = await response.blob();
-			const file = new File([blob], "room.png", { type: "image/png" });
+			const formData = new FormData();
 			formData.append("file", file);
 
-			// Send to backend with increased timeout
 			const { data } = await server.post("/stylematch/detection/detect-furniture", formData, {
 				headers: {
 					"Content-Type": "multipart/form-data"
 				},
-				timeout: 120000, // 2 minutes timeout
-				onUploadProgress: (progressEvent) => {
-					// Optional: Track upload progress
-					const percentCompleted = Math.round((progressEvent.loaded * 100) / progressEvent.total);
-					console.log(`Upload Progress: ${percentCompleted}%`);
-				}
+				timeout: 300000,
 			});
 
-			if (data.success) {
-				// Map the response to furniture items
+			if (data.success && data.images && data.images.length > 0) {
+				const timestamp = data.images[0].timestamp
+
 				const items = data.images.map((item) => {
 					const baseUrl = server.defaults.baseURL?.replace(/\/$/, '') || '';
-					const imagePath = item.image_path?.startsWith('/') ? item.image_path : `/${item.image_path}`;
+					const imagePath = `/static/predictions/furniture-detection/${timestamp}/${item.filename}`;
 					const imageUrl = `${baseUrl}${imagePath}`;
 
-					// Capitalize each word in the class name
 					const capitalizedName = item.class
 						? item.class
-							.split(/[\s_-]+/) // Split by space, underscore, or hyphen
+							.split(/[\s_-]+/)
 							.map(word => word.charAt(0).toUpperCase() + word.slice(1).toLowerCase())
 							.join(' ')
 						: 'Unknown';
@@ -64,34 +81,66 @@ function GetStarted() {
 					return {
 						name: capitalizedName,
 						image: imageUrl,
-						confidence: `${item.confidence}%`
+						confidence: item.confidence
 					};
 				});
 
 				setFurnitureItems(items);
-				setError(null);
+				ShowToast("success", "Analysis Complete", `Detected ${items.length} furniture item(s) in your room.`);
 			} else {
-				console.error("Detection failed:", data.error);
-				setError(data.error || "Failed to detect furniture. Please try again.");
+				ShowToast("warning", "No Furniture Detected", "We couldn't detect any furniture in this image. Try a different photo.");
+				setFurnitureItems([]);
 			}
 		} catch (error) {
-			console.error("Error:", error);
+			console.error("Detection error:", error);
 
-			// Better error handling
-			if (error.code === 'ECONNABORTED') {
-				setError("Request timed out. The analysis is taking longer than expected. Please try again.");
+			let errorTitle = "Detection Failed";
+			let errorDescription = "An unexpected error occurred.";
+
+			if (error.code === 'ECONNABORTED' || error.message?.includes('timeout')) {
+				errorTitle = "Request Timeout";
+				errorDescription = "Request tined out. Please try again with a smaller image.";
+			} else if (error.response?.status === 504) {
+				errorTitle = "Service Timeout";
+				errorDescription = error.response?.data?.error || "Server timed out. Please try with a smaller image.";
 			} else if (error.response?.status === 500) {
-				setError(error.response?.data?.error || "Server error occurred. Please try again.");
+				errorTitle = "500 Internal Server Error";
+				errorDescription = error.response?.data?.error || "A server error occurred. Please try again later.";
+			} else if (error.response?.status === 401 || error.response?.status === 403) {
+				errorTitle = "401 Unauthorized";
+				errorDescription = "Access denied. Please check with your system administrator.";
+			} else if (error.response?.status === 429) {
+				errorTitle = "429 Too Many Requests";
+				errorDescription = "You have hit the rate-limit. Please wait and try again later.";
+			} else if (error.response?.status === 404) {
+				errorTitle = "404 Not Found";
+				errorDescription = "The requested resource was not found. Please try again.";
+			} else if (error.response?.status === 400) {
+				errorTitle = "400 Bad Request";
+				errorDescription = "The server could not understand the request. Please try again with a different image.";
 			} else if (error.response) {
-				setError(`Error: ${error.response.data?.error || error.message}`);
+				errorDescription = error.response.data?.error || error.message;
 			} else if (error.request) {
-				setError("No response from server. Please check your connection.");
-			} else {
-				setError("An unexpected error occurred. Please try again.");
+				errorTitle = "Network Error";
+				errorDescription = "Unable to connect to the server. Please check your internet connection.";
 			}
+
+			ShowToast("error", errorTitle, errorDescription);
+			setFurnitureItems([]);
 		} finally {
 			setIsLoading(false);
 		}
+	};
+
+	const handleFileUpload = (event) => {
+		const file = event.target.files?.[0];
+		if (file) {
+			processImage(file);
+		}
+	};
+
+	const handleUploadClick = () => {
+		fileInputRef.current?.click();
 	};
 
 	return (
@@ -109,6 +158,14 @@ function GetStarted() {
 					backgroundRepeat: "no-repeat",
 					zIndex: -1
 				}}
+			/>
+
+			<input
+				ref={fileInputRef}
+				type="file"
+				accept="image/jpeg,image/jpg,image/png,image/webp,image/avif"
+				style={{ display: "none" }}
+				onChange={handleFileUpload}
 			/>
 
 			<Flex height="75vh" gap={4}>
@@ -129,34 +186,18 @@ function GetStarted() {
 							Let us analyse your space to find the perfect furniture for you
 						</Text>
 
-						<Box mt={4} display={"flex"} justifyContent={"center"} width="100%">
-							<Box onClick={handleGetStarted} cursor="pointer" width="90%">
-								<GetStartedButton width={"100%"} destination={null} delay={"0.5s"} />
+						<Box mt={4} display="flex" justifyContent="center" width="100%">
+							<Box onClick={!isLoading ? handleUploadClick : undefined} cursor={!isLoading ? "pointer" : "not-allowed"} width="90%" opacity={isLoading ? 0.5 : 1}>
+								<GetStartedButton width="100%" destination={null} delay="0.5s" />
 							</Box>
 						</Box>
-
-						{error && (
-							<Box
-								mt={2}
-								p={3}
-								bg="rgba(255, 0, 0, 0.1)"
-								borderRadius="md"
-								border="1px solid rgba(255, 0, 0, 0.3)"
-								width="90%"
-							>
-								<Text color="white" fontSize="sm" textAlign="center">
-									{error}
-								</Text>
-							</Box>
-						)}
 					</Card.Body>
 				</Card.Root>
 
 				<Flex direction="column" width="75%" gap={3}>
 					<Card.Root height="45%" variant="elevated" borderRadius={35} style={glassStyle} overflow="hidden">
 						<Box position="relative" width="100%" height="100%">
-							<Image src={roomImage} alt="Modern living room" objectFit="cover" width="100%" height="100%" opacity={0.5} />
-							{/* Gradient overlay */}
+							<Image src={roomImage} alt="Room preview" objectFit="cover" width="100%" height="100%" opacity={0.5} />
 							<Box position="absolute" inset={0} bgGradient="to-b" gradientFrom="transparent" gradientTo="rgba(0,0,0,0.3)" />
 							<Box position="absolute" bottom={3} right={5} fontWeight="md" fontSize="2xl" color="white">
 								<Text>Modern</Text>
@@ -169,42 +210,70 @@ function GetStarted() {
 							{isLoading ? (
 								<Flex justify="center" align="center" height="100%" direction="column" gap={4}>
 									<Spinner size="xl" color="white" thickness="4px" />
-									<Text color="white" fontSize="lg" opacity={0.8}>
+									<Text color="white" fontSize="lg">
 										Analyzing your room...
 									</Text>
-									<Text color="white" fontSize="sm" opacity={0.6}>
-										This may take up to 2 minutes
+									<Text color="white" fontSize="sm">
+										This may take up to 5 minutes
 									</Text>
 								</Flex>
 							) : furnitureItems.length === 0 ? (
 								<Flex justify="center" align="center" height="100%" direction="column" gap={3}>
-									<Text color="white" fontSize="xl" opacity={0.7}>
+									<Text color="white" fontSize="xl">
 										No furniture detected yet
 									</Text>
-									<Text color="white" fontSize="md" opacity={0.5}>
-										Click "Get Started" to analyze your room
+									<Text color="white" fontSize="md">
+										Click "Get Started" to upload your room image
 									</Text>
 								</Flex>
 							) : (
-								<Grid templateColumns="repeat(3, 1fr)" gap={4} height="100%">
-									{furnitureItems.map((item, index) => (
-										<Card.Root key={index} size="sm" borderRadius={20}>
-											<Card.Body>
-												<Flex align="start" gap="3">
-													<Avatar.Root size="lg" shape="rounded">
-														<Avatar.Image src={item.image} />
-														<Avatar.Fallback name={item.name} />
-													</Avatar.Root>
+								<Carousel.Root slideCount={chunkedItems.length}>
+									<Carousel.ItemGroup>
+										{chunkedItems.map((chunk, pageIndex) => (
+											<Carousel.Item key={pageIndex} index={pageIndex}>
+												<Grid templateColumns="repeat(3, 1fr)" gap={4} height="100%">
+													{chunk.map((item, index) => (
+														<Card.Root key={index} size="sm" borderRadius={20} maxHeight={"77px"}>
+															<Card.Body>
+																<Flex align="start" gap="3">
+																	<Avatar.Root size="lg" shape="rounded">
+																		<Avatar.Image src={item.image} />
+																		<Avatar.Fallback name={item.name} />
+																	</Avatar.Root>
 
-													<Box>
-														<Card.Title>{item.name}</Card.Title>
-														<Card.Description>Confidence: {item.confidence}</Card.Description>
-													</Box>
-												</Flex>
-											</Card.Body>
-										</Card.Root>
-									))}
-								</Grid>
+																	<Box>
+																		<Card.Title>{item.name}</Card.Title>
+																		<Card.Description>Confidence: {item.confidence}</Card.Description>
+																	</Box>
+																</Flex>
+															</Card.Body>
+														</Card.Root>
+													))}
+												</Grid>
+											</Carousel.Item>
+										))}
+									</Carousel.ItemGroup>
+
+									<Carousel.Control justifyContent="center" gap={2} mt={3}>
+										<Carousel.PrevTrigger asChild>
+											<IconButton variant="ghost" size="sm" color="white" borderRadius={"full"}>
+												<LuChevronLeft />
+											</IconButton>
+										</Carousel.PrevTrigger>
+
+										<Carousel.IndicatorGroup>
+											{chunkedItems.map((_, index) => (
+												<Carousel.Indicator key={index} index={index} />
+											))}
+										</Carousel.IndicatorGroup>
+
+										<Carousel.NextTrigger asChild>
+											<IconButton variant="ghost" size="sm" color="white" borderRadius={"full"}>
+												<LuChevronRight />
+											</IconButton>
+										</Carousel.NextTrigger>
+									</Carousel.Control>
+								</Carousel.Root>
 							)}
 						</Card.Body>
 					</Card.Root>
