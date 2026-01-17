@@ -1,7 +1,7 @@
 import { useEffect, useState } from "react";
 import { useLocation } from "react-router-dom";
 import { Card, Flex, Box, Text, Heading, Image, Badge, Button, HStack, VStack, Icon, SimpleGrid, Carousel, IconButton, Spinner } from "@chakra-ui/react";
-import { LuSparkles, LuSofa, LuShoppingCart, LuHeart, LuChevronLeft, LuChevronRight, LuCheck, LuX } from "react-icons/lu";
+import { LuSparkles, LuSofa, LuShoppingCart, LuHeart, LuChevronLeft, LuChevronRight, LuCheck, LuX, LuPackageSearch } from "react-icons/lu";
 import { motion } from "framer-motion";
 import StyleMatchBackground from "../../assets/StyleMatchBackground.png";
 import server from "../../../networking";
@@ -52,14 +52,19 @@ function Recommendations() {
 					return response.data;
 				}
 				throw new Error("Failed to fetch recommendations");
+			})
+			.catch(error => {
+				throw error;
 			});
 
 		ShowToast(null, null, null, {
 			promise: fetchPromise,
 			loading: {
-				title: "Finding recommendations..."			},
+				title: "Finding recommendations..."
+			},
 			success: {
-				title: "Recommendations found!"			},
+				title: "Recommendations found!"
+			},
 			error: {
 				title: "Failed to fetch recommendations",
 				description: "Please try again later"
@@ -70,7 +75,6 @@ function Recommendations() {
 			await fetchPromise;
 		} catch (error) {
 			console.error("Error fetching recommendations:", error);
-			setRecommendations([]);
 		} finally {
 			setLoadingRecs(false);
 		}
@@ -152,6 +156,8 @@ function Recommendations() {
 	};
 
 	const MotionBox = motion.create(Box);
+	const MotionCard = motion.create(Card.Root);
+	const MotionFlex = motion.create(Flex);
 
 	return (
 		<>
@@ -276,7 +282,16 @@ function Recommendations() {
 											<Carousel.ItemGroup height="100%">
 												{furnitures.map((item, index) => (
 													<Carousel.Item key={item.id} index={index} height="100%">
-														<Card.Root flexDirection="row" overflow="hidden" height="100%" bg="rgba(255, 255, 255, 0.95)" borderRadius={20}>
+														<MotionCard
+															flexDirection="row"
+															overflow="hidden"
+															height="100%"
+															bg="rgba(255, 255, 255, 0.95)"
+															borderRadius={20}
+															initial={{ opacity: 0, scale: 0.95, y: 20 }}
+															animate={{ opacity: 1, scale: 1, y: 0 }}
+															transition={{ duration: 0.4, ease: "easeOut" }}
+														>
 															<Box position="relative" minWidth={"220px"} maxWidth={"220px"} minHeight="150px" maxHeight="150px">
 																<Image objectFit="cover" width="100%" height="100%" src={furnitures[index].image} alt={furnitures[index].name} />
 															</Box>
@@ -301,7 +316,7 @@ function Recommendations() {
 																	</Button>
 																</Card.Footer>
 															</Box>
-														</Card.Root>
+														</MotionCard>
 													</Carousel.Item>
 												))}
 											</Carousel.ItemGroup>
@@ -327,12 +342,21 @@ function Recommendations() {
 
 								<Box flex="0 0 45%" minHeight="0">
 									{recommendations.length > 0 ? (
-										<Carousel.Root slideCount={recommendations.length} index={currentCarouselIndex} onIndexChange={(e) => setCurrentCarouselIndex(e.index)} display="flex" flexDirection="column" height="100%">
+										<Carousel.Root slideCount={recommendations.length} index={currentCarouselIndex} onIndexChange={e => setCurrentCarouselIndex(e.index)} display="flex" flexDirection="column" height="100%">
 											<Box flex={1}>
 												<Carousel.ItemGroup height="100%">
 													{recommendations.map((rec, index) => (
 														<Carousel.Item key={rec.id} index={index} height="100%">
-															<Card.Root flexDirection="row" overflow="hidden" height="100%" bg="rgba(255, 255, 255, 0.95)" borderRadius={20}>
+															<MotionCard
+																flexDirection="row"
+																overflow="hidden"
+																height="100%"
+																bg="rgba(255, 255, 255, 0.95)"
+																borderRadius={20}
+																initial={{ opacity: 0, scale: 0.95, x: 50 }}
+																animate={{ opacity: 1, scale: 1, x: 0 }}
+																transition={{ duration: 0.4, ease: "easeOut" }}
+															>
 																<Box position="relative" minWidth={"220px"} maxWidth="30%" minH={"180px"} maxHeight="180px">
 																	<Image objectFit="cover" minWidth={"164px"} width="100%" minHeight={"171px"} height="100%" src={rec.image} alt={rec.name} />
 																</Box>
@@ -353,14 +377,7 @@ function Recommendations() {
 																		>
 																			{isRecommendationSaved(rec.id) ? "Saved" : "Save"}
 																		</Button>
-																		<Button
-																			bgColor="#FF6B6B"
-																			borderRadius={6}
-																			size="sm"
-																			onClick={() => handleNotRelevant(rec.id, index)}
-																			color="white"
-																			disabled={removingRecId === rec.id}
-																		>
+																		<Button bgColor="#FF6B6B" borderRadius={6} size="sm" onClick={() => handleNotRelevant(rec.id, index)} color="white" disabled={removingRecId === rec.id}>
 																			{removingRecId === rec.id ? (
 																				<Spinner size="sm" color="white" />
 																			) : (
@@ -372,7 +389,7 @@ function Recommendations() {
 																		</Button>
 																	</Card.Footer>
 																</Box>
-															</Card.Root>
+															</MotionCard>
 														</Carousel.Item>
 													))}
 												</Carousel.ItemGroup>
@@ -392,15 +409,68 @@ function Recommendations() {
 												</Carousel.NextTrigger>
 											</Carousel.Control>
 										</Carousel.Root>
-									) : (
+									) : loadingRecs ? (
 										<Flex height="100%" align="center" justify="center" bg="rgba(255, 255, 255, 0.95)" borderRadius={20} mt={7}>
 											<VStack gap={3}>
-												<Icon as={LuShoppingCart} boxSize={12} color="gray.400" />
+												<Spinner size="xl" color="#D4AF37" thickness="4px" />
 												<Text color="gray.600" fontSize="lg" fontWeight="medium">
-													Click "Find Recommendations" to discover furniture
+													Finding perfect matches...
 												</Text>
 											</VStack>
 										</Flex>
+									) : (
+										<MotionFlex
+											height="100%"
+											align="center"
+											justify="center"
+											bg="rgba(255, 255, 255, 0.95)"
+											borderRadius={20}
+											mt={7}
+											initial={{ opacity: 0, scale: 0.9 }}
+											animate={{ opacity: 1, scale: 1 }}
+											transition={{ duration: 0.5, ease: "easeOut" }}
+											position="relative"
+											overflow="hidden"
+										>
+											<Box
+												position="absolute"
+												top="50%"
+												left="50%"
+												transform="translate(-50%, -50%)"
+												width="300px"
+												height="300px"
+												borderRadius="full"
+												bg="radial-gradient(circle, rgba(212, 175, 55, 0.1) 0%, rgba(212, 175, 55, 0) 70%)"
+												animation="pulse 3s ease-in-out infinite"
+												css={{
+													"@keyframes pulse": {
+														"0%, 100%": { transform: "translate(-50%, -50%) scale(1)", opacity: 0.5 },
+														"50%": { transform: "translate(-50%, -50%) scale(1.2)", opacity: 0.3 }
+													}
+												}}
+											/>
+											<VStack gap={4} zIndex={1}>
+												<MotionBox
+													initial={{ rotate: 0 }}
+													animate={{ rotate: [0, 10, -10, 0] }}
+													transition={{
+														duration: 2,
+														repeat: Infinity,
+														ease: "easeInOut"
+													}}
+												>
+													<Icon as={LuPackageSearch} boxSize={16} color="#D4AF37" />
+												</MotionBox>
+												<VStack gap={1}>
+													<Text color="gray.700" fontSize="xl" fontWeight="bold">
+														Ready to Explore?
+													</Text>
+													<Text color="gray.500" fontSize="sm" textAlign="center" maxW="300px">
+														Select a furniture item above to discover perfectly matched recommendations
+													</Text>
+												</VStack>
+											</VStack>
+										</MotionFlex>
 									)}
 								</Box>
 							</VStack>
