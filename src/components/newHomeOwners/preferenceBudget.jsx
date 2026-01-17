@@ -33,11 +33,7 @@ function PreferenceBudget({ onPreferenceChange, onBudgetChange }) {
 			);
 			
 			const preferencesData = {
-				style: selectedThemeObjects.map(t => t.name).join(" & ") || "Not selected",
-				themes: selectedThemeObjects,
-				colors: selectedThemeObjects.map(t => t.color),
-				materials: [], // Can be extended later if needed
-				specialRequirements: ""
+				style: selectedThemeObjects.map(t => t.name).join(" & ") || "Not selected"
 			};
 			
 			onPreferenceChange(preferencesData);

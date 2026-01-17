@@ -28,10 +28,7 @@ function GenerateDesignDocument({ floorPlanFile, preferences, budget, extraction
 
 			// Preferences
 			const preferencesData = {
-				style: preferences?.style || "Modern",
-				colors: preferences?.colors || [],
-				materials: preferences?.materials || [],
-				special_requirements: preferences?.specialRequirements || "",
+				style: preferences?.style || "Modern"
 			};
 			formData.append("preferences", JSON.stringify(preferencesData));
 
@@ -264,6 +261,9 @@ function GenerateDesignDocument({ floorPlanFile, preferences, budget, extraction
 							link.click();
 							document.body.removeChild(link);
 						}}
+						w="100%"
+						h="60px"
+						fontSize="lg"
 					>
 						Download Again
 					</Button>
