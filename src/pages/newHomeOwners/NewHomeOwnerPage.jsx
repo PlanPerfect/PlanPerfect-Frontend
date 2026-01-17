@@ -28,6 +28,10 @@ function NewHomeOwnerPage() {
 		setExtractionResults(results);
 		steps.setStep(3); // Move to step 4 After AI extraction is completed (Check Details)
 	}, [steps]);
+
+	const handleExtractionResultUpdate = useCallback((updatedResults) => {
+		setExtractionResults(updatedResults);
+	}, []);
 	
 	const handlePreferenceChange = useCallback((preferencesData) => {
 		setPreferences(preferencesData);
@@ -66,7 +70,7 @@ function NewHomeOwnerPage() {
 		{
 			title: "Check Details",
 			icon: <LuFileCheck2 />,
-			content: <CheckResult extractionResults={extractionResults} />,
+			content: <CheckResult extractionResults={extractionResults} onUpdateExtractionResults={handleExtractionResultUpdate} />,
 		},
 		{
 			title: "Get Results!",
