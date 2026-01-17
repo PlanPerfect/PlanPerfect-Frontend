@@ -69,90 +69,111 @@ function GetStarted() {
 		setFurnitureItems([]);
 		setDetectionSuccess(false);
 
-		try {
-			const imageUrl = URL.createObjectURL(file);
-			setRoomImage(imageUrl);
+		const imageUrl = URL.createObjectURL(file);
+		setRoomImage(imageUrl);
 
-			const formData = new FormData();
-			formData.append("file", file);
+		const detectionPromise = new Promise(async (resolve, reject) => {
+			try {
+				const formData = new FormData();
+				formData.append("file", file);
 
-			const { data } = await server.post("/stylematch/detection/detect-furniture", formData, {
-				headers: {
-					"Content-Type": "multipart/form-data"
-				},
-				timeout: 300000,
-			});
-
-			if (data.success && data.images && data.images.length > 0) {
-				const timestamp = data.images[0].timestamp
-
-				const items = data.images.map((item) => {
-					const baseUrl = server.defaults.baseURL?.replace(/\/$/, '') || '';
-					const imagePath = `/static/predictions/furniture-detection/${timestamp}/${item.filename}`;
-					const imageUrl = `${baseUrl}${imagePath}`;
-
-					const capitalizedName = item.class
-						? item.class
-							.split(/[\s_-]+/)
-							.map(word => word.charAt(0).toUpperCase() + word.slice(1).toLowerCase())
-							.join(' ')
-						: 'Unknown';
-
-					return {
-						name: capitalizedName,
-						image: imageUrl,
-						confidence: item.confidence
-					};
+				const { data } = await server.post("/stylematch/detection/detect-furniture", formData, {
+					headers: {
+						"Content-Type": "multipart/form-data"
+					},
+					timeout: 300000,
 				});
 
-				setFurnitureItems(items);
-				setDetectionSuccess(true);
-				ShowToast("success", "Analysis Complete", `Detected ${items.length} furniture item(s) in your room.`);
-			} else {
-				ShowToast("warning", "No Furniture Detected", "We couldn't detect any furniture in this image. Try a different photo.");
+				if (data.success && data.images && data.images.length > 0) {
+					const timestamp = data.images[0].timestamp;
+
+					const items = data.images.map((item) => {
+						const baseUrl = server.defaults.baseURL?.replace(/\/$/, '') || '';
+						const imagePath = `/static/predictions/furniture-detection/${timestamp}/${item.filename}`;
+						const imageUrl = `${baseUrl}${imagePath}`;
+
+						const capitalizedName = item.class
+							? item.class
+								.split(/[\s_-]+/)
+								.map(word => word.charAt(0).toUpperCase() + word.slice(1).toLowerCase())
+								.join(' ')
+							: 'Unknown';
+
+						return {
+							name: capitalizedName,
+							image: imageUrl,
+							confidence: item.confidence
+						};
+					});
+
+					setFurnitureItems(items);
+					setDetectionSuccess(true);
+					resolve(items);
+				} else {
+					setFurnitureItems([]);
+					setDetectionSuccess(false);
+					reject(new Error("NO_FURNITURE_DETECTED"));
+				}
+			} catch (error) {
+				console.error("Detection error:", error);
 				setFurnitureItems([]);
 				setDetectionSuccess(false);
+				reject(error);
+			} finally {
+				setIsLoading(false);
 			}
-		} catch (error) {
-			console.error("Detection error:", error);
+		});
 
-			let errorTitle = "Detection Failed";
-			let errorDescription = "An unexpected error occurred.";
+		ShowToast(null, null, null, {
+			promise: detectionPromise,
+			loading: {
+				title: "Processing..."
+			},
+			success: (items) => ({
+				title: `Successfully detected ${items.length} furniture item(s)`,
+				duration: 4500
+			}),
+			error: (error) => {
+				let errorTitle = "Detection Failed";
+				let errorDescription = "An unexpected error occurred.";
 
-			if (error.code === 'ECONNABORTED' || error.message?.includes('timeout')) {
-				errorTitle = "Request Timeout";
-				errorDescription = "Request tined out. Please try again with a smaller image.";
-			} else if (error.response?.status === 504) {
-				errorTitle = "Service Timeout";
-				errorDescription = error.response?.data?.error || "Server timed out. Please try with a smaller image.";
-			} else if (error.response?.status === 500) {
-				errorTitle = "500 Internal Server Error";
-				errorDescription = error.response?.data?.error || "A server error occurred. Please try again later.";
-			} else if (error.response?.status === 401 || error.response?.status === 403) {
-				errorTitle = "401 Unauthorized";
-				errorDescription = "Access denied. Please check with your system administrator.";
-			} else if (error.response?.status === 429) {
-				errorTitle = "429 Too Many Requests";
-				errorDescription = "You have hit the rate-limit. Please wait and try again later.";
-			} else if (error.response?.status === 404) {
-				errorTitle = "404 Not Found";
-				errorDescription = "The requested resource was not found. Please try again.";
-			} else if (error.response?.status === 400) {
-				errorTitle = "400 Bad Request";
-				errorDescription = "The server could not understand the request. Please try again with a different image.";
-			} else if (error.response) {
-				errorDescription = error.response.data?.error || error.message;
-			} else if (error.request) {
-				errorTitle = "Network Error";
-				errorDescription = "Unable to connect to the server. Please check your internet connection.";
+				if (error.message === "NO_FURNITURE_DETECTED") {
+					errorTitle = "No Furniture Detected";
+					errorDescription = "We couldn't detect any furniture in this image. Try a different photo.";
+				} else if (error.code === 'ECONNABORTED' || error.message?.includes('timeout')) {
+					errorTitle = "Request Timeout";
+					errorDescription = "Request timed out. Please try again with a smaller image.";
+				} else if (error.response?.status === 504) {
+					errorTitle = "Service Timeout";
+					errorDescription = error.response?.data?.error || "Server timed out. Please try with a smaller image.";
+				} else if (error.response?.status === 500) {
+					errorTitle = "500 Internal Server Error";
+					errorDescription = error.response?.data?.error || "A server error occurred. Please try again later.";
+				} else if (error.response?.status === 401 || error.response?.status === 403) {
+					errorTitle = "401 Unauthorized";
+					errorDescription = "Access denied. Please check with your system administrator.";
+				} else if (error.response?.status === 429) {
+					errorTitle = "429 Too Many Requests";
+					errorDescription = "You have hit the rate-limit. Please wait and try again later.";
+				} else if (error.response?.status === 404) {
+					errorTitle = "404 Not Found";
+					errorDescription = "The requested resource was not found. Please try again.";
+				} else if (error.response?.status === 400) {
+					errorTitle = "400 Bad Request";
+					errorDescription = "The server could not understand the request. Please try again with a different image.";
+				} else if (error.response) {
+					errorDescription = error.response.data?.error || error.message;
+				} else if (error.request) {
+					errorTitle = "Network Error";
+					errorDescription = "Unable to connect to the server. Please check your internet connection.";
+				}
+
+				return {
+					title: errorTitle,
+					description: errorDescription
+				};
 			}
-
-			ShowToast("error", errorTitle, errorDescription);
-			setFurnitureItems([]);
-			setDetectionSuccess(false);
-		} finally {
-			setIsLoading(false);
-		}
+		});
 	};
 
 	const handleFileUpload = (event) => {
