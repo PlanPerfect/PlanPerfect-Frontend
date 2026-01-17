@@ -3,7 +3,7 @@ import { useNavigate } from "react-router-dom"
 
 function GetStartedButton({ width, destination, delay }) {
     var width = width || "auto"
-    var destination = destination || "/onboarding"
+    var destination = destination
     var delay = delay || "2.2s"
 
     const navigate = useNavigate();
@@ -31,7 +31,7 @@ function GetStartedButton({ width, destination, delay }) {
                 transition="background-position 0.3s ease-in-out"
                 fontFamily="'Montserrat', sans-serif"
                 textTransform="uppercase"
-                onClick={() => navigate(destination)}
+                onClick={destination ? () => navigate(destination) : undefined}
             >
                 <Text>
                     Get Started
