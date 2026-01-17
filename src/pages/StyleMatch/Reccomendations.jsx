@@ -11,6 +11,9 @@ function Recommendations() {
 	const [uniqueFurniture, setUniqueFurniture] = useState([]);
 	const [furnitureCounts, setFurnitureCounts] = useState({});
 	const [recommendations, setRecommendations] = useState([]);
+	const [loadingRecs, setLoadingRecs] = useState(false);
+
+	const UNSPLASH_ACCESS_KEY = "ijagQOFvxPTAjK3R-vEJWUw_WVzUvLT-QewMsoqUY74";
 
 	useEffect(() => {
 		if (furnitures && furnitures.length > 0) {
@@ -21,44 +24,42 @@ function Recommendations() {
 
 			setFurnitureCounts(counts);
 			setUniqueFurniture(Object.keys(counts));
-
-			const mockRecs = [
-				{
-					id: 1,
-					name: "Modern Sectional Sofa",
-					price: "$1,299",
-					image: "https://images.unsplash.com/photo-1555041469-a586c61ea9bc?w=800&q=80",
-					description: "Contemporary L-shaped sectional with premium fabric upholstery",
-					match: 95
-				},
-				{
-					id: 2,
-					name: "Minimalist Coffee Table",
-					price: "$399",
-					image: "https://images.unsplash.com/photo-1611269154421-4e27233ac5c7?w=800&q=80",
-					description: "Sleek wooden coffee table with clean lines and storage",
-					match: 92
-				},
-				{
-					id: 3,
-					name: "Designer Armchair",
-					price: "$699",
-					image: "https://images.unsplash.com/photo-1586023492125-27b2c045efd7?w=800&q=80",
-					description: "Ergonomic mid-century modern accent chair",
-					match: 88
-				},
-				{
-					id: 4,
-					name: "Floating Shelf Unit",
-					price: "$249",
-					image: "https://images.unsplash.com/photo-1594620302200-9a762244a156?w=800&q=80",
-					description: "Wall-mounted shelving system with adjustable levels",
-					match: 85
-				}
-			];
-			setRecommendations(mockRecs);
 		}
 	}, [furnitures]);
+
+	const truncateDescription = text => {
+		if (!text) return "";
+		const sentences = text.match(/[^.!?]+[.!?]+/g) || [text];
+		return sentences.slice(0, 1).join(" ");
+	};
+
+	const fetchRecommendations = async furnitureName => {
+		setLoadingRecs(true);
+		try {
+			const searchQuery = `${style} ${furnitureName} furniture interior`;
+			const response = await fetch(`https://api.unsplash.com/search/photos?query=${encodeURIComponent(searchQuery)}&per_page=5&orientation=landscape`, {
+				headers: {
+					Authorization: `Client-ID ${UNSPLASH_ACCESS_KEY}`
+				}
+			});
+
+			const data = await response.json();
+
+			const recs = data.results.map((result, index) => ({
+				id: result.id,
+				name: `${style} ${furnitureName} ${index + 1}`,
+				image: result.urls.regular,
+				description: truncateDescription(result.description || result.alt_description || `A beautiful ${style} style ${furnitureName}`),
+				match: Math.floor(Math.random() * 15) + 85 // Random match between 85-100%
+			}));
+
+			setRecommendations(recs);
+		} catch (error) {
+			console.error("Error fetching recommendations:", error);
+		} finally {
+			setLoadingRecs(false);
+		}
+	};
 
 	const glassStyle = {
 		background: "rgba(255, 255, 255, 0.1)",
@@ -187,29 +188,26 @@ function Recommendations() {
 					>
 						<Card.Body paddingTop={4} paddingBottom={5} px={4} height="100%">
 							<VStack align="stretch" gap={2} height="100%">
-								<Box flex={1} display="flex" flexDirection="column">
-									<Carousel.Root slideCount={recommendations.length} display="flex" flexDirection="column" height="100%">
+								<Box flex="0 0 45%" display="flex" flexDirection="column" minHeight="0">
+									<Carousel.Root slideCount={furnitures.length} display="flex" flexDirection="column" height="100%">
 										<Box flex={1}>
 											<Carousel.ItemGroup height="100%">
-												{recommendations.map((item, index) => (
+												{furnitures.map((item, index) => (
 													<Carousel.Item key={item.id} index={index} height="100%">
 														<Card.Root flexDirection="row" overflow="hidden" height="100%" bg="rgba(255, 255, 255, 0.95)" borderRadius={20}>
-															<Box position="relative" width="40%">
-																<Image objectFit="cover" width="100%" height="100%" src={recommendations[0].image} alt={recommendations[0].name} />
-																<Badge position="absolute" top={3} left={3} colorScheme="green" fontSize="xs" padding={2} borderRadius={8}>
-																	{recommendations[0].match}% Match
-																</Badge>
+															<Box position="relative" minWidth={"220px"} maxWidth={"220px"} minHeight="150px" maxHeight="150px">
+																<Image objectFit="cover" width="100%" height="100%" src={furnitures[index].image} alt={furnitures[index].name} />
 															</Box>
 															<Box flex={1} display="flex" flexDirection="column" justifyContent="space-between">
 																<Card.Body py={3} px={4}>
 																	<Card.Title fontSize="lg" mb={2}>
-																		{recommendations[0].name}
+																		{furnitures[index].name}
 																	</Card.Title>
-																	<Card.Description fontSize="sm">{recommendations[0].description}</Card.Description>
+																	<Card.Description fontSize="sm">StyleMatch is {furnitures[index].confidence} confident of this prediction!</Card.Description>
 																</Card.Body>
 																<Card.Footer gap={2} pb={3} px={4}>
-																	<Button bgColor={"#D4AF37"} borderRadius={6} leftIcon={<LuShoppingCart />} size="sm">
-																		Find Reccomendations
+																	<Button bgColor={"#D4AF37"} borderRadius={6} leftIcon={<LuShoppingCart />} size="sm" onClick={() => fetchRecommendations(furnitures[index].name)} isLoading={loadingRecs}>
+																		Find Recommendations
 																	</Button>
 																</Card.Footer>
 															</Box>
@@ -237,29 +235,59 @@ function Recommendations() {
 
 								<Box height="1px" bg="rgba(255, 255, 255, 0.2)" />
 
-								<Box flex={1}>
-									{recommendations[0] && (
-										<Card.Root flexDirection="row" overflow="hidden" height="100%" bg="rgba(255, 255, 255, 0.95)" borderRadius={20} mt={1}>
-											<Box position="relative" width="40%">
-												<Image objectFit="cover" width="100%" height="100%" src={recommendations[0].image} alt={recommendations[0].name} />
-												<Badge position="absolute" top={3} left={3} colorScheme="green" fontSize="xs" padding={2} borderRadius={8}>
-													{recommendations[0].match}% Match
-												</Badge>
+								<Box flex="0 0 45%" minHeight="0">
+									{recommendations.length > 0 ? (
+										<Carousel.Root slideCount={recommendations.length} display="flex" flexDirection="column" height="100%">
+											<Box flex={1}>
+												<Carousel.ItemGroup height="100%">
+													{recommendations.map((rec, index) => (
+														<Carousel.Item key={rec.id} index={index} height="100%">
+															<Card.Root flexDirection="row" overflow="hidden" height="100%" bg="rgba(255, 255, 255, 0.95)" borderRadius={20}>
+																<Box position="relative" minWidth={"220px"} maxWidth="30%" minH={"180px"} maxHeight="180px">
+																	<Image objectFit="cover" minWidth={"164px"} width="100%" minHeight={"171px"} height="100%" src={rec.image} alt={rec.name} />
+																</Box>
+																<Box flex={1} display="flex" flexDirection="column" justifyContent="space-between">
+																	<Card.Body py={3} px={4}>
+																		<Card.Title fontSize="lg" mb={2}>
+																			{rec.name}
+																		</Card.Title>
+																		<Card.Description fontSize="sm">{rec.description}</Card.Description>
+																	</Card.Body>
+																	<Card.Footer gap={2} pb={3} px={4}>
+																		<Button bgColor={"#D4AF37"} borderRadius={6} leftIcon={<LuHeart />} size="sm">
+																			Save
+																		</Button>
+																	</Card.Footer>
+																</Box>
+															</Card.Root>
+														</Carousel.Item>
+													))}
+												</Carousel.ItemGroup>
 											</Box>
-											<Box flex={1} display="flex" flexDirection="column" justifyContent="space-between">
-												<Card.Body py={3} px={4}>
-													<Card.Title fontSize="lg" mb={2}>
-														{recommendations[0].name}
-													</Card.Title>
-													<Card.Description fontSize="sm">{recommendations[0].description}</Card.Description>
-												</Card.Body>
-												<Card.Footer gap={2} pb={3} px={4}>
-													<Button bgColor={"#D4AF37"} borderRadius={6} leftIcon={<LuShoppingCart />} size="sm">
-														Save
-													</Button>
-												</Card.Footer>
-											</Box>
-										</Card.Root>
+
+											<Carousel.Control justifyContent="center" gap={4} mt={2}>
+												<Carousel.PrevTrigger asChild>
+													<IconButton size="sm" variant="outline" borderRadius="full">
+														<LuChevronLeft />
+													</IconButton>
+												</Carousel.PrevTrigger>
+												<Carousel.Indicators />
+												<Carousel.NextTrigger asChild>
+													<IconButton size="sm" variant="outline" borderRadius="full">
+														<LuChevronRight />
+													</IconButton>
+												</Carousel.NextTrigger>
+											</Carousel.Control>
+										</Carousel.Root>
+									) : (
+										<Flex height="100%" align="center" justify="center" bg="rgba(255, 255, 255, 0.95)" borderRadius={20}>
+											<VStack gap={3}>
+												<Icon as={LuShoppingCart} boxSize={12} color="gray.400" />
+												<Text color="gray.600" fontSize="lg" fontWeight="medium">
+													Click "Find Recommendations" to discover furniture
+												</Text>
+											</VStack>
+										</Flex>
 									)}
 								</Box>
 							</VStack>
