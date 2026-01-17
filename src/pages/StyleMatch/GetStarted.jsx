@@ -1,7 +1,9 @@
 import { useState, useRef } from "react";
 import { useNavigate } from "react-router-dom";
-import { Card, Flex, Heading, Text, Box, Image, Avatar, Spinner, Grid, IconButton, Carousel } from "@chakra-ui/react";
+import { Card, Flex, Heading, Text, Box, Image, Avatar, Grid, IconButton, Carousel, Icon } from "@chakra-ui/react";
 import { LuChevronLeft, LuChevronRight } from "react-icons/lu";
+import { RxRocket } from 'react-icons/rx';
+import { motion } from "framer-motion";
 import StyleMatchBackground from "../../assets/StyleMatchBackground.png";
 import SampleStyleBackground from "../../assets/SampleStyleBackground.png";
 import AnimatedLogo from "@/components/Homepage/AnimatedLogo";
@@ -25,6 +27,18 @@ function GetStarted() {
 		WebkitBackdropFilter: "blur(20px) saturate(180%)",
 		border: "1px solid rgba(255, 255, 255, 0.2)",
 		boxShadow: "0 8px 32px 0 rgba(31, 38, 135, 0.15), inset 0 1px 0 0 rgba(255, 255, 255, 0.3)"
+	};
+
+	const rocketVariants = {
+		initial: { y: 0 },
+		analyzing: {
+			y: [-7, 7, -7],
+			rotate: [0, 5, -5, 0],
+			transition: {
+				duration: 2.5,
+				repeat: Infinity
+			}
+		}
 	};
 
 	const itemsPerPage = 6;
@@ -233,12 +247,17 @@ function GetStarted() {
 						<Card.Body padding={4}>
 							{isLoading ? (
 								<Flex justify="center" align="center" height="100%" direction="column" gap={4}>
-									<Spinner size="xl" color="white" thickness="4px" />
+									<motion.div
+										variants={rocketVariants}
+										animate="analyzing"
+									>
+										<Icon as={RxRocket} w={10} h={10} color="white" />
+									</motion.div>
 									<Text color="white" fontSize="lg">
 										Analyzing your room...
 									</Text>
 									<Text color="white" fontSize="sm">
-										This may take up to 5 minutes
+										Hold tight! This may take up to 5 minutes
 									</Text>
 								</Flex>
 							) : furnitureItems.length === 0 ? (
