@@ -3,11 +3,13 @@ import { useState } from "react";
 import { FaDownload } from "react-icons/fa6";
 import { IoSparkles } from "react-icons/io5";
 import server from "../../../networking";
+import { useNavigate } from "react-router-dom";
 
 function GenerateDesignDocument({ floorPlanFile, preferences, budget, extractionResults }) {
 	const [isGenerating, setIsGenerating] = useState(false);
 	const [error, setError] = useState(null);
 	const [generatedPdfUrl, setGeneratedPdfUrl] = useState(null);
+	const navigate = useNavigate()
 
 	const handleGenerateDocument = async () => {
 		setIsGenerating(true);
@@ -248,7 +250,7 @@ function GenerateDesignDocument({ floorPlanFile, preferences, budget, extraction
 				{/* Download Again Button (if PDF was generated) */}
 				{generatedPdfUrl && !isGenerating && (
 					<Button
-						size="lg"
+						size="xl"
 						variant="outline"
 						borderColor="#D4AF37"
 						color="#D4AF37"
