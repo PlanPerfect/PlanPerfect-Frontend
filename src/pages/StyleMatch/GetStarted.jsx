@@ -2,7 +2,7 @@ import { useState, useRef } from "react";
 import { useNavigate } from "react-router-dom";
 import { Card, Flex, Heading, Text, Box, Image, Avatar, Grid, IconButton, Carousel, Icon } from "@chakra-ui/react";
 import { LuChevronLeft, LuChevronRight } from "react-icons/lu";
-import { RxRocket } from 'react-icons/rx';
+import { RxRocket } from "react-icons/rx";
 import { motion } from "framer-motion";
 import StyleMatchBackground from "../../assets/StyleMatchBackground.png";
 import SampleStyleBackground from "../../assets/SampleStyleBackground.png";
@@ -17,7 +17,10 @@ function GetStarted() {
 	const [isLoading, setIsLoading] = useState(false);
 	const [roomImage, setRoomImage] = useState(SampleStyleBackground);
 	const [detectionSuccess, setDetectionSuccess] = useState(false);
-	const [roomStyle, setRoomStyle] = useState("");
+	const styles = ["Boutique", "Classical", "Contemporary", "Country", "Eclectic", "Industrial", "Japanese", "Luxury", "Minimalist", "Modern", "Persian", "Scandinavian", "Vintage", "Wabi-Sabi", "Japandi", "Peranakan", "Boho"];
+	const [roomStyle, setRoomStyle] = useState(() => {
+		return styles[Math.floor(Math.random() * styles.length)];
+	});
 	const fileInputRef = useRef(null);
 	const navigate = useNavigate();
 
@@ -47,7 +50,7 @@ function GetStarted() {
 		chunkedItems.push(furnitureItems.slice(i, i + itemsPerPage));
 	}
 
-	const processImage = async (file) => {
+	const processImage = async file => {
 		if (!file) {
 			ShowToast("error", "No File Selected", "Please select an image file to analyze.");
 			return;
@@ -81,23 +84,23 @@ function GetStarted() {
 					headers: {
 						"Content-Type": "multipart/form-data"
 					},
-					timeout: 300000,
+					timeout: 300000
 				});
 
 				if (data.success && data.images && data.images.length > 0) {
 					const timestamp = data.images[0].timestamp;
 
-					const items = data.images.map((item) => {
-						const baseUrl = server.defaults.baseURL?.replace(/\/$/, '') || '';
+					const items = data.images.map(item => {
+						const baseUrl = server.defaults.baseURL?.replace(/\/$/, "") || "";
 						const imagePath = `/static/predictions/furniture-detection/${timestamp}/${item.filename}`;
 						const imageUrl = `${baseUrl}${imagePath}`;
 
 						const capitalizedName = item.class
 							? item.class
-								.split(/[\s_-]+/)
-								.map(word => word.charAt(0).toUpperCase() + word.slice(1).toLowerCase())
-								.join(' ')
-							: 'Unknown';
+									.split(/[\s_-]+/)
+									.map(word => word.charAt(0).toUpperCase() + word.slice(1).toLowerCase())
+									.join(" ")
+							: "Unknown";
 
 						return {
 							name: capitalizedName,
@@ -129,18 +132,18 @@ function GetStarted() {
 			loading: {
 				title: "Processing..."
 			},
-			success: (items) => ({
+			success: items => ({
 				title: `Successfully detected ${items.length} furniture item(s)`,
 				duration: 4500
 			}),
-			error: (error) => {
+			error: error => {
 				let errorTitle = "Detection Failed";
 				let errorDescription = "An unexpected error occurred.";
 
 				if (error.message === "NO_FURNITURE_DETECTED") {
 					errorTitle = "No Furniture Detected";
 					errorDescription = "We couldn't detect any furniture in this image. Try a different photo.";
-				} else if (error.code === 'ECONNABORTED' || error.message?.includes('timeout')) {
+				} else if (error.code === "ECONNABORTED" || error.message?.includes("timeout")) {
 					errorTitle = "Request Timeout";
 					errorDescription = "Request timed out. Please try again with a smaller image.";
 				} else if (error.response?.status === 504) {
@@ -176,7 +179,7 @@ function GetStarted() {
 		});
 	};
 
-	const handleFileUpload = (event) => {
+	const handleFileUpload = event => {
 		const file = event.target.files?.[0];
 		if (file) {
 			processImage(file);
@@ -213,13 +216,7 @@ function GetStarted() {
 				}}
 			/>
 
-			<input
-				ref={fileInputRef}
-				type="file"
-				accept="image/jpeg,image/jpg,image/png,image/webp,image/avif"
-				style={{ display: "none" }}
-				onChange={handleFileUpload}
-			/>
+			<input ref={fileInputRef} type="file" accept="image/jpeg,image/jpg,image/png,image/webp,image/avif" style={{ display: "none" }} onChange={handleFileUpload} />
 
 			<Flex height="75vh" gap={4}>
 				<Card.Root width="25%" variant="elevated" borderRadius={35} style={glassStyle}>
@@ -268,10 +265,7 @@ function GetStarted() {
 						<Card.Body padding={4}>
 							{isLoading ? (
 								<Flex justify="center" align="center" height="100%" direction="column" gap={4}>
-									<motion.div
-										variants={rocketVariants}
-										animate="analyzing"
-									>
+									<motion.div variants={rocketVariants} animate="analyzing">
 										<Icon as={RxRocket} w={10} h={10} color="white" />
 									</motion.div>
 									<Text color="white" fontSize="lg">
