@@ -33,32 +33,6 @@ function Homepage() {
 
                 <GetStartedButton delay={"1.4s"} />
             </VStack>
-
-            <style>
-                {`
-                    @keyframes fadeInDown {
-                        from {
-                            opacity: 0;
-                            transform: translateY(-20px);
-                        }
-                        to {
-                            opacity: 1;
-                            transform: translateY(0);
-                        }
-                    }
-
-                    @keyframes fadeInUp {
-                        from {
-                            opacity: 0;
-                            transform: translateY(20px);
-                        }
-                        to {
-                            opacity: 1;
-                            transform: translateY(0);
-                        }
-                    }
-                `}
-            </style>
         </>
     )
 }
