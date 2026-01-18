@@ -52,19 +52,19 @@ function GetStarted() {
 
 	const processImage = async file => {
 		if (!file) {
-			ShowToast("error", "No File Selected", "Please select an image file to analyze.");
+			ShowToast("info", "Please upload an image to analyze.");
 			return;
 		}
 
 		const validTypes = ["image/jpeg", "image/jpg", "image/png", "image/webp", "image/avif"];
 		if (!validTypes.includes(file.type)) {
-			ShowToast("error", "Invalid File Type", "Please upload a JPEG, PNG, WEBP, or AVIF image.");
+			ShowToast("error", "Please upload a JPEG, PNG, WEBP, or AVIF image.");
 			return;
 		}
 
 		const maxSize = 50 * 1024 * 1024;
 		if (file.size > maxSize) {
-			ShowToast("error", "File Too Large", "Please upload an image smaller than 50MB.");
+			ShowToast("error", "File Too Large. Please upload an image smaller than 50MB.");
 			return;
 		}
 
@@ -87,10 +87,10 @@ function GetStarted() {
 					timeout: 300000
 				});
 
-				if (data.success && data.images && data.images.length > 0) {
-					const timestamp = data.images[0].timestamp;
+				if (data.detections && data.detections.length > 0) {
+					const timestamp = data.detections[0].timestamp;
 
-					const items = data.images.map(item => {
+					const items = data.detections.map(item => {
 						const baseUrl = server.defaults.baseURL?.replace(/\/$/, "") || "";
 						const imagePath = `/static/predictions/furniture-detection/${timestamp}/${item.filename}`;
 						const imageUrl = `${baseUrl}${imagePath}`;
@@ -117,11 +117,17 @@ function GetStarted() {
 					setDetectionSuccess(false);
 					reject(new Error("NO_FURNITURE_DETECTED"));
 				}
-			} catch (error) {
-				console.error("Detection error:", error);
+			} catch (err) {
 				setFurnitureItems([]);
 				setDetectionSuccess(false);
-				reject(error);
+
+				const backendError = err.response?.data?.error;
+				if (backendError) {
+					reject(new Error(backendError));
+				} else {
+					console.error("Failed to detect furniture:", err);
+					reject(err);
+				}
 			} finally {
 				setIsLoading(false);
 			}
@@ -133,47 +139,24 @@ function GetStarted() {
 				title: "Processing..."
 			},
 			success: items => ({
-				title: `Successfully detected ${items.length} furniture item(s)`,
+				title: `Successfully detected ${items.length} furniture item(s).`,
 				duration: 4500
 			}),
 			error: error => {
-				let errorTitle = "Detection Failed";
-				let errorDescription = "An unexpected error occurred.";
+				let errorTitle = "Furniture Detection Failed";
 
 				if (error.message === "NO_FURNITURE_DETECTED") {
 					errorTitle = "No Furniture Detected";
-					errorDescription = "We couldn't detect any furniture in this image. Try a different photo.";
-				} else if (error.code === "ECONNABORTED" || error.message?.includes("timeout")) {
-					errorTitle = "Request Timeout";
-					errorDescription = "Request timed out. Please try again with a smaller image.";
-				} else if (error.response?.status === 504) {
-					errorTitle = "Service Timeout";
-					errorDescription = error.response?.data?.error || "Server timed out. Please try with a smaller image.";
-				} else if (error.response?.status === 500) {
-					errorTitle = "500 Internal Server Error";
-					errorDescription = error.response?.data?.error || "A server error occurred. Please try again later.";
-				} else if (error.response?.status === 401 || error.response?.status === 403) {
-					errorTitle = "401 Unauthorized";
-					errorDescription = "Access denied. Please check with your system administrator.";
-				} else if (error.response?.status === 429) {
-					errorTitle = "429 Too Many Requests";
-					errorDescription = "You have hit the rate-limit. Please wait and try again later.";
-				} else if (error.response?.status === 404) {
-					errorTitle = "404 Not Found";
-					errorDescription = "The requested resource was not found. Please try again.";
-				} else if (error.response?.status === 400) {
-					errorTitle = "400 Bad Request";
-					errorDescription = "The server could not understand the request. Please try again with a different image.";
-				} else if (error.response) {
-					errorDescription = error.response.data?.error || error.message;
-				} else if (error.request) {
-					errorTitle = "Network Error";
-					errorDescription = "Unable to connect to the server. Please check your internet connection.";
+				} else if (error.message?.startsWith("UERROR: ")) {
+					errorTitle = error.message.substring("UERROR: ".length);
+				} else if (error.message?.startsWith("ERROR: ")) {
+					errorTitle = error.message.substring("ERROR: ".length);
+				} else if (error.message) {
+					errorTitle = error.message;
 				}
 
 				return {
-					title: errorTitle,
-					description: errorDescription
+					title: errorTitle
 				};
 			}
 		});
