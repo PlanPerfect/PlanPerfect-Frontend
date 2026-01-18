@@ -17,7 +17,6 @@ function GetStarted() {
 	const [isLoading, setIsLoading] = useState(false);
 	const [roomImage, setRoomImage] = useState(SampleStyleBackground);
 	const [detectionSuccess, setDetectionSuccess] = useState(false);
-	const [selectedItem, setSelectedItem] = useState(null);
 	const styles = ["Boutique", "Classical", "Contemporary", "Country", "Eclectic", "Industrial", "Japanese", "Luxury", "Minimalist", "Modern", "Persian", "Scandinavian", "Vintage", "Wabi-Sabi", "Japandi", "Peranakan", "Boho"];
 	const [roomStyle, setRoomStyle] = useState(() => {
 		return styles[Math.floor(Math.random() * styles.length)];
@@ -319,7 +318,12 @@ function GetStarted() {
 
 																			<Box>
 																				<Card.Title>{item.name}</Card.Title>
-																				<Card.Description>Confidence: {item.confidence}</Card.Description>
+																				<Card.Description>
+																					Confidence:{" "}
+																					<Text as="span" fontWeight="bold">
+																						{item.confidence}
+																					</Text>
+																				</Card.Description>
 																			</Box>
 																		</Flex>
 																	</Card.Body>
@@ -341,7 +345,8 @@ function GetStarted() {
 																					width="100%"
 																					height="auto"
 																					maxH="200px"
-																					objectFit="cover"
+																					objectFit="contain" // Changed from "cover"
+																					imageRendering="crisp-edges"
 																				/>
 																			</Box>
 																		</Box>
