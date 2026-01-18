@@ -2,13 +2,13 @@ import { VStack, Flex, Icon, Heading, Text, Card, Box } from '@chakra-ui/react'
 import { Home } from 'lucide-react'
 import { useNavigate } from 'react-router-dom'
 
-function AnimatedCards({ icon, iconColor, title, description, delay, destination }) {
-    var icon  = icon || Home;
-    var iconColor = iconColor || "blue.500";
-    var title = title || "Homeowner";
-    var description = description || "Explore intelligent design solutions that breathe new life into your home";
-    var delay = delay || 0.5;
-    var destination = destination || null;
+function AnimatedCard({ icon, iconColor, title, description, delay, destination, shouldAnimate }) {
+    icon = icon || Home;
+    iconColor = iconColor || "blue.500";
+    title = title || "Homeowner";
+    description = description || "Explore intelligent design solutions that breathe new life into your home";
+    delay = delay || 0.5;
+    destination = destination || null;
     const navigate = useNavigate();
 
     return (
@@ -24,7 +24,7 @@ function AnimatedCards({ icon, iconColor, title, description, delay, destination
             border="2px solid"
             borderRadius={20}
             borderColor="transparent"
-            style={{ animation: `fadeInUp 0.8s ease-out ${delay}s backwards` }}
+            animation={shouldAnimate ? `fadeInUp 0.8s ease-out ${delay}s backwards` : 'none'}
             _active={{
                 transform: 'translateY(-4px)',
             }}
@@ -77,4 +77,4 @@ function AnimatedCards({ icon, iconColor, title, description, delay, destination
     )
 }
 
-export default AnimatedCards
+export default AnimatedCard
