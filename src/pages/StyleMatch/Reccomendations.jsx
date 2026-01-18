@@ -66,7 +66,7 @@ function Recommendations() {
 				throw new Error("Failed to fetch recommendations");
 			})
 			.catch(error => {
-				if (error.response?.status === 429) {
+				if (error.response?.status === 429 || error.response?.status === 403) {
 					throw new Error("Rate limit exceeded");
 				}
 				throw error;
@@ -80,15 +80,15 @@ function Recommendations() {
 			success: {
 				title: "Recommendations found!"
 			},
-			error: {
-				title: error.message === "Rate limit exceeded" ? "Too many requests. Please try again later" : "Failed to fetch recommendations"
-			}
+			error: err => ({
+				title: err?.message === "Rate limit exceeded" ? "Too many requests. Please try again later" : "Failed to fetch recommendations"
+			})
 		});
 
 		try {
 			await fetchPromise;
 		} catch (error) {
-			console.error("Error fetching recommendations:", error);
+			console.warn(error);
 		} finally {
 			setLoadingRecs(false);
 		}
@@ -114,7 +114,7 @@ function Recommendations() {
 			return null;
 		} catch (error) {
 			console.error("Error fetching single recommendation:", error);
-			if (error.response?.status === 429) {
+			if (error.response?.status === 429 || error.response?.status === 403) {
 				ShowToast("error", "Too many requests. Please try again later");
 			}
 			return null;
@@ -231,15 +231,15 @@ function Recommendations() {
 										overflowY="auto"
 										css={{
 											"&::-webkit-scrollbar": { display: "none" },
-											"-ms-overflow-style": "none",
-											"scrollbar-width": "none"
+											msOverflowStyle: "none",
+											scrollbarWidth: "none"
 										}}
 									>
 										{uniqueFurniture.length > 0 ? (
 											<SimpleGrid columns={2} spacing={4} gap={2}>
 												{uniqueFurniture.map((furniture, index) => (
 													<MotionBox
-														key={index}
+														key={furniture}
 														initial={{ opacity: 0, x: -20 }}
 														animate={{ opacity: 1, x: 0 }}
 														transition={{ duration: 0.3, delay: 0.1 * index }}
@@ -288,8 +288,8 @@ function Recommendations() {
 							overflowX="hidden"
 							css={{
 								"&::-webkit-scrollbar": { display: "none" },
-								"-ms-overflow-style": "none",
-								"scrollbar-width": "none"
+								msOverflowStyle: "none",
+								scrollbarWidth: "none"
 							}}
 						>
 							<Card.Body paddingTop={4} paddingBottom={5} px={4} height="100%">
@@ -299,7 +299,7 @@ function Recommendations() {
 											<Box flex={1}>
 												<Carousel.ItemGroup height="100%">
 													{furnitures.map((item, index) => (
-														<Carousel.Item key={item.id} index={index} height="100%">
+														<Carousel.Item key={`${item.id}-${index}`} index={index} height="100%">
 															<MotionCard
 																flexDirection="row"
 																overflow="hidden"
