@@ -12,28 +12,6 @@ function App() {
 				<Outlet />
 				<Toaster />
 			</div>
-
-			<style>
-                {`
-                    @keyframes fadeInDown {
-                        from {
-                            transform: translateY(-20px);
-                        }
-                        to {
-                            transform: translateY(0);
-                        }
-                    }
-
-                    @keyframes fadeInUp {
-                        from {
-                            transform: translateY(20px);
-                        }
-                        to {
-                            transform: translateY(0);
-                        }
-                    }
-                `}
-            </style>
 		</>
 	)
 }

@@ -37,9 +37,9 @@ function Services() {
                     gap={8}
                     w="full"
                 >
-                    <AnimatedCard icon={Key} iconColor={"blue.500"} title={"New Homeowner"} description={"Let us help you design your perfect home with our AI-powered tools"} delay={0.5} />
+                    <AnimatedCard icon={Key} iconColor={"blue.500"} title={"New Homeowner"} description={"Let us help you design your perfect home with our AI-powered tools"} delay={0.5} destination={"/newhomeowner"} />
 
-                    <AnimatedCard icon={Home} iconColor={"green.500"} title={"Existing Homeowner"} description={"Explore intelligent design solutions that breathe new life into your home"} delay={1.0} />
+                    <AnimatedCard icon={Home} iconColor={"green.500"} title={"Existing Homeowner"} description={"Explore intelligent design solutions that breathe new life into your home"} delay={1.0} destination={"/existinghomeowner"} />
                 </SimpleGrid>
             </VStack>
         </>
