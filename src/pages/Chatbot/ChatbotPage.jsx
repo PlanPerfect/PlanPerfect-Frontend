@@ -1,4 +1,4 @@
-import { useState, useRef, useEffect } from "react";
+import { useState, useRef, useEffect, useLayoutEffect } from "react";
 import { Box, Card, Flex, Heading, Text, Input, VStack, HStack, Avatar } from "@chakra-ui/react";
 import { Send, Bot, User, Sparkles, AlertCircle } from "lucide-react";
 import LandingBackground from "../../assets/LandingBackground.png";
@@ -15,8 +15,10 @@ function ChatbotPage() {
 	]);
 	const [inputValue, setInputValue] = useState("");
 	const [isTyping, setIsTyping] = useState(false);
+	const [isInitialMount, setIsInitialMount] = useState(true);
 	const messagesEndRef = useRef(null);
 	const inputRef = useRef(null);
+	const initialMessageCount = useRef(1);
 
 	const glassStyle = {
 		background: "rgba(255, 255, 255, 0.1)",
@@ -30,6 +32,10 @@ function ChatbotPage() {
 		messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
 	};
 
+	useLayoutEffect(() => {
+		setIsInitialMount(false);
+	}, []);
+
 	useEffect(() => {
 		scrollToBottom();
 	}, [messages]);
@@ -37,20 +43,20 @@ function ChatbotPage() {
 	const handleSend = async () => {
 		if (!inputValue.trim()) return;
 
+		const userMessage = {
+			role: "user",
+			content: inputValue,
+			timestamp: new Date()
+		};
+
+		setMessages(prev => [...prev, userMessage]);
+		setInputValue("");
 		setIsTyping(true);
 
 		try {
 			const response = await server.post("/chatbot/chat-completion", {
-				query: inputValue
+				query: userMessage.content
 			});
-
-			const userMessage = {
-				role: "user",
-				content: inputValue,
-				timestamp: new Date()
-			};
-
-			setMessages(prev => [...prev, userMessage]);
 
 			const assistantMessage = {
 				role: "assistant",
@@ -178,47 +184,51 @@ function ChatbotPage() {
 								</Box>
 							)}
 
-							{messages.map((message, idx) => (
-								<Flex key={idx} justify={message.role === "user" ? "flex-end" : "flex-start"} animation={`fadeInUp 0.3s ease-out ${idx * 0.1}s both`}>
-									<Flex maxW={{ base: "85%", md: "70%" }} gap={3} direction={message.role === "user" ? "row-reverse" : "row"}>
-										{/* Avatar */}
-										<Avatar.Root size={{ base: "sm", md: "md" }} bg={message.role === "user" ? "#D4AF37" : message.isError ? "rgba(255, 100, 100, 0.3)" : "rgba(255, 240, 189, 0.3)"} flexShrink={0}>
-											{message.role === "user" ? <User size={20} color="white" /> : message.isError ? <AlertCircle size={20} color="#ff6b6b" /> : <Bot size={20} color="#fff0bd" />}
-										</Avatar.Root>
+							{messages.map((message, idx) => {
+								const shouldAnimate = !isInitialMount && idx >= initialMessageCount.current;
 
-										<VStack align="start" gap={1}>
-											<Box
-												bg={message.role === "user" ? "#C9A227" : message.isError ? "rgba(255, 100, 100, 0.15)" : "rgba(255, 255, 255, 0.15)"}
-												backdropFilter="blur(10px)"
-												border={message.isError ? "1px solid rgba(255, 100, 100, 0.3)" : "1px solid rgba(255, 255, 255, 0.2)"}
-												borderRadius={20}
-												p={{ base: 3, md: 4 }}
-												boxShadow="0 4px 16px rgba(0, 0, 0, 0.1)"
-											>
-												<Text
-													color="white"
-													fontSize={{
-														base: "sm",
-														md: "md"
-													}}
-													lineHeight="1.6"
+								return (
+									<Flex key={idx} justify={message.role === "user" ? "flex-end" : "flex-start"} animation={shouldAnimate ? "fadeInUp 0.4s ease-out" : "none"}>
+										<Flex maxW={{ base: "85%", md: "70%" }} gap={3} direction={message.role === "user" ? "row-reverse" : "row"}>
+											{/* Avatar */}
+											<Avatar.Root size={{ base: "sm", md: "md" }} bg={message.role === "user" ? "#D4AF37" : message.isError ? "rgba(255, 100, 100, 0.3)" : "rgba(255, 240, 189, 0.3)"} flexShrink={0}>
+												{message.role === "user" ? <User size={20} color="white" /> : message.isError ? <AlertCircle size={20} color="#ff6b6b" /> : <Bot size={20} color="#fff0bd" />}
+											</Avatar.Root>
+
+											<VStack align="start" gap={1}>
+												<Box
+													bg={message.role === "user" ? "#C9A227" : message.isError ? "rgba(255, 100, 100, 0.15)" : "rgba(255, 255, 255, 0.15)"}
+													backdropFilter="blur(10px)"
+													border={message.isError ? "1px solid rgba(255, 100, 100, 0.3)" : "1px solid rgba(255, 255, 255, 0.2)"}
+													borderRadius={20}
+													p={{ base: 3, md: 4 }}
+													boxShadow="0 4px 16px rgba(0, 0, 0, 0.1)"
 												>
-													{message.content}
+													<Text
+														color="white"
+														fontSize={{
+															base: "sm",
+															md: "md"
+														}}
+														lineHeight="1.6"
+													>
+														{message.content}
+													</Text>
+												</Box>
+												<Text fontSize="xs" color="rgba(255, 255, 255, 0.5)" px={2}>
+													{message.timestamp.toLocaleTimeString([], {
+														hour: "2-digit",
+														minute: "2-digit"
+													})}
 												</Text>
-											</Box>
-											<Text fontSize="xs" color="rgba(255, 255, 255, 0.5)" px={2}>
-												{message.timestamp.toLocaleTimeString([], {
-													hour: "2-digit",
-													minute: "2-digit"
-												})}
-											</Text>
-										</VStack>
+											</VStack>
+										</Flex>
 									</Flex>
-								</Flex>
-							))}
+								);
+							})}
 
 							{isTyping && (
-								<Flex justify="flex-start" animation="fadeInUp 0.3s ease-out">
+								<Flex justify="flex-start" animation="fadeInUp 0.4s ease-out">
 									<Flex gap={3} maxW="70%">
 										<Avatar.Root size={{ base: "sm", md: "md" }} bg="rgba(255, 240, 189, 0.3)">
 											<Bot size={20} color="#fff0bd" />
