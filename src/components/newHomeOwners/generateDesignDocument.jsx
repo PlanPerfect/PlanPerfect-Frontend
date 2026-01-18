@@ -229,7 +229,7 @@ function GenerateDesignDocument({ floorPlanFile, preferences, budget, extraction
 					borderColor={generatedPdfUrl ? "transparent" : "#D4AF37"}
 					color={generatedPdfUrl ? "white" : "#D4AF37"}
                     bg={generatedPdfUrl ? "#D4AF37" : "transparent"}
-					_hover={{ bg: "yellow.50" }}
+					_hover={generatedPdfUrl ? { bg: "#C9A961" } : { bg: "yellow.50" }}
 					onClick={handleGenerateDocument}
 					disabled={isGenerating || !floorPlanFile}
 					leftIcon={
