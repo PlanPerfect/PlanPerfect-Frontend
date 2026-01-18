@@ -199,6 +199,9 @@ function GetStarted() {
 		});
 	};
 
+	const MotionCard = motion.create(Card.Root);
+	const MotionBox = motion.create(Box);
+
 	return (
 		<>
 			<Box
@@ -251,15 +254,34 @@ function GetStarted() {
 				</Card.Root>
 
 				<Flex direction="column" width="75%" gap={3}>
-					<Card.Root height="45%" variant="elevated" borderRadius={35} style={glassStyle} overflow="hidden">
+					<MotionCard
+						height="45%"
+						variant="elevated"
+						borderRadius={35}
+						style={glassStyle}
+						overflow="hidden"
+						initial={{ opacity: 0, y: -20 }}
+						animate={{ opacity: 1, y: 0 }}
+						transition={{ duration: 0.5, ease: "easeOut" }}
+					>
 						<Box position="relative" width="100%" height="100%">
 							<Image src={roomImage} alt="Room preview" objectFit="cover" width="100%" height="100%" opacity={0.5} />
 							<Box position="absolute" inset={0} bgGradient="to-b" gradientFrom="transparent" gradientTo="rgba(0,0,0,0.3)" />
-							<Box position="absolute" bottom={3} right={5} fontWeight="md" fontSize="2xl" color="white">
+							<MotionBox
+								position="absolute"
+								bottom={3}
+								right={5}
+								fontWeight="md"
+								fontSize="2xl"
+								color="white"
+								initial={{ opacity: 0, x: 20 }}
+								animate={{ opacity: 1, x: 0 }}
+								transition={{ delay: 0.3, duration: 0.5 }}
+							>
 								<Text>{roomStyle}</Text>
-							</Box>
+							</MotionBox>
 						</Box>
-					</Card.Root>
+					</MotionCard>
 
 					<Card.Root height="55%" variant="elevated" borderRadius={35} style={glassStyle}>
 						<Card.Body padding={4}>
@@ -291,7 +313,20 @@ function GetStarted() {
 											<Carousel.Item key={pageIndex} index={pageIndex}>
 												<Grid templateColumns="repeat(3, 1fr)" gap={4} height="100%">
 													{chunk.map((item, index) => (
-														<Card.Root key={index} size="sm" borderRadius={20} maxHeight={"77px"}>
+														<MotionCard
+															key={index}
+															size="sm"
+															borderRadius={20}
+															maxHeight={"77px"}
+															initial={{ opacity: 0, scale: 0.8, y: 20 }}
+															animate={{ opacity: 1, scale: 1, y: 0 }}
+															cursor={"pointer"}
+															transition={{
+																duration: 0.4,
+																delay: index * 0.1,
+																ease: "easeOut"
+															}}
+														>
 															<Card.Body>
 																<Flex align="start" gap="3">
 																	<Avatar.Root size="lg" shape="rounded">
@@ -305,7 +340,7 @@ function GetStarted() {
 																	</Box>
 																</Flex>
 															</Card.Body>
-														</Card.Root>
+														</MotionCard>
 													))}
 												</Grid>
 											</Carousel.Item>
