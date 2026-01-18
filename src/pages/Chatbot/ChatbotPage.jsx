@@ -15,7 +15,6 @@ function ChatbotPage() {
 	]);
 	const [inputValue, setInputValue] = useState("");
 	const [isTyping, setIsTyping] = useState(false);
-	const [error, setError] = useState(null);
 	const messagesEndRef = useRef(null);
 	const inputRef = useRef(null);
 
@@ -38,21 +37,20 @@ function ChatbotPage() {
 	const handleSend = async () => {
 		if (!inputValue.trim()) return;
 
-		const userMessage = {
-			role: "user",
-			content: inputValue,
-			timestamp: new Date()
-		};
-
-		setMessages(prev => [...prev, userMessage]);
-		setInputValue("");
 		setIsTyping(true);
-		setError(null);
 
 		try {
 			const response = await server.post("/chatbot/chat-completion", {
 				query: inputValue
 			});
+
+			const userMessage = {
+				role: "user",
+				content: inputValue,
+				timestamp: new Date()
+			};
+
+			setMessages(prev => [...prev, userMessage]);
 
 			const assistantMessage = {
 				role: "assistant",
@@ -62,22 +60,15 @@ function ChatbotPage() {
 
 			setMessages(prev => [...prev, assistantMessage]);
 		} catch (err) {
-			console.error("Error calling chatbot API:", err);
-
-			const errorMessage = err.response?.data?.error || err.response?.data?.detail || "Sorry, I encountered an error. Please try again.";
-
-			setError(errorMessage);
-
-			ShowToast("error", "Failed to send message", error);
-
-			const errorAssistantMessage = {
-				role: "assistant",
-				content: errorMessage,
-				timestamp: new Date(),
-				isError: true
-			};
-
-			setMessages(prev => [...prev, errorAssistantMessage]);
+			if (err.response.data.error.startsWith("UERROR: ")) {
+				const errorMessage = err.response.data.error.substring("UERROR: ".length);
+				console.warn("Failed to send message: ", errorMessage);
+				ShowToast("error", errorMessage);
+			} else if (err.response.data.error.startsWith("ERROR: ")) {
+				const errorMessage = err.response.data.error.substring("ERROR: ".length);
+				console.error("Failed to send message: ", errorMessage);
+				ShowToast("error", errorMessage);
+			}
 		} finally {
 			setIsTyping(false);
 		}
