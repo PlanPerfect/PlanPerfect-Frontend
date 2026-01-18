@@ -47,30 +47,36 @@ function Recommendations() {
 		setLoadingRecs(true);
 		setSelectedFurniture(furnitureName);
 
-		const fetchPromise = server
-			.post("/stylematch/recommendations/get-recommendations", {
-				style: style || "Modern",
-				furniture_name: furnitureName,
-				per_page: 5
-			})
-			.then(response => {
-				if (response.data.success) {
+		const fetchPromise = new Promise(async (resolve, reject) => {
+			try {
+				const response = await server.post("/stylematch/recommendations/get-recommendations", {
+					style: style || "Modern",
+					furniture_name: furnitureName,
+					per_page: 5
+				});
+
+				if (response.data && response.data.recommendations) {
 					const recs = response.data.recommendations.map((rec, index) => ({
 						id: `${rec.unsplashId}-${Date.now()}-${index}`,
 						...rec
 					}));
 					setRecommendations(recs);
 					setCurrentCarouselIndex(0);
-					return response.data;
+					resolve(response.data);
 				}
-				throw new Error("Failed to fetch recommendations");
-			})
-			.catch(error => {
-				if (error.response?.status === 429 || error.response?.status === 403) {
-					throw new Error("Rate limit exceeded");
+			} catch (err) {
+				const backendError = err.response?.data?.error || err.response?.data?.detail;
+
+				if (backendError) {
+					reject(new Error(backendError));
+				} else {
+					console.error("Failed to fetch recommendations:", err);
+					reject(err);
 				}
-				throw error;
-			});
+			} finally {
+				setLoadingRecs(false);
+			}
+		});
 
 		ShowToast(null, null, null, {
 			promise: fetchPromise,
@@ -80,18 +86,24 @@ function Recommendations() {
 			success: {
 				title: "Recommendations found!"
 			},
-			error: err => ({
-				title: err?.message === "Rate limit exceeded" ? "Too many requests. Please try again later" : "Failed to fetch recommendations"
-			})
-		});
+			error: error => {
+				let errorTitle = "Failed to fetch recommendations";
 
-		try {
-			await fetchPromise;
-		} catch (error) {
-			console.warn(error);
-		} finally {
-			setLoadingRecs(false);
-		}
+				if (error.message === "NO_RECOMMENDATIONS_FOUND") {
+					errorTitle = "No Recommendations Found";
+				} else if (error.message?.startsWith("UERROR: ")) {
+					errorTitle = error.message.substring("UERROR: ".length);
+				} else if (error.message?.startsWith("ERROR: ")) {
+					errorTitle = error.message.substring("ERROR: ".length);
+				} else if (error.message) {
+					errorTitle = error.message;
+				}
+
+				return {
+					title: errorTitle
+				};
+			}
+		});
 	};
 
 	const fetchSingleRecommendation = async furnitureName => {
@@ -104,7 +116,7 @@ function Recommendations() {
 				page: randomPage
 			});
 
-			if (response.data.success && response.data.recommendations.length > 0) {
+			if (response.data.recommendations && response.data.recommendations.length > 0) {
 				const rec = response.data.recommendations[0];
 				return {
 					id: `${rec.unsplashId}-${Date.now()}-${Math.random()}`,
@@ -112,11 +124,25 @@ function Recommendations() {
 				};
 			}
 			return null;
-		} catch (error) {
-			console.error("Error fetching single recommendation:", error);
-			if (error.response?.status === 429 || error.response?.status === 403) {
-				ShowToast("error", "Too many requests. Please try again later");
+		} catch (err) {
+			console.error("Error fetching single recommendation:", err);
+
+			const backendError = err.response?.data?.error || err.response?.data?.detail;
+
+			if (backendError) {
+				let errorMessage = "Too many requests. Please try again later";
+
+				if (backendError.startsWith("UERROR: ")) {
+					errorMessage = backendError.substring("UERROR: ".length);
+				} else if (backendError.startsWith("ERROR: ")) {
+					errorMessage = backendError.substring("ERROR: ".length);
+				} else {
+					errorMessage = backendError;
+				}
+
+				ShowToast("error", errorMessage);
 			}
+
 			return null;
 		}
 	};
