@@ -69,7 +69,7 @@ function ChatbotPage() {
 				console.error("Failed to send message: ", errorMessage);
 				ShowToast("error", errorMessage);
 			} else {
-				console.error("Failed to send message: ", err.response.data.error);
+				console.error("Failed to send message: ", err.response.data.error || err.response?.data?.detail);
 				ShowToast("error", "An unexpected error occurred. Check console for more details.");
 			}
 		} finally {

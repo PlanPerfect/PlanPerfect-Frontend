@@ -121,7 +121,7 @@ function GetStarted() {
 				setFurnitureItems([]);
 				setDetectionSuccess(false);
 
-				const backendError = err.response?.data?.error;
+				const backendError = err.response?.data?.error || err.response?.data?.detail;
 				if (backendError) {
 					reject(new Error(backendError));
 				} else {
