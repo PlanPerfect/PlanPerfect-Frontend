@@ -58,7 +58,7 @@ function AIExtraction({ file, onComplete, startExtraction }) {
 
 			const unitInfo = extractionResponse.data.result;
 
-			// Combine both results
+			// Combine results
 			const combinedResults = {
 				segmentedImage: segmentedImage,
 				unitInfo: unitInfo,
@@ -68,7 +68,7 @@ function AIExtraction({ file, onComplete, startExtraction }) {
 			setIsProcessing(false);
 			setHasCompleted(true);
 
-			// Auto-advance to next step after showing completion
+			// Auto-advance to next step after showing completion with 1.5s delay
 			setTimeout(() => {
 				if (onComplete) {
 					onComplete(combinedResults);
@@ -100,6 +100,7 @@ function AIExtraction({ file, onComplete, startExtraction }) {
 
 	return (
 		<Box textAlign="center" py={10}>
+			{/* Ai extracting */}
 			{isProcessing && (
 				<>
 					<Spinner size="xl" color="#D4AF37" mb={4} />
@@ -116,6 +117,7 @@ function AIExtraction({ file, onComplete, startExtraction }) {
 				</>
 			)}
 
+			{/* Extraction complete */}
 			{hasCompleted && (
 				<>
 					<Box
@@ -142,6 +144,7 @@ function AIExtraction({ file, onComplete, startExtraction }) {
 				</>
 			)}
 
+			{/* Extraction error */}
 			{hasError && (
 				<>
 					<Box

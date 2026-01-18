@@ -14,9 +14,9 @@ function CheckResult({ extractionResults, onUpdateExtractionResults }) {
 		livingRoom: 0,
 		balcony: 0,
 	});
-	const [unitRooms, setUnitRooms] = useState(extractionResults?.unitInfo?.unit_rooms || "2-Bedroom");
-	const [unitType, setUnitType] = useState(extractionResults?.unitInfo?.unit_types || "Type B2");
-	const [unitSize, setUnitSize] = useState(extractionResults?.unitInfo?.unit_sizes || "55 sq m");
+	const [unitRooms, setUnitRooms] = useState(extractionResults?.unitInfo?.unit_rooms || "");
+	const [unitType, setUnitType] = useState(extractionResults?.unitInfo?.unit_types || "");
+	const [unitSize, setUnitSize] = useState(extractionResults?.unitInfo?.unit_sizes || "");
 	const inputRef = useRef(null);
 
 	// Initialize room counts from extraction results
@@ -61,7 +61,7 @@ function CheckResult({ extractionResults, onUpdateExtractionResults }) {
 		}));
 	};
 
-	// Extract image URL from results
+	// Extract image URL from extraction results
 	const imageUrl = extractionResults?.segmentedImage || null;
 
 	const updateUnitInfo = (key, value) => {

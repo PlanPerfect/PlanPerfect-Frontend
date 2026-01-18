@@ -6,7 +6,7 @@ function UploadFloorPlan({ onFileChange }) {
 	const [uploadedFile, setUploadedFile] = useState(null);
 	const [error, setError] = useState("");
 
-	const MAX_FILE_SIZE = 15 * 1024 * 1024; // 15MB in bytes
+	const MAX_FILE_SIZE = 15 * 1024 * 1024; // 15MB
 	const ALLOWED_TYPES = ["image/png", "image/jpg", "image/jpeg"];
 
 	const handleFileAccept = (details) => {

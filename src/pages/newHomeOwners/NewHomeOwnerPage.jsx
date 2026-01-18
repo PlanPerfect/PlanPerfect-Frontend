@@ -42,7 +42,7 @@ function NewHomeOwnerPage() {
 	}, []);
 
 	const handleNextClick = () => {
-		// If on upload floor plan step, trigger extraction
+		// If on upload floor plan step, trigger extraction when user click on "Next" button
 		if (steps.value === 1 && uploadedFloorPlan) {
 			setStartExtraction(true);
 			steps.setStep(2); // Move to AI extraction step
@@ -214,6 +214,7 @@ function NewHomeOwnerPage() {
 							))}
 						</Steps.List>
 					</Box>
+
 					<Box
 						w="80%"
 						mx="auto"
@@ -230,6 +231,7 @@ function NewHomeOwnerPage() {
 						bgColor="white"
 						boxShadow="2px 2px 1px 1px rgba(0, 0, 0, 0.10), 0px 0px 2px 1px rgba(0, 0, 0, 0.10)"
 					>
+						{/* Content box */}
 						<Box
 							flex="1"
 							display="flex"
@@ -246,6 +248,7 @@ function NewHomeOwnerPage() {
 							</Steps.CompletedContent>
 						</Box>
 
+						{/* Navigation Buttons */}
 						{showNavigationButtons && (
 							<Flex justify="center" gap={4}>
 								{steps.value > 0 && (
