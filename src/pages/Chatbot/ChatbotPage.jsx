@@ -50,7 +50,6 @@ function ChatbotPage() {
 		setError(null);
 
 		try {
-			// Call backend API
 			const response = await server.post("/chatbot/chat-completion", {
 				query: inputValue
 			});
@@ -69,7 +68,7 @@ function ChatbotPage() {
 
 			setError(errorMessage);
 
-			ShowToast("error", "Chatbot Error", error);
+			ShowToast("error", "Failed to send message", error);
 
 			const errorAssistantMessage = {
 				role: "assistant",
@@ -95,7 +94,6 @@ function ChatbotPage() {
 
 	return (
 		<>
-			{/* Fixed Background */}
 			<Box
 				style={{
 					position: "fixed",
@@ -111,10 +109,8 @@ function ChatbotPage() {
 				}}
 			/>
 
-			{/* Main Container */}
 			<Flex h="80vh" justify="center" align="center">
 				<Card.Root width="100%" height={{ base: "calc(100vh - 12rem)", md: "75vh" }} variant="elevated" borderRadius={{ base: 20, md: 35 }} style={glassStyle} overflow="hidden">
-					{/* Header */}
 					<Box borderBottom="1px solid rgba(255, 255, 255, 0.2)" p={{ base: 4, md: 6 }} bg="rgba(255, 255, 255, 0.05)">
 						<Flex align="center" gap={3}>
 							<Box bg="rgba(255, 240, 189, 0.2)" p={2} borderRadius="full" animation="pulse 2s infinite">
@@ -131,7 +127,6 @@ function ChatbotPage() {
 						</Flex>
 					</Box>
 
-					{/* Messages Container */}
 					<Card.Body
 						p={{ base: 4, md: 6 }}
 						overflowY="auto"
@@ -154,7 +149,6 @@ function ChatbotPage() {
 						}}
 					>
 						<VStack gap={4} align="stretch">
-							{/* Quick Prompts - Show only when no user messages */}
 							{messages.length === 1 && (
 								<Box mb={4}>
 									<Text fontSize="sm" color="rgba(255, 255, 255, 0.7)" mb={3}>
@@ -190,7 +184,6 @@ function ChatbotPage() {
 								</Box>
 							)}
 
-							{/* Messages */}
 							{messages.map((message, idx) => (
 								<Flex key={idx} justify={message.role === "user" ? "flex-end" : "flex-start"} animation={`fadeInUp 0.3s ease-out ${idx * 0.1}s both`}>
 									<Flex maxW={{ base: "85%", md: "70%" }} gap={3} direction={message.role === "user" ? "row-reverse" : "row"}>
@@ -199,7 +192,6 @@ function ChatbotPage() {
 											{message.role === "user" ? <User size={20} color="white" /> : message.isError ? <AlertCircle size={20} color="#ff6b6b" /> : <Bot size={20} color="#fff0bd" />}
 										</Avatar.Root>
 
-										{/* Message Bubble */}
 										<VStack align="start" gap={1}>
 											<Box
 												bg={message.role === "user" ? "#C9A227" : message.isError ? "rgba(255, 100, 100, 0.15)" : "rgba(255, 255, 255, 0.15)"}
@@ -231,7 +223,6 @@ function ChatbotPage() {
 								</Flex>
 							))}
 
-							{/* Typing Indicator */}
 							{isTyping && (
 								<Flex justify="flex-start" animation="fadeInUp 0.3s ease-out">
 									<Flex gap={3} maxW="70%">
@@ -253,7 +244,6 @@ function ChatbotPage() {
 						</VStack>
 					</Card.Body>
 
-					{/* Input Area */}
 					<Box borderTop="1px solid rgba(255, 255, 255, 0.2)" p={{ base: 4, md: 6 }} bg="rgba(255, 255, 255, 0.05)">
 						<HStack gap={3}>
 							<Input
