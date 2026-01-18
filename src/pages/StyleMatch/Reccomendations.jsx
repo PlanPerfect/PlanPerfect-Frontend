@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useEffect, useState, useLayoutEffect } from "react";
 import { useLocation, useNavigate } from "react-router-dom";
 import { Card, Flex, Box, Text, Heading, Image, Badge, Button, HStack, VStack, Icon, SimpleGrid, Carousel, IconButton, Spinner } from "@chakra-ui/react";
 import { LuSparkles, LuSofa, LuShoppingCart, LuHeart, LuChevronLeft, LuChevronRight, LuCheck, LuX, LuPackageSearch } from "react-icons/lu";
@@ -18,7 +18,12 @@ function Recommendations() {
 	const [savedRecommendations, setSavedRecommendations] = useState([]);
 	const [currentCarouselIndex, setCurrentCarouselIndex] = useState(0);
 	const [removingRecId, setRemovingRecId] = useState(null);
+	const [isInitialMount, setIsInitialMount] = useState(true);
 	const navigate = useNavigate();
+
+	useLayoutEffect(() => {
+		setIsInitialMount(false);
+	}, []);
 
 	useEffect(() => {
 		if (furnitures && furnitures.length > 0) {
@@ -224,7 +229,7 @@ function Recommendations() {
 					{/* Left Panel - Style & Detected Furniture */}
 					<Card.Root width="35%" variant="elevated" borderRadius={35} style={glassStyle} overflow="hidden">
 						<Card.Body display="flex" flexDirection="column" gap={6} height="100%" overflow="hidden">
-							<MotionBox initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.5 }}>
+						<MotionBox initial={!isInitialMount && { opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.5 }}>
 								<VStack align="stretch" gap={3}>
 									<Flex align="center" gap={2}>
 										<Icon as={LuSparkles} boxSize={6} color="#fff0bd" />
@@ -242,7 +247,7 @@ function Recommendations() {
 
 							<Box height="1px" bg="rgba(255, 255, 255, 0.2)" />
 
-							<MotionBox initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.5, delay: 0.2 }} flex={1} overflow="hidden" display="flex" flexDirection="column">
+						<MotionBox initial={!isInitialMount && { opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.5, delay: 0.2 }} flex={1} overflow="hidden" display="flex" flexDirection="column">
 								<VStack align="stretch" gap={3} height="100%" overflow="hidden">
 									<Flex align="center" gap={2}>
 										<Icon as={LuSofa} boxSize={6} color="white" />
@@ -266,7 +271,7 @@ function Recommendations() {
 												{uniqueFurniture.map((furniture, index) => (
 													<MotionBox
 														key={furniture}
-														initial={{ opacity: 0, x: -20 }}
+													initial={!isInitialMount && { opacity: 0, x: -20 }}
 														animate={{ opacity: 1, x: 0 }}
 														transition={{ duration: 0.3, delay: 0.1 * index }}
 														bg="rgba(255, 255, 255, 0.08)"
@@ -332,7 +337,7 @@ function Recommendations() {
 																height="100%"
 																bg="rgba(255, 255, 255, 0.95)"
 																borderRadius={20}
-																initial={{ opacity: 0, scale: 0.95, y: 20 }}
+																initial={!isInitialMount && { opacity: 0, scale: 0.95, y: 20 }}
 																animate={{ opacity: 1, scale: 1, y: 0 }}
 																transition={{ duration: 0.4, ease: "easeOut" }}
 															>
@@ -397,7 +402,7 @@ function Recommendations() {
 																	height="100%"
 																	bg="rgba(255, 255, 255, 0.95)"
 																	borderRadius={20}
-																	initial={{ opacity: 0, scale: 0.95, x: 50 }}
+																initial={!isInitialMount && { opacity: 0, scale: 0.95, x: 50 }}
 																	animate={{ opacity: 1, scale: 1, x: 0 }}
 																	transition={{ duration: 0.4, ease: "easeOut" }}
 																>
@@ -470,7 +475,7 @@ function Recommendations() {
 												bg="rgba(255, 255, 255, 0.95)"
 												borderRadius={20}
 												mt={7}
-												initial={{ opacity: 0, scale: 0.9 }}
+											initial={!isInitialMount && { opacity: 0, scale: 0.9 }}
 												animate={{ opacity: 1, scale: 1 }}
 												transition={{ duration: 0.5, ease: "easeOut" }}
 												position="relative"
