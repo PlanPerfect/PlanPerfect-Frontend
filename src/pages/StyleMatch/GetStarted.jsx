@@ -1,6 +1,6 @@
 import { useState, useRef } from "react";
 import { useNavigate } from "react-router-dom";
-import { Card, Flex, Heading, Text, Box, Image, Avatar, Grid, IconButton, Carousel, Icon } from "@chakra-ui/react";
+import { Card, Flex, Heading, Text, Box, Image, Avatar, Grid, IconButton, Carousel, Icon, Popover, Portal } from "@chakra-ui/react";
 import { LuChevronLeft, LuChevronRight } from "react-icons/lu";
 import { RxRocket } from "react-icons/rx";
 import { motion } from "framer-motion";
@@ -17,6 +17,7 @@ function GetStarted() {
 	const [isLoading, setIsLoading] = useState(false);
 	const [roomImage, setRoomImage] = useState(SampleStyleBackground);
 	const [detectionSuccess, setDetectionSuccess] = useState(false);
+	const [selectedItem, setSelectedItem] = useState(null);
 	const styles = ["Boutique", "Classical", "Contemporary", "Country", "Eclectic", "Industrial", "Japanese", "Luxury", "Minimalist", "Modern", "Persian", "Scandinavian", "Vintage", "Wabi-Sabi", "Japandi", "Peranakan", "Boho"];
 	const [roomStyle, setRoomStyle] = useState(() => {
 		return styles[Math.floor(Math.random() * styles.length)];
@@ -254,30 +255,11 @@ function GetStarted() {
 				</Card.Root>
 
 				<Flex direction="column" width="75%" gap={3}>
-					<MotionCard
-						height="45%"
-						variant="elevated"
-						borderRadius={35}
-						style={glassStyle}
-						overflow="hidden"
-						initial={{ opacity: 0, y: -20 }}
-						animate={{ opacity: 1, y: 0 }}
-						transition={{ duration: 0.5, ease: "easeOut" }}
-					>
+					<MotionCard height="45%" variant="elevated" borderRadius={35} style={glassStyle} overflow="hidden" initial={{ opacity: 0, y: -20 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.5, ease: "easeOut" }}>
 						<Box position="relative" width="100%" height="100%">
 							<Image src={roomImage} alt="Room preview" objectFit="cover" width="100%" height="100%" opacity={0.5} />
 							<Box position="absolute" inset={0} bgGradient="to-b" gradientFrom="transparent" gradientTo="rgba(0,0,0,0.3)" />
-							<MotionBox
-								position="absolute"
-								bottom={3}
-								right={5}
-								fontWeight="md"
-								fontSize="2xl"
-								color="white"
-								initial={{ opacity: 0, x: 20 }}
-								animate={{ opacity: 1, x: 0 }}
-								transition={{ delay: 0.3, duration: 0.5 }}
-							>
+							<MotionBox position="absolute" bottom={3} right={5} fontWeight="md" fontSize="2xl" color="white" initial={{ opacity: 0, x: 20 }} animate={{ opacity: 1, x: 0 }} transition={{ delay: 0.3, duration: 0.5 }}>
 								<Text>{roomStyle}</Text>
 							</MotionBox>
 						</Box>
@@ -313,34 +295,61 @@ function GetStarted() {
 											<Carousel.Item key={pageIndex} index={pageIndex}>
 												<Grid templateColumns="repeat(3, 1fr)" gap={4} height="100%">
 													{chunk.map((item, index) => (
-														<MotionCard
-															key={index}
-															size="sm"
-															borderRadius={20}
-															maxHeight={"77px"}
-															initial={{ opacity: 0, scale: 0.8, y: 20 }}
-															animate={{ opacity: 1, scale: 1, y: 0 }}
-															cursor={"pointer"}
-															transition={{
-																duration: 0.4,
-																delay: index * 0.1,
-																ease: "easeOut"
-															}}
-														>
-															<Card.Body>
-																<Flex align="start" gap="3">
-																	<Avatar.Root size="lg" shape="rounded">
-																		<Avatar.Image src={item.image} />
-																		<Avatar.Fallback name={item.name} />
-																	</Avatar.Root>
+														<Popover.Root key={index} positioning={{ placement: "top-middle" }}>
+															<Popover.Trigger asChild>
+																<MotionCard
+																	size="sm"
+																	borderRadius={20}
+																	maxHeight={"77px"}
+																	initial={{ opacity: 0, scale: 0.8, y: 20 }}
+																	animate={{ opacity: 1, scale: 1, y: 0 }}
+																	cursor={"pointer"}
+																	transition={{
+																		duration: 0.4,
+																		delay: index * 0.1,
+																		ease: "easeOut"
+																	}}
+																>
+																	<Card.Body>
+																		<Flex align="start" gap="3">
+																			<Avatar.Root size="lg" shape="rounded">
+																				<Avatar.Image src={item.image} />
+																				<Avatar.Fallback name={item.name} />
+																			</Avatar.Root>
 
-																	<Box>
-																		<Card.Title>{item.name}</Card.Title>
-																		<Card.Description>Confidence: {item.confidence}</Card.Description>
-																	</Box>
-																</Flex>
-															</Card.Body>
-														</MotionCard>
+																			<Box>
+																				<Card.Title>{item.name}</Card.Title>
+																				<Card.Description>Confidence: {item.confidence}</Card.Description>
+																			</Box>
+																		</Flex>
+																	</Card.Body>
+																</MotionCard>
+															</Popover.Trigger>
+															<Popover.Positioner>
+																<Popover.Content maxW="400px">
+																	<Popover.Arrow />
+																	<Popover.Body p={0}>
+																		<Box>
+																			<Popover.Title fontWeight="semibold" fontSize="lg" p={4} pb={3} borderBottom="1px solid" borderColor="border.subtle">
+																				{item.name}
+																			</Popover.Title>
+																			<Box p={4}>
+																				<Image
+																					src={item.image}
+																					alt={item.name}
+																					borderRadius="md"
+																					width="100%"
+																					height="auto"
+																					maxH="200px"
+																					objectFit="cover"
+																				/>
+																			</Box>
+																		</Box>
+																	</Popover.Body>
+																	<Popover.CloseTrigger />
+																</Popover.Content>
+															</Popover.Positioner>
+														</Popover.Root>
 													))}
 												</Grid>
 											</Carousel.Item>
