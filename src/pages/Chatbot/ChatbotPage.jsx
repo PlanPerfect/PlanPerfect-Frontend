@@ -68,6 +68,9 @@ function ChatbotPage() {
 				const errorMessage = err.response.data.error.substring("ERROR: ".length);
 				console.error("Failed to send message: ", errorMessage);
 				ShowToast("error", errorMessage);
+			} else {
+				console.error("Failed to send message: ", err.response.data.error);
+				ShowToast("error", "An unexpected error occurred. Check console for more details.");
 			}
 		} finally {
 			setIsTyping(false);
