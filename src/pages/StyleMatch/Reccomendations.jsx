@@ -1,5 +1,5 @@
 import { useEffect, useState } from "react";
-import { useLocation } from "react-router-dom";
+import { useLocation, useNavigate } from "react-router-dom";
 import { Card, Flex, Box, Text, Heading, Image, Badge, Button, HStack, VStack, Icon, SimpleGrid, Carousel, IconButton, Spinner } from "@chakra-ui/react";
 import { LuSparkles, LuSofa, LuShoppingCart, LuHeart, LuChevronLeft, LuChevronRight, LuCheck, LuX, LuPackageSearch } from "react-icons/lu";
 import { motion } from "framer-motion";
@@ -18,6 +18,7 @@ function Recommendations() {
 	const [savedRecommendations, setSavedRecommendations] = useState([]);
 	const [currentCarouselIndex, setCurrentCarouselIndex] = useState(0);
 	const [removingRecId, setRemovingRecId] = useState(null);
+	const navigate = useNavigate();
 
 	useEffect(() => {
 		if (furnitures && furnitures.length > 0) {
@@ -30,6 +31,17 @@ function Recommendations() {
 			setUniqueFurniture(Object.keys(counts));
 		}
 	}, [furnitures]);
+
+	useEffect(() => {
+		if (!furnitures || furnitures.length === 0 || !style) {
+			ShowToast("info", "Please go back to upload an image for style matching.", "", {
+				action: {
+					label: "Go Back",
+					onClick: () => navigate("/stylematch")
+				}
+			});
+		}
+	}, [furnitures, style, navigate]);
 
 	const fetchRecommendations = async furnitureName => {
 		setLoadingRecs(true);
@@ -54,6 +66,9 @@ function Recommendations() {
 				throw new Error("Failed to fetch recommendations");
 			})
 			.catch(error => {
+				if (error.response?.status === 429) {
+					throw new Error("Rate limit exceeded");
+				}
 				throw error;
 			});
 
@@ -66,8 +81,7 @@ function Recommendations() {
 				title: "Recommendations found!"
 			},
 			error: {
-				title: "Failed to fetch recommendations",
-				description: "Please try again later"
+				title: error.message === "Rate limit exceeded" ? "Too many requests. Please try again later" : "Failed to fetch recommendations"
 			}
 		});
 
@@ -100,6 +114,9 @@ function Recommendations() {
 			return null;
 		} catch (error) {
 			console.error("Error fetching single recommendation:", error);
+			if (error.response?.status === 429) {
+				ShowToast("error", "Too many requests. Please try again later");
+			}
 			return null;
 		}
 	};
@@ -159,233 +176,161 @@ function Recommendations() {
 	const MotionCard = motion.create(Card.Root);
 	const MotionFlex = motion.create(Flex);
 
-	return (
-		<>
-			<Box
-				style={{
-					position: "fixed",
-					top: 0,
-					left: 0,
-					right: 0,
-					bottom: 0,
-					backgroundImage: `url(${StyleMatchBackground})`,
-					backgroundSize: "cover",
-					backgroundPosition: "center",
-					backgroundRepeat: "no-repeat",
-					zIndex: -1
-				}}
-			/>
+	if (furnitures && furnitures.length > 0 && style) {
+		return (
+			<>
+				<Box
+					style={{
+						position: "fixed",
+						top: 0,
+						left: 0,
+						right: 0,
+						bottom: 0,
+						backgroundImage: `url(${StyleMatchBackground})`,
+						backgroundSize: "cover",
+						backgroundPosition: "center",
+						backgroundRepeat: "no-repeat",
+						zIndex: -1
+					}}
+				/>
 
-			<Flex height="75vh" gap={4}>
-				{/* Left Panel - Style & Detected Furniture */}
-				<Card.Root width="35%" variant="elevated" borderRadius={35} style={glassStyle} overflow="hidden">
-					<Card.Body display="flex" flexDirection="column" gap={6} height="100%" overflow="hidden">
-						<MotionBox initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.5 }}>
-							<VStack align="stretch" gap={3}>
-								<Flex align="center" gap={2}>
-									<Icon as={LuSparkles} boxSize={6} color="#fff0bd" />
-									<Heading size="lg" color="white">
-										Your Style
-									</Heading>
-								</Flex>
-								<Box bg="rgba(255, 240, 189, 0.15)" borderRadius={20} padding={4} border="1px solid rgba(255, 240, 189, 0.3)">
-									<Text fontSize="2xl" fontWeight="bold" color="#fff0bd" textAlign="center">
-										{style || "Modern"}
-									</Text>
-								</Box>
-							</VStack>
-						</MotionBox>
-
-						<Box height="1px" bg="rgba(255, 255, 255, 0.2)" />
-
-						<MotionBox initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.5, delay: 0.2 }} flex={1} overflow="hidden" display="flex" flexDirection="column">
-							<VStack align="stretch" gap={3} height="100%" overflow="hidden">
-								<Flex align="center" gap={2}>
-									<Icon as={LuSofa} boxSize={6} color="white" />
-									<Heading size="lg" color="white">
-										Detected Items
-									</Heading>
-								</Flex>
-								<VStack
-									align="stretch"
-									gap={2}
-									flex={1}
-									overflowY="auto"
-									css={{
-										"&::-webkit-scrollbar": { display: "none" },
-										"-ms-overflow-style": "none",
-										"scrollbar-width": "none"
-									}}
-								>
-									{uniqueFurniture.length > 0 ? (
-										<SimpleGrid columns={2} spacing={4} gap={2}>
-											{uniqueFurniture.map((furniture, index) => (
-												<MotionBox
-													key={index}
-													initial={{ opacity: 0, x: -20 }}
-													animate={{ opacity: 1, x: 0 }}
-													transition={{ duration: 0.3, delay: 0.1 * index }}
-													bg="rgba(255, 255, 255, 0.08)"
-													borderRadius={15}
-													p={3}
-													border="1px solid rgba(255, 255, 255, 0.15)"
-													_hover={{
-														bg: "rgba(255, 255, 255, 0.12)",
-														transform: "translateX(5px)",
-														transition: "all 0.2s"
-													}}
-												>
-													<Flex align="center" gap={3}>
-														<Box w={8} h={8} borderRadius="full" bg="rgba(255, 240, 189, 0.2)" display="flex" alignItems="center" justifyContent="center">
-															<Text color="#fff0bd" fontWeight="bold">
-																{furnitureCounts[furniture] || 0}
-															</Text>
-														</Box>
-														<Text color="white" fontSize="md" fontWeight="medium">
-															{furniture}
-														</Text>
-													</Flex>
-												</MotionBox>
-											))}
-										</SimpleGrid>
-									) : (
-										<Text color="rgba(255, 255, 255, 0.6)" textAlign="center">
-											No furniture detected
+				<Flex height="75vh" gap={4}>
+					{/* Left Panel - Style & Detected Furniture */}
+					<Card.Root width="35%" variant="elevated" borderRadius={35} style={glassStyle} overflow="hidden">
+						<Card.Body display="flex" flexDirection="column" gap={6} height="100%" overflow="hidden">
+							<MotionBox initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.5 }}>
+								<VStack align="stretch" gap={3}>
+									<Flex align="center" gap={2}>
+										<Icon as={LuSparkles} boxSize={6} color="#fff0bd" />
+										<Heading size="lg" color="white">
+											Your Style
+										</Heading>
+									</Flex>
+									<Box bg="rgba(255, 240, 189, 0.15)" borderRadius={20} padding={4} border="1px solid rgba(255, 240, 189, 0.3)">
+										<Text fontSize="2xl" fontWeight="bold" color="#fff0bd" textAlign="center">
+											{style || "Modern"}
 										</Text>
-									)}
+									</Box>
 								</VStack>
-							</VStack>
-						</MotionBox>
-					</Card.Body>
-				</Card.Root>
+							</MotionBox>
 
-				{/* Right Panel - Recommendations */}
-				<Flex direction="column" width="65%" gap={3}>
-					<Card.Root
-						height="100%"
-						variant="elevated"
-						borderRadius={35}
-						style={glassStyle}
-						overflowY="auto"
-						overflowX="hidden"
-						css={{
-							"&::-webkit-scrollbar": { display: "none" },
-							"-ms-overflow-style": "none",
-							"scrollbar-width": "none"
-						}}
-					>
-						<Card.Body paddingTop={4} paddingBottom={5} px={4} height="100%">
-							<VStack align="stretch" gap={2} height="100%">
-								<Box flex="0 0 45%" display="flex" flexDirection="column" minHeight="0">
-									<Carousel.Root slideCount={furnitures.length} display="flex" flexDirection="column" height="100%">
-										<Box flex={1}>
-											<Carousel.ItemGroup height="100%">
-												{furnitures.map((item, index) => (
-													<Carousel.Item key={item.id} index={index} height="100%">
-														<MotionCard
-															flexDirection="row"
-															overflow="hidden"
-															height="100%"
-															bg="rgba(255, 255, 255, 0.95)"
-															borderRadius={20}
-															initial={{ opacity: 0, scale: 0.95, y: 20 }}
-															animate={{ opacity: 1, scale: 1, y: 0 }}
-															transition={{ duration: 0.4, ease: "easeOut" }}
-														>
-															<Box position="relative" minWidth={"220px"} maxWidth={"220px"} minHeight="150px" maxHeight="150px">
-																<Image objectFit="cover" width="100%" height="100%" src={furnitures[index].image} alt={furnitures[index].name} />
+							<Box height="1px" bg="rgba(255, 255, 255, 0.2)" />
+
+							<MotionBox initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.5, delay: 0.2 }} flex={1} overflow="hidden" display="flex" flexDirection="column">
+								<VStack align="stretch" gap={3} height="100%" overflow="hidden">
+									<Flex align="center" gap={2}>
+										<Icon as={LuSofa} boxSize={6} color="white" />
+										<Heading size="lg" color="white">
+											Detected Items
+										</Heading>
+									</Flex>
+									<VStack
+										align="stretch"
+										gap={2}
+										flex={1}
+										overflowY="auto"
+										css={{
+											"&::-webkit-scrollbar": { display: "none" },
+											"-ms-overflow-style": "none",
+											"scrollbar-width": "none"
+										}}
+									>
+										{uniqueFurniture.length > 0 ? (
+											<SimpleGrid columns={2} spacing={4} gap={2}>
+												{uniqueFurniture.map((furniture, index) => (
+													<MotionBox
+														key={index}
+														initial={{ opacity: 0, x: -20 }}
+														animate={{ opacity: 1, x: 0 }}
+														transition={{ duration: 0.3, delay: 0.1 * index }}
+														bg="rgba(255, 255, 255, 0.08)"
+														borderRadius={15}
+														p={3}
+														border="1px solid rgba(255, 255, 255, 0.15)"
+														_hover={{
+															bg: "rgba(255, 255, 255, 0.12)",
+															transform: "translateX(5px)",
+															transition: "all 0.2s"
+														}}
+													>
+														<Flex align="center" gap={3}>
+															<Box w={8} h={8} borderRadius="full" bg="rgba(255, 240, 189, 0.2)" display="flex" alignItems="center" justifyContent="center">
+																<Text color="#fff0bd" fontWeight="bold">
+																	{furnitureCounts[furniture] || 0}
+																</Text>
 															</Box>
-															<Box flex={1} display="flex" flexDirection="column" justifyContent="space-between">
-																<Card.Body py={3} px={4}>
-																	<Card.Title fontSize="lg" mb={2}>
-																		{furnitures[index].name}
-																	</Card.Title>
-																	<Card.Description fontSize="sm">StyleMatch is {furnitures[index].confidence} confident of this prediction!</Card.Description>
-																</Card.Body>
-																<Card.Footer gap={2} pb={3} px={4}>
-																	<Button
-																		bgColor={"#D4AF37"}
-																		borderRadius={6}
-																		leftIcon={<LuShoppingCart />}
-																		size="sm"
-																		onClick={() => fetchRecommendations(furnitures[index].name)}
-																		isLoading={loadingRecs}
-																		disabled={selectedFurniture === furnitures[index].name}
-																	>
-																		{selectedFurniture === furnitures[index].name ? "Selected" : "Find Recommendations"}
-																	</Button>
-																</Card.Footer>
-															</Box>
-														</MotionCard>
-													</Carousel.Item>
+															<Text color="white" fontSize="md" fontWeight="medium">
+																{furniture}
+															</Text>
+														</Flex>
+													</MotionBox>
 												))}
-											</Carousel.ItemGroup>
-										</Box>
+											</SimpleGrid>
+										) : (
+											<Text color="rgba(255, 255, 255, 0.6)" textAlign="center">
+												No furniture detected
+											</Text>
+										)}
+									</VStack>
+								</VStack>
+							</MotionBox>
+						</Card.Body>
+					</Card.Root>
 
-										<Carousel.Control justifyContent="center" gap={4}>
-											<Carousel.PrevTrigger asChild>
-												<IconButton size="sm" variant="outline" borderRadius="full">
-													<LuChevronLeft />
-												</IconButton>
-											</Carousel.PrevTrigger>
-											<Carousel.Indicators />
-											<Carousel.NextTrigger asChild>
-												<IconButton size="sm" variant="outline" borderRadius="full">
-													<LuChevronRight />
-												</IconButton>
-											</Carousel.NextTrigger>
-										</Carousel.Control>
-									</Carousel.Root>
-								</Box>
-
-								<Box height="1px" bg="rgba(255, 255, 255, 0.2)" />
-
-								<Box flex="0 0 45%" minHeight="0">
-									{recommendations.length > 0 ? (
-										<Carousel.Root slideCount={recommendations.length} index={currentCarouselIndex} onIndexChange={e => setCurrentCarouselIndex(e.index)} display="flex" flexDirection="column" height="100%">
+					{/* Right Panel - Recommendations */}
+					<Flex direction="column" width="65%" gap={3}>
+						<Card.Root
+							height="100%"
+							variant="elevated"
+							borderRadius={35}
+							style={glassStyle}
+							overflowY="auto"
+							overflowX="hidden"
+							css={{
+								"&::-webkit-scrollbar": { display: "none" },
+								"-ms-overflow-style": "none",
+								"scrollbar-width": "none"
+							}}
+						>
+							<Card.Body paddingTop={4} paddingBottom={5} px={4} height="100%">
+								<VStack align="stretch" gap={2} height="100%">
+									<Box flex="0 0 45%" display="flex" flexDirection="column" minHeight="0">
+										<Carousel.Root slideCount={furnitures.length} display="flex" flexDirection="column" height="100%">
 											<Box flex={1}>
 												<Carousel.ItemGroup height="100%">
-													{recommendations.map((rec, index) => (
-														<Carousel.Item key={rec.id} index={index} height="100%">
+													{furnitures.map((item, index) => (
+														<Carousel.Item key={item.id} index={index} height="100%">
 															<MotionCard
 																flexDirection="row"
 																overflow="hidden"
 																height="100%"
 																bg="rgba(255, 255, 255, 0.95)"
 																borderRadius={20}
-																initial={{ opacity: 0, scale: 0.95, x: 50 }}
-																animate={{ opacity: 1, scale: 1, x: 0 }}
+																initial={{ opacity: 0, scale: 0.95, y: 20 }}
+																animate={{ opacity: 1, scale: 1, y: 0 }}
 																transition={{ duration: 0.4, ease: "easeOut" }}
 															>
-																<Box position="relative" minWidth={"220px"} maxWidth="30%" minH={"180px"} maxHeight="180px">
-																	<Image objectFit="cover" minWidth={"164px"} width="100%" minHeight={"171px"} height="100%" src={rec.image} alt={rec.name} />
+																<Box position="relative" minWidth={"220px"} maxWidth={"220px"} minHeight="150px" maxHeight="150px">
+																	<Image objectFit="cover" width="100%" height="100%" src={furnitures[index].image} alt={furnitures[index].name} />
 																</Box>
 																<Box flex={1} display="flex" flexDirection="column" justifyContent="space-between">
 																	<Card.Body py={3} px={4}>
 																		<Card.Title fontSize="lg" mb={2}>
-																			{rec.name}
+																			{furnitures[index].name}
 																		</Card.Title>
-																		<Card.Description fontSize="sm">{rec.description}</Card.Description>
+																		<Card.Description fontSize="sm">StyleMatch is {furnitures[index].confidence} confident of this prediction!</Card.Description>
 																	</Card.Body>
 																	<Card.Footer gap={2} pb={3} px={4}>
 																		<Button
-																			bgColor={isRecommendationSaved(rec.id) ? "#4CAF50" : "#D4AF37"}
+																			bgColor={"#D4AF37"}
 																			borderRadius={6}
-																			leftIcon={isRecommendationSaved(rec.id) ? <LuCheck /> : <LuHeart />}
+																			leftIcon={<LuShoppingCart />}
 																			size="sm"
-																			onClick={() => toggleSaveRecommendation(rec)}
+																			onClick={() => fetchRecommendations(furnitures[index].name)}
+																			isLoading={loadingRecs}
+																			disabled={selectedFurniture === furnitures[index].name}
 																		>
-																			{isRecommendationSaved(rec.id) ? "Saved" : "Save"}
-																		</Button>
-																		<Button bgColor="#FF6B6B" borderRadius={6} size="sm" onClick={() => handleNotRelevant(rec.id, index)} color="white" disabled={removingRecId === rec.id}>
-																			{removingRecId === rec.id ? (
-																				<Spinner size="sm" color="white" />
-																			) : (
-																				<>
-																					<Icon as={LuX} mr={1} />
-																					Not Relevant
-																				</>
-																			)}
+																			{selectedFurniture === furnitures[index].name ? "Selected" : "Find Recommendations"}
 																		</Button>
 																	</Card.Footer>
 																</Box>
@@ -395,7 +340,7 @@ function Recommendations() {
 												</Carousel.ItemGroup>
 											</Box>
 
-											<Carousel.Control justifyContent="center" gap={4} mt={2}>
+											<Carousel.Control justifyContent="center" gap={4}>
 												<Carousel.PrevTrigger asChild>
 													<IconButton size="sm" variant="outline" borderRadius="full">
 														<LuChevronLeft />
@@ -409,77 +354,170 @@ function Recommendations() {
 												</Carousel.NextTrigger>
 											</Carousel.Control>
 										</Carousel.Root>
-									) : loadingRecs ? (
-										<Flex height="100%" align="center" justify="center" bg="rgba(255, 255, 255, 0.95)" borderRadius={20} mt={7}>
-											<VStack gap={3}>
-												<Spinner size="xl" color="#D4AF37" thickness="4px" />
-												<Text color="gray.600" fontSize="lg" fontWeight="medium">
-													Finding perfect matches...
-												</Text>
-											</VStack>
-										</Flex>
-									) : (
-										<MotionFlex
-											height="100%"
-											align="center"
-											justify="center"
-											bg="rgba(255, 255, 255, 0.95)"
-											borderRadius={20}
-											mt={7}
-											initial={{ opacity: 0, scale: 0.9 }}
-											animate={{ opacity: 1, scale: 1 }}
-											transition={{ duration: 0.5, ease: "easeOut" }}
-											position="relative"
-											overflow="hidden"
-										>
-											<Box
-												position="absolute"
-												top="50%"
-												left="50%"
-												transform="translate(-50%, -50%)"
-												width="300px"
-												height="300px"
-												borderRadius="full"
-												bg="radial-gradient(circle, rgba(212, 175, 55, 0.1) 0%, rgba(212, 175, 55, 0) 70%)"
-												animation="pulse 3s ease-in-out infinite"
-												css={{
-													"@keyframes pulse": {
-														"0%, 100%": { transform: "translate(-50%, -50%) scale(1)", opacity: 0.5 },
-														"50%": { transform: "translate(-50%, -50%) scale(1.2)", opacity: 0.3 }
-													}
-												}}
-											/>
-											<VStack gap={4} zIndex={1}>
-												<MotionBox
-													initial={{ rotate: 0 }}
-													animate={{ rotate: [0, 10, -10, 0] }}
-													transition={{
-														duration: 2,
-														repeat: Infinity,
-														ease: "easeInOut"
-													}}
-												>
-													<Icon as={LuPackageSearch} boxSize={16} color="#D4AF37" />
-												</MotionBox>
-												<VStack gap={1}>
-													<Text color="gray.700" fontSize="xl" fontWeight="bold">
-														Ready to Explore?
-													</Text>
-													<Text color="gray.500" fontSize="sm" textAlign="center" maxW="300px">
-														Select a furniture item above to discover perfectly matched recommendations
+									</Box>
+
+									<Box height="1px" bg="rgba(255, 255, 255, 0.2)" />
+
+									<Box flex="0 0 45%" minHeight="0">
+										{recommendations.length > 0 ? (
+											<Carousel.Root slideCount={recommendations.length} index={currentCarouselIndex} onIndexChange={e => setCurrentCarouselIndex(e.index)} display="flex" flexDirection="column" height="100%">
+												<Box flex={1}>
+													<Carousel.ItemGroup height="100%">
+														{recommendations.map((rec, index) => (
+															<Carousel.Item key={rec.id} index={index} height="100%">
+																<MotionCard
+																	flexDirection="row"
+																	overflow="hidden"
+																	height="100%"
+																	bg="rgba(255, 255, 255, 0.95)"
+																	borderRadius={20}
+																	initial={{ opacity: 0, scale: 0.95, x: 50 }}
+																	animate={{ opacity: 1, scale: 1, x: 0 }}
+																	transition={{ duration: 0.4, ease: "easeOut" }}
+																>
+																	<Box position="relative" minWidth={"220px"} maxWidth="30%" minH={"180px"} maxHeight="180px">
+																		<Image objectFit="cover" minWidth={"164px"} width="100%" minHeight={"171px"} height="100%" src={rec.image} alt={rec.name} />
+																	</Box>
+																	<Box flex={1} display="flex" flexDirection="column" justifyContent="space-between">
+																		<Card.Body py={3} px={4}>
+																			<Card.Title fontSize="lg" mb={2}>
+																				{rec.name}
+																			</Card.Title>
+																			<Card.Description fontSize="sm">{rec.description}</Card.Description>
+																		</Card.Body>
+																		<Card.Footer gap={2} pb={3} px={4}>
+																			<Button
+																				bgColor={isRecommendationSaved(rec.id) ? "#4CAF50" : "#D4AF37"}
+																				borderRadius={6}
+																				leftIcon={isRecommendationSaved(rec.id) ? <LuCheck /> : <LuHeart />}
+																				size="sm"
+																				onClick={() => toggleSaveRecommendation(rec)}
+																			>
+																				{isRecommendationSaved(rec.id) ? "Saved" : "Save"}
+																			</Button>
+																			<Button bgColor="#FF6B6B" borderRadius={6} size="sm" onClick={() => handleNotRelevant(rec.id, index)} color="white" disabled={removingRecId === rec.id}>
+																				{removingRecId === rec.id ? (
+																					<Spinner size="sm" color="white" />
+																				) : (
+																					<>
+																						<Icon as={LuX} mr={1} />
+																						Not Relevant
+																					</>
+																				)}
+																			</Button>
+																		</Card.Footer>
+																	</Box>
+																</MotionCard>
+															</Carousel.Item>
+														))}
+													</Carousel.ItemGroup>
+												</Box>
+
+												<Carousel.Control justifyContent="center" gap={4} mt={2}>
+													<Carousel.PrevTrigger asChild>
+														<IconButton size="sm" variant="outline" borderRadius="full">
+															<LuChevronLeft />
+														</IconButton>
+													</Carousel.PrevTrigger>
+													<Carousel.Indicators />
+													<Carousel.NextTrigger asChild>
+														<IconButton size="sm" variant="outline" borderRadius="full">
+															<LuChevronRight />
+														</IconButton>
+													</Carousel.NextTrigger>
+												</Carousel.Control>
+											</Carousel.Root>
+										) : loadingRecs ? (
+											<Flex height="100%" align="center" justify="center" bg="rgba(255, 255, 255, 0.95)" borderRadius={20} mt={7}>
+												<VStack gap={3}>
+													<Spinner size="xl" color="#D4AF37" thickness="4px" />
+													<Text color="gray.600" fontSize="lg" fontWeight="medium">
+														Finding perfect matches...
 													</Text>
 												</VStack>
-											</VStack>
-										</MotionFlex>
-									)}
-								</Box>
-							</VStack>
-						</Card.Body>
-					</Card.Root>
+											</Flex>
+										) : (
+											<MotionFlex
+												height="100%"
+												align="center"
+												justify="center"
+												bg="rgba(255, 255, 255, 0.95)"
+												borderRadius={20}
+												mt={7}
+												initial={{ opacity: 0, scale: 0.9 }}
+												animate={{ opacity: 1, scale: 1 }}
+												transition={{ duration: 0.5, ease: "easeOut" }}
+												position="relative"
+												overflow="hidden"
+											>
+												<Box
+													position="absolute"
+													top="50%"
+													left="50%"
+													transform="translate(-50%, -50%)"
+													width="300px"
+													height="300px"
+													borderRadius="full"
+													bg="radial-gradient(circle, rgba(212, 175, 55, 0.1) 0%, rgba(212, 175, 55, 0) 70%)"
+													animation="pulse 3s ease-in-out infinite"
+													css={{
+														"@keyframes pulse": {
+															"0%, 100%": { transform: "translate(-50%, -50%) scale(1)", opacity: 0.5 },
+															"50%": { transform: "translate(-50%, -50%) scale(1.2)", opacity: 0.3 }
+														}
+													}}
+												/>
+												<VStack gap={4} zIndex={1}>
+													<MotionBox
+														initial={{ rotate: 0 }}
+														animate={{ rotate: [0, 10, -10, 0] }}
+														transition={{
+															duration: 2,
+															repeat: Infinity,
+															ease: "easeInOut"
+														}}
+													>
+														<Icon as={LuPackageSearch} boxSize={16} color="#D4AF37" />
+													</MotionBox>
+													<VStack gap={1}>
+														<Text color="gray.700" fontSize="xl" fontWeight="bold">
+															Ready to Explore?
+														</Text>
+														<Text color="gray.500" fontSize="sm" textAlign="center" maxW="300px">
+															Select a furniture item above to discover perfectly matched recommendations
+														</Text>
+													</VStack>
+												</VStack>
+											</MotionFlex>
+										)}
+									</Box>
+								</VStack>
+							</Card.Body>
+						</Card.Root>
+					</Flex>
 				</Flex>
-			</Flex>
-		</>
-	);
+			</>
+		);
+	} else {
+		return (
+			<>
+				<Box
+					style={{
+						position: "fixed",
+						top: 0,
+						left: 0,
+						right: 0,
+						bottom: 0,
+						backgroundImage: `url(${StyleMatchBackground})`,
+						backgroundSize: "cover",
+						backgroundPosition: "center",
+						backgroundRepeat: "no-repeat",
+						zIndex: -1
+					}}
+				/>
+			</>
+		);
+	}
 }
 
 export default Recommendations;

@@ -23,5 +23,6 @@ export default function ShowToast(type, title, description, options = {}) {
         title: title !== null ? title : "",
         description: description !== null ? description : "",
         duration: options.duration || 4500,
+        action: options.action || undefined,
     });
 }
