@@ -205,68 +205,89 @@ function GenerateDesignDocument({ floorPlanFile, preferences, budget, extraction
 					</Box>
 				)}
 
-				{/* Chatbot CTA Button */}
+				{/* Before Generation */}
 				{!generatedPdfUrl && (
-					<Button
-						size="xl"
-						bg="#D4AF37"
-						color="white"
-						_hover={{ bg: "#C9A961" }}
-						w="100%"
-						h="60px"
-						fontSize="lg"
-						leftIcon={<IoSparkles />}
-						onClick={() => navigate("/chatbot")}
-					>
-						Chat with our chatbot to get a more cohesive report
-					</Button>
+					<>
+						{/* Chatbot CTA Button - PRIMARY */}
+						<Button
+							size="xl"
+							bg="#D4AF37"
+							color="white"
+							_hover={{ bg: "#C9A961" }}
+							w="100%"
+							h="60px"
+							fontSize="lg"
+							leftIcon={<IoSparkles />}
+							onClick={() => navigate("/chatbot")}
+						>
+							Chat with our chatbot to get a more cohesive report
+						</Button>
+
+						{/* Skip & Generate Button - SECONDARY */}
+						<Button
+							size="xl"
+							variant="outline"
+							borderColor="#D4AF37"
+							color="#D4AF37"
+							bg="transparent"
+							_hover={{ bg: "yellow.50" }}
+							onClick={handleGenerateDocument}
+							disabled={isGenerating || !floorPlanFile}
+							leftIcon={isGenerating ? <Spinner size="sm" /> : <IoSparkles />}
+							w="100%"
+							h="60px"
+							fontSize="lg"
+						>
+							{isGenerating
+								? "Generating Your Document..."
+								: "Skip and generate design document now"}
+						</Button>
+					</>
 				)}
 
-				{/* Skip & Generate Button (Secondary) */}
-				<Button
-					size="xl"
-					variant={generatedPdfUrl ? "solid" : "outline"}
-					borderColor={generatedPdfUrl ? "transparent" : "#D4AF37"}
-					color={generatedPdfUrl ? "white" : "#D4AF37"}
-                    bg={generatedPdfUrl ? "#D4AF37" : "transparent"}
-					_hover={generatedPdfUrl ? { bg: "#C9A961" } : { bg: "yellow.50" }}
-					onClick={handleGenerateDocument}
-					disabled={isGenerating || !floorPlanFile}
-					leftIcon={
-						isGenerating ? <Spinner size="sm" /> : <IoSparkles />
-					}
-					w="100%"
-					h="60px"
-					fontSize="lg"
-				>
-					{isGenerating
-						? "Generating Your Document..."
-						: "Skip and generate design document now"}
-				</Button>
-
-				{/* Download Again Button (if PDF was generated) */}
+				{/* After Generation */}
 				{generatedPdfUrl && !isGenerating && (
-					<Button
-						size="xl"
-						variant="outline"
-						borderColor="#D4AF37"
-						color="#D4AF37"
-						_hover={{ bg: "yellow.50" }}
-						leftIcon={<FaDownload />}
-						onClick={() => {
-							const link = document.createElement("a");
-							link.href = generatedPdfUrl;
-							link.download = `interior_design_proposal_${Date.now()}.pdf`;
-							document.body.appendChild(link);
-							link.click();
-							document.body.removeChild(link);
-						}}
-						w="100%"
-						h="60px"
-						fontSize="lg"
-					>
-						Download Again
-					</Button>
+					<>
+						{/* Generate Again Button - PRIMARY */}
+						<Button
+							size="xl"
+							bg="#D4AF37"
+							color="white"
+							_hover={{ bg: "#C9A961" }}
+							onClick={handleGenerateDocument}
+							disabled={isGenerating || !floorPlanFile}
+							leftIcon={<IoSparkles />}
+							w="100%"
+							h="60px"
+							fontSize="lg"
+						>
+							Generate Again
+						</Button>
+
+						{/* Download Again Button - SECONDARY */}
+						<Button
+							size="xl"
+							variant="outline"
+							borderColor="#D4AF37"
+							color="#D4AF37"
+							bg="transparent"
+							_hover={{ bg: "yellow.50" }}
+							leftIcon={<FaDownload />}
+							onClick={() => {
+								const link = document.createElement("a");
+								link.href = generatedPdfUrl;
+								link.download = `interior_design_proposal_${Date.now()}.pdf`;
+								document.body.appendChild(link);
+								link.click();
+								document.body.removeChild(link);
+							}}
+							w="100%"
+							h="60px"
+							fontSize="lg"
+						>
+							Download Again
+						</Button>
+					</>
 				)}
 
 				<Text fontSize="xs" color="gray.500" textAlign="center">
