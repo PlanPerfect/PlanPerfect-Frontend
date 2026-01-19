@@ -206,7 +206,7 @@ function GenerateDesignDocument({ floorPlanFile, preferences, budget, extraction
 				)}
 
 				{/* Before Generation */}
-				{!generatedPdfUrl && (
+				{!generatedPdfUrl && !isGenerating && (
 					<>
 						{/* Chatbot CTA Button - PRIMARY */}
 						<Button
@@ -232,23 +232,40 @@ function GenerateDesignDocument({ floorPlanFile, preferences, budget, extraction
 							bg="transparent"
 							_hover={{ bg: "yellow.50" }}
 							onClick={handleGenerateDocument}
-							disabled={isGenerating || !floorPlanFile}
-							leftIcon={isGenerating ? <Spinner size="sm" /> : <IoSparkles />}
+							disabled={!floorPlanFile}
+							leftIcon={<IoSparkles />}
 							w="100%"
 							h="60px"
 							fontSize="lg"
 						>
-							{isGenerating
-								? "Generating Your Document..."
-								: "Skip and generate design document now"}
+							Skip and generate design document now
 						</Button>
 					</>
 				)}
 
+				{/* Generating */}
+				{!generatedPdfUrl && isGenerating && (
+					<Button
+						size="xl"
+						variant="outline"
+						borderColor="#D4AF37"
+						color="#D4AF37"
+						bg="transparent"
+						_hover={{ bg: "yellow.50" }}
+						disabled={true}
+						leftIcon={<Spinner size="sm" />}
+						w="100%"
+						h="60px"
+						fontSize="lg"
+					>
+						Generating Your Document...
+					</Button>
+				)}
+
 				{/* After Generation */}
-				{generatedPdfUrl && !isGenerating && (
+				{generatedPdfUrl && (
 					<>
-						{/* Generate Again Button - PRIMARY */}
+						{/* Generate Again Button*/}
 						<Button
 							size="xl"
 							bg="#D4AF37"
@@ -256,15 +273,15 @@ function GenerateDesignDocument({ floorPlanFile, preferences, budget, extraction
 							_hover={{ bg: "#C9A961" }}
 							onClick={handleGenerateDocument}
 							disabled={isGenerating || !floorPlanFile}
-							leftIcon={<IoSparkles />}
+							leftIcon={isGenerating ? <Spinner size="sm" /> : <IoSparkles />}
 							w="100%"
 							h="60px"
 							fontSize="lg"
 						>
-							Generate Again
+							{isGenerating ? "Generating Your Document..." : "Generate Again"}
 						</Button>
 
-						{/* Download Again Button - SECONDARY */}
+						{/* Download Again Button */}
 						<Button
 							size="xl"
 							variant="outline"
@@ -284,6 +301,7 @@ function GenerateDesignDocument({ floorPlanFile, preferences, budget, extraction
 							w="100%"
 							h="60px"
 							fontSize="lg"
+							disabled={isGenerating}
 						>
 							Download Again
 						</Button>
@@ -291,8 +309,7 @@ function GenerateDesignDocument({ floorPlanFile, preferences, budget, extraction
 				)}
 
 				<Text fontSize="xs" color="gray.500" textAlign="center">
-					Generation typically takes 30-60 seconds. Your document will
-					download automatically.
+					Generation may take a moment. Your document will download automatically once it's ready.
 				</Text>
 			</VStack>
 		</Box>
