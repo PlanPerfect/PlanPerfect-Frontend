@@ -417,7 +417,7 @@ function ExistingHomeOwner() {
 								<Steps.Item key={index} index={index} display="flex" alignItems="center">
 									<Flex direction="column" align="center" mb={2}>
 										<Flex direction="column" align="center" gap={1}>
-											<Steps.Trigger cursor="pointer">
+											<Steps.Trigger cursor="default" pointerEvents="none">
 												<Steps.Indicator borderRadius="full" width="56px" height="56px" fontSize="24px">
 													<Steps.Status complete={<FaCheck />} incomplete={item.icon} />
 												</Steps.Indicator>
