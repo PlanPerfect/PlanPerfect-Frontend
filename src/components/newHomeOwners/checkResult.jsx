@@ -41,25 +41,37 @@ function CheckResult({ extractionResults, onUpdateExtractionResults }) {
 	}, [extractionResults]);
 
 	const handleIncrement = (room) => {
-		updateRoomCounts((prev) => ({
-			...prev,
-			[room]: Math.min(10, prev[room] + 1),
-		}));
+		setRoomCounts((prev) => {
+			const newCounts = {
+				...prev,
+				[room]: Math.min(10, prev[room] + 1),
+			};
+			updateExtractionResults(newCounts);
+			return newCounts;
+		});
 	};
 
 	const handleDecrement = (room) => {
-		updateRoomCounts((prev) => ({
-			...prev,
-			[room]: Math.max(0, prev[room] - 1),
-		}));
+		setRoomCounts((prev) => {
+			const newCounts = {
+				...prev,
+				[room]: Math.max(0, prev[room] - 1),
+			};
+			updateExtractionResults(newCounts);
+			return newCounts;
+		});
 	};
 
 	const handleInputChange = (room, value) => {
 		const numValue = parseInt(value) || 0;
-		updateRoomCounts((prev) => ({
-			...prev,
-			[room]: Math.min(10, Math.max(0, numValue)),
-		}));
+		setRoomCounts((prev) => {
+			const newCounts = {
+				...prev,
+				[room]: Math.min(10, Math.max(0, numValue)),
+			};
+			updateExtractionResults(newCounts);
+			return newCounts;
+		});
 	};
 
 	// Extract image URL from extraction results
@@ -67,32 +79,31 @@ function CheckResult({ extractionResults, onUpdateExtractionResults }) {
 
 	const updateUnitInfo = (key, value) => {
 		onUpdateExtractionResults((prev) => ({
-		  ...prev,
-		  unitInfo: {
-			...prev.unitInfo,
-			[key]: value,
-		  },
+			...prev,
+			unitInfo: {
+				...prev.unitInfo,
+				[key]: value,
+			},
 		}));
 	};
 
-	const updateRoomCounts = (newCounts) => {
-		setRoomCounts(newCounts);
-	  
+	// Function to update extraction results with new room counts
+	const updateExtractionResults = (newCounts) => {
 		onUpdateExtractionResults((prev) => ({
-		  ...prev,
-		  unitInfo: {
-			...prev.unitInfo,
-			room_counts: {
-			  BEDROOM: newCounts.bedroom,
-			  BATH: newCounts.bathroom,
-			  LEDGE: newCounts.ledge,
-			  KITCHEN: newCounts.kitchen,
-			  LIVING: newCounts.livingRoom,
-			  BALCONY: newCounts.balcony,
+			...prev,
+			unitInfo: {
+				...prev.unitInfo,
+				room_counts: {
+					BEDROOM: newCounts.bedroom,
+					BATH: newCounts.bathroom,
+					LEDGE: newCounts.ledge,
+					KITCHEN: newCounts.kitchen,
+					LIVING: newCounts.livingRoom,
+					BALCONY: newCounts.balcony,
+				},
 			},
-		  },
 		}));
-	};	
+	};
 
 	const rooms = [
 		{ key: "bedroom", label: "Bedroom", icon: IoBed },
@@ -154,8 +165,8 @@ function CheckResult({ extractionResults, onUpdateExtractionResults }) {
 						borderRadius="md"
 						size="lg"
 						onChange={(e) => {
-							setUnitRooms(e.currentTarget.value)
-							updateUnitInfo("unit_rooms", [e.currentTarget.value]);
+							setUnitRooms(e.currentTarget.value);
+							updateUnitInfo("unit_rooms", e.currentTarget.value);
 						}}
 					/>
 				</Box>
@@ -174,7 +185,7 @@ function CheckResult({ extractionResults, onUpdateExtractionResults }) {
 						borderRadius="md"
 						size="lg"
 						onChange={(e) => {
-							setUnitType(e.currentTarget.value)
+							setUnitType(e.currentTarget.value);
 							updateUnitInfo("unit_types", [e.currentTarget.value]);
 						}}
 					/>
@@ -194,7 +205,7 @@ function CheckResult({ extractionResults, onUpdateExtractionResults }) {
 						borderRadius="md"
 						size="lg"
 						onChange={(e) => {
-							setUnitSize(e.currentTarget.value)
+							setUnitSize(e.currentTarget.value);
 							updateUnitInfo("unit_sizes", [e.currentTarget.value]);
 						}}
 					/>
@@ -263,7 +274,7 @@ function CheckResult({ extractionResults, onUpdateExtractionResults }) {
 										: "pointer"
 								}
 								_hover={
-									roomCounts[key] === 0
+									roomCounts[key] === 10
 										? {}
 										: { bg: "#F4E5B2" }
 								}
