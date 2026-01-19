@@ -1,9 +1,10 @@
 import { useState, useEffect, useRef } from "react";
 import { Box, Flex, Heading, Text, Image, IconButton, Input, Grid } from "@chakra-ui/react";
-import { IoBed, IoRestaurant, IoWater } from "react-icons/io5";
+import { IoBed } from "react-icons/io5";
 import { IoIosTv } from "react-icons/io";
-import { MdBalcony, MdKitchen } from "react-icons/md";
+import { MdBalcony, MdKitchen, MdBathtub } from "react-icons/md";
 import { FaPlus, FaMinus } from "react-icons/fa";
+import { GiFlatPlatform } from "react-icons/gi";
 
 function CheckResult({ extractionResults, onUpdateExtractionResults }) {
 	const [roomCounts, setRoomCounts] = useState({
@@ -95,8 +96,8 @@ function CheckResult({ extractionResults, onUpdateExtractionResults }) {
 
 	const rooms = [
 		{ key: "bedroom", label: "Bedroom", icon: IoBed },
-		{ key: "bathroom", label: "Bathroom", icon: IoWater },
-		{ key: "ledge", label: "Ledge", icon: IoRestaurant },
+		{ key: "bathroom", label: "Bathroom", icon: MdBathtub },
+		{ key: "ledge", label: "Ledge", icon: GiFlatPlatform },
 		{ key: "kitchen", label: "Kitchen", icon: MdKitchen },
 		{ key: "livingRoom", label: "Living Room", icon: IoIosTv },
 		{ key: "balcony", label: "Balcony", icon: MdBalcony },

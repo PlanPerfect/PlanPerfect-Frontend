@@ -122,8 +122,8 @@ function UploadFloorPlan({ onFileChange }) {
 							<Text fontSize="sm" color="gray.500" mt={2}>
 								Supports: PNG, JPG and JPEG
 							</Text>
-							<Text fontSize="sm" color="gray.500">
-								Max File Size: 1 File, 15MB
+							<Text fontSize="sm" color="gray.500" as="span" fontWeight="bold" >
+								Max File & Size: 1 File, 15MB
 							</Text>
 						</Box>
 					</Flex>
