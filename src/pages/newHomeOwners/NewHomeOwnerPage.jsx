@@ -28,6 +28,10 @@ function NewHomeOwnerPage() {
 		setExtractionResults(results);
 		steps.setStep(3); // Move to step 4 After AI extraction is completed (Check Details)
 	}, [steps]);
+
+	const handleExtractionResultUpdate = useCallback((updatedResults) => {
+		setExtractionResults(updatedResults);
+	}, []);
 	
 	const handlePreferenceChange = useCallback((preferencesData) => {
 		setPreferences(preferencesData);
@@ -38,7 +42,7 @@ function NewHomeOwnerPage() {
 	}, []);
 
 	const handleNextClick = () => {
-		// If on upload floor plan step, trigger extraction
+		// If on upload floor plan step, trigger extraction when user click on "Next" button
 		if (steps.value === 1 && uploadedFloorPlan) {
 			setStartExtraction(true);
 			steps.setStep(2); // Move to AI extraction step
@@ -66,7 +70,7 @@ function NewHomeOwnerPage() {
 		{
 			title: "Check Details",
 			icon: <LuFileCheck2 />,
-			content: <CheckResult extractionResults={extractionResults} />,
+			content: <CheckResult extractionResults={extractionResults} onUpdateExtractionResults={handleExtractionResultUpdate} />,
 		},
 		{
 			title: "Get Results!",
@@ -98,7 +102,7 @@ function NewHomeOwnerPage() {
 
 			{/* Hero Section */}
 			<Box
-				minH="80vh"
+				minH="82vh"
 				display="flex"
 				alignItems="center"
 				justifyContent="center"
@@ -210,6 +214,7 @@ function NewHomeOwnerPage() {
 							))}
 						</Steps.List>
 					</Box>
+
 					<Box
 						w="80%"
 						mx="auto"
@@ -226,6 +231,7 @@ function NewHomeOwnerPage() {
 						bgColor="white"
 						boxShadow="2px 2px 1px 1px rgba(0, 0, 0, 0.10), 0px 0px 2px 1px rgba(0, 0, 0, 0.10)"
 					>
+						{/* Content box */}
 						<Box
 							flex="1"
 							display="flex"
@@ -242,6 +248,7 @@ function NewHomeOwnerPage() {
 							</Steps.CompletedContent>
 						</Box>
 
+						{/* Navigation Buttons */}
 						{showNavigationButtons && (
 							<Flex justify="center" gap={4}>
 								{steps.value > 0 && (

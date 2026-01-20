@@ -3,11 +3,13 @@ import { useState } from "react";
 import { FaDownload } from "react-icons/fa6";
 import { IoSparkles } from "react-icons/io5";
 import server from "../../../networking";
+import { useNavigate } from "react-router-dom";
 
 function GenerateDesignDocument({ floorPlanFile, preferences, budget, extractionResults }) {
 	const [isGenerating, setIsGenerating] = useState(false);
 	const [error, setError] = useState(null);
 	const [generatedPdfUrl, setGeneratedPdfUrl] = useState(null);
+	const navigate = useNavigate()
 
 	const handleGenerateDocument = async () => {
 		setIsGenerating(true);
@@ -26,10 +28,7 @@ function GenerateDesignDocument({ floorPlanFile, preferences, budget, extraction
 
 			// Preferences
 			const preferencesData = {
-				style: preferences?.style || "Modern",
-				colors: preferences?.colors || [],
-				materials: preferences?.materials || [],
-				special_requirements: preferences?.specialRequirements || "",
+				style: preferences?.style || "Modern"
 			};
 			formData.append("preferences", JSON.stringify(preferencesData));
 
@@ -206,70 +205,111 @@ function GenerateDesignDocument({ floorPlanFile, preferences, budget, extraction
 					</Box>
 				)}
 
-				{/* Chatbot CTA Button */}
-				{!generatedPdfUrl && (
-					<Button
-						size="xl"
-						bg="#D4AF37"
-						color="white"
-						_hover={{ bg: "#C9A961" }}
-						w="100%"
-						h="60px"
-						fontSize="lg"
-						leftIcon={<IoSparkles />}
-						onClick={() => navigate("/chatbot")}
-					>
-						Chat with our chatbot to get a more cohesive report
-					</Button>
+				{/* Before Generation */}
+				{!generatedPdfUrl && !isGenerating && (
+					<>
+						{/* Chatbot CTA Button - PRIMARY */}
+						<Button
+							size="xl"
+							bg="#D4AF37"
+							color="white"
+							_hover={{ bg: "#C9A961" }}
+							w="100%"
+							h="60px"
+							fontSize="lg"
+							leftIcon={<IoSparkles />}
+							onClick={() => navigate("/chatbot")}
+						>
+							Chat with our chatbot to get a more cohesive report
+						</Button>
+
+						{/* Skip & Generate Button - SECONDARY */}
+						<Button
+							size="xl"
+							variant="outline"
+							borderColor="#D4AF37"
+							color="#D4AF37"
+							bg="transparent"
+							_hover={{ bg: "yellow.50" }}
+							onClick={handleGenerateDocument}
+							disabled={!floorPlanFile}
+							leftIcon={<IoSparkles />}
+							w="100%"
+							h="60px"
+							fontSize="lg"
+						>
+							Skip and generate design document now
+						</Button>
+					</>
 				)}
 
-				{/* Skip & Generate Button (Secondary) */}
-				<Button
-					size="xl"
-					variant={generatedPdfUrl ? "solid" : "outline"}
-					borderColor={generatedPdfUrl ? "transparent" : "#D4AF37"}
-					color={generatedPdfUrl ? "white" : "#D4AF37"}
-                    bg={generatedPdfUrl ? "#D4AF37" : "transparent"}
-					_hover={{ bg: "yellow.50" }}
-					onClick={handleGenerateDocument}
-					disabled={isGenerating || !floorPlanFile}
-					leftIcon={
-						isGenerating ? <Spinner size="sm" /> : <IoSparkles />
-					}
-					w="100%"
-					h="60px"
-					fontSize="lg"
-				>
-					{isGenerating
-						? "Generating Your Document..."
-						: "Skip and generate design document now"}
-				</Button>
-
-				{/* Download Again Button (if PDF was generated) */}
-				{generatedPdfUrl && !isGenerating && (
+				{/* Generating */}
+				{!generatedPdfUrl && isGenerating && (
 					<Button
-						size="lg"
+						size="xl"
 						variant="outline"
 						borderColor="#D4AF37"
 						color="#D4AF37"
+						bg="transparent"
 						_hover={{ bg: "yellow.50" }}
-						leftIcon={<FaDownload />}
-						onClick={() => {
-							const link = document.createElement("a");
-							link.href = generatedPdfUrl;
-							link.download = `interior_design_proposal_${Date.now()}.pdf`;
-							document.body.appendChild(link);
-							link.click();
-							document.body.removeChild(link);
-						}}
+						disabled={true}
+						leftIcon={<Spinner size="sm" />}
+						w="100%"
+						h="60px"
+						fontSize="lg"
 					>
-						Download Again
+						Generating Your Document...
 					</Button>
 				)}
 
+				{/* After Generation */}
+				{generatedPdfUrl && (
+					<>
+						{/* Generate Again Button*/}
+						<Button
+							size="xl"
+							bg="#D4AF37"
+							color="white"
+							_hover={{ bg: "#C9A961" }}
+							onClick={handleGenerateDocument}
+							disabled={isGenerating || !floorPlanFile}
+							leftIcon={isGenerating ? <Spinner size="sm" /> : <IoSparkles />}
+							w="100%"
+							h="60px"
+							fontSize="lg"
+						>
+							{isGenerating ? "Generating Your Document..." : "Generate Again"}
+						</Button>
+
+						{/* Download Again Button */}
+						<Button
+							size="xl"
+							variant="outline"
+							borderColor="#D4AF37"
+							color="#D4AF37"
+							bg="transparent"
+							_hover={{ bg: "yellow.50" }}
+							leftIcon={<FaDownload />}
+							onClick={() => {
+								const link = document.createElement("a");
+								link.href = generatedPdfUrl;
+								link.download = `interior_design_proposal_${Date.now()}.pdf`;
+								document.body.appendChild(link);
+								link.click();
+								document.body.removeChild(link);
+							}}
+							w="100%"
+							h="60px"
+							fontSize="lg"
+							disabled={isGenerating}
+						>
+							Download Again
+						</Button>
+					</>
+				)}
+
 				<Text fontSize="xs" color="gray.500" textAlign="center">
-					Generation typically takes 30-60 seconds. Your document will
-					download automatically.
+					Generation may take a moment. Your document will download automatically once it's ready.
 				</Text>
 			</VStack>
 		</Box>
