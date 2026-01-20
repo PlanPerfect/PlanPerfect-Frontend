@@ -1,5 +1,5 @@
 import { useState, useRef, useEffect, useLayoutEffect } from "react";
-import { Box, Card, Flex, Heading, Text, Input, VStack, HStack, Avatar } from "@chakra-ui/react";
+import { Box, Card, Flex, Heading, Text, Input, VStack, HStack } from "@chakra-ui/react";
 import { Send, Bot, User, Sparkles, AlertCircle } from "lucide-react";
 import LandingBackground from "../../assets/LandingBackground.png";
 import ShowToast from "@/Extensions/ShowToast";
@@ -16,6 +16,7 @@ function ChatbotPage() {
 	const [inputValue, setInputValue] = useState("");
 	const [isTyping, setIsTyping] = useState(false);
 	const [isInitialMount, setIsInitialMount] = useState(true);
+	const [currentModel, setCurrentModel] = useState("");
 	const messagesEndRef = useRef(null);
 	const inputRef = useRef(null);
 	const initialMessageCount = useRef(1);
@@ -26,6 +27,38 @@ function ChatbotPage() {
 		WebkitBackdropFilter: "blur(20px) saturate(180%)",
 		border: "1px solid rgba(255, 255, 255, 0.2)",
 		boxShadow: "0 8px 32px 0 rgba(31, 38, 135, 0.15), inset 0 1px 0 0 rgba(255, 255, 255, 0.3)"
+	};
+
+	useEffect(() => {
+		fetchCurrentModel();
+	}, []);
+
+	const fetchCurrentModel = async () => {
+		try {
+			const response = await server.get("/chatbot/current-model");
+			setCurrentModel(response.data.model);
+		} catch (err) {
+			console.warn("Failed to fetch current model. Falling back to Llama 3.3 70B.", err);
+			setCurrentModel("Llama 3.3 70B");
+		}
+	};
+
+	const formatModelName = (modelString) => {
+		const modelName = modelString.split('/')[1] || modelString;
+
+		if (modelName.includes('llama')) {
+			const match = modelName.match(/llama-(\d+\.\d+)-(\d+b)/i);
+			if (match) {
+				return `Llama ${match[1]} ${match[2].toUpperCase()}`;
+			}
+		} else if (modelName.includes('gemini')) {
+			const match = modelName.match(/gemini-(\d+\.\d+)-(\w+)/i);
+			if (match) {
+				return `Gemini ${match[1]} ${match[2].charAt(0).toUpperCase() + match[2].slice(1)}`;
+			}
+		}
+
+		return modelName.charAt(0).toUpperCase() + modelName.slice(1);
 	};
 
 	useLayoutEffect(() => {
@@ -61,17 +94,21 @@ function ChatbotPage() {
 			};
 
 			setMessages(prev => [...prev, assistantMessage]);
+
+			if (response.data.model && response.data.model !== currentModel) {
+				setCurrentModel(response.data.model);
+			}
 		} catch (err) {
-			if (err.response.data.error.startsWith("UERROR: ")) {
+			if (err.response?.data?.error?.startsWith("UERROR: ")) {
 				const errorMessage = err.response.data.error.substring("UERROR: ".length);
 				console.warn("Failed to send message: ", errorMessage);
 				ShowToast("error", errorMessage);
-			} else if (err.response.data.error.startsWith("ERROR: ")) {
+			} else if (err.response?.data?.error?.startsWith("ERROR: ")) {
 				const errorMessage = err.response.data.error.substring("ERROR: ".length);
 				console.error("Failed to send message: ", errorMessage);
 				ShowToast("error", errorMessage);
 			} else {
-				console.error("Failed to send message: ", err.response.data.error || err.response?.data?.detail);
+				console.error("Failed to send message: ", err.response?.data?.error || err.response?.data?.detail);
 				ShowToast("error", "An unexpected error occurred. Check console for more details.");
 			}
 		} finally {
@@ -116,8 +153,12 @@ function ChatbotPage() {
 								<Heading size={{ base: "md", md: "lg" }} color="white" textShadow="0 2px 4px rgba(0,0,0,0.2)">
 									AI Design Assistant
 								</Heading>
-								<Text fontSize={{ base: "xs", md: "sm" }} color="rgba(255, 255, 255, 0.7)">
-									Powered by StyleMatch
+								<Text
+									fontSize={{ base: "xs", md: "sm" }}
+									color="rgba(255, 255, 255, 0.7)"
+									transition="all 0.3s ease"
+								>
+									Powered by {formatModelName(currentModel)}
 								</Text>
 							</VStack>
 						</Flex>
@@ -186,10 +227,15 @@ function ChatbotPage() {
 								return (
 									<Flex key={idx} justify={message.role === "user" ? "flex-end" : "flex-start"} animation={shouldAnimate ? "fadeInUp 0.4s ease-out" : "none"}>
 										<Flex maxW={{ base: "85%", md: "70%" }} gap={3} direction={message.role === "user" ? "row-reverse" : "row"}>
-											{/* Avatar */}
-											<Avatar.Root size={{ base: "sm", md: "md" }} bg={message.role === "user" ? "#D4AF37" : message.isError ? "rgba(255, 100, 100, 0.3)" : "rgba(255, 240, 189, 0.3)"} flexShrink={0}>
+											<Box
+												bg={message.role === "user" ? "#D4AF37" : message.isError ? "rgba(255, 100, 100, 0.3)" : "rgba(255, 240, 189, 0.3)"}
+												p={2}
+												borderRadius="full"
+												h="fit-content"
+												flexShrink={0}
+											>
 												{message.role === "user" ? <User size={20} color="white" /> : message.isError ? <AlertCircle size={20} color="#ff6b6b" /> : <Bot size={20} color="#fff0bd" />}
-											</Avatar.Root>
+											</Box>
 
 											<VStack align="start" gap={1}>
 												<Box
@@ -226,9 +272,9 @@ function ChatbotPage() {
 							{isTyping && (
 								<Flex justify="flex-start" animation="fadeInUp 0.4s ease-out">
 									<Flex gap={3} maxW="70%">
-										<Avatar.Root size={{ base: "sm", md: "md" }} bg="rgba(255, 240, 189, 0.3)">
+										<Box bg="rgba(255, 240, 189, 0.3)" p={2} borderRadius="full" h="fit-content">
 											<Bot size={20} color="#fff0bd" />
-										</Avatar.Root>
+										</Box>
 										<Box bg="rgba(255, 255, 255, 0.15)" backdropFilter="blur(10px)" border="1px solid rgba(255, 255, 255, 0.2)" borderRadius={20} p={4}>
 											<Flex gap={1}>
 												<Box w="8px" h="8px" bg="rgba(255, 255, 255, 0.6)" borderRadius="full" animation="bounce 1.4s infinite" />
@@ -311,18 +357,22 @@ function ChatbotPage() {
 				{`
 		  @keyframes fadeInDown {
 				from {
+					opacity: 0;
 					transform: translateY(-20px);
 				}
 				to {
+					opacity: 1;
 					transform: translateY(0);
 				}
 			}
 
 			@keyframes fadeInUp {
 				from {
+					opacity: 0;
 					transform: translateY(20px);
 				}
 				to {
+					opacity: 1;
 					transform: translateY(0);
 				}
 			}
