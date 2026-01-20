@@ -31,7 +31,7 @@ function Homepage() {
 
                 <AnimatedHeading />
 
-                <GetStartedButton delay={"1.4s"} />
+                <GetStartedButton delay={"1.4s"} destination={"/onboarding"} />
             </VStack>
 
             <style>

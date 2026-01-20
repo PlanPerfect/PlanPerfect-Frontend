@@ -1,8 +1,11 @@
 import { VStack, Heading, Text } from "@chakra-ui/react"
 
-function AnimatedHeading() {
+function AnimatedHeading({ hasAnimated }) {
     return (
-        <VStack gap={2} style={{ animation: 'fadeInDown 0.8s ease-out' }}>
+        <VStack
+            gap={2}
+            style={hasAnimated ? {} : { animation: 'fadeInDown 0.8s ease-out' }}
+        >
             <Heading
                 as="h1"
                 size={{ base: "2xl", md: "3xl", lg: "4xl" }}

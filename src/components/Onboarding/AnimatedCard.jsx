@@ -1,12 +1,15 @@
 import { VStack, Flex, Icon, Heading, Text, Card, Box } from '@chakra-ui/react'
 import { Home } from 'lucide-react'
+import { useNavigate } from 'react-router-dom'
 
-function AnimatedCards({ icon, iconColor, title, description, delay }) {
-    var icon  = icon || Home;
-    var iconColor = iconColor || "blue.500";
-    var title = title || "Homeowner";
-    var description = description || "Explore intelligent design solutions that breathe new life into your home";
-    var delay = delay || 0.5;
+function AnimatedCard({ icon, iconColor, title, description, delay, destination, shouldAnimate }) {
+    icon = icon || Home;
+    iconColor = iconColor || "blue.500";
+    title = title || "Homeowner";
+    description = description || "Explore intelligent design solutions that breathe new life into your home";
+    delay = delay || 0.5;
+    destination = destination || null;
+    const navigate = useNavigate();
 
     return (
         <Card.Root
@@ -21,10 +24,11 @@ function AnimatedCards({ icon, iconColor, title, description, delay }) {
             border="2px solid"
             borderRadius={20}
             borderColor="transparent"
-            style={{ animation: `fadeInUp 0.8s ease-out ${delay}s backwards` }}
+            animation={shouldAnimate ? `fadeInUp 0.8s ease-out ${delay}s backwards` : 'none'}
             _active={{
                 transform: 'translateY(-4px)',
             }}
+            onClick={destination ? () => navigate(destination) : undefined}
         >
             <Card.Body>
                 <VStack spacing={4} align="center" py={6}>
@@ -73,4 +77,4 @@ function AnimatedCards({ icon, iconColor, title, description, delay }) {
     )
 }
 
-export default AnimatedCards
+export default AnimatedCard
