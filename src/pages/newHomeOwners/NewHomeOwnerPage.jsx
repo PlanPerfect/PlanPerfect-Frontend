@@ -102,7 +102,7 @@ function NewHomeOwnerPage() {
 
 			{/* Hero Section */}
 			<Box
-				minH="80vh"
+				minH="82vh"
 				display="flex"
 				alignItems="center"
 				justifyContent="center"
