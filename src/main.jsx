@@ -36,7 +36,7 @@ createRoot(document.getElementById('root')).render(
 						<Route index element={<ExistingHomeOwner />} />
 					</Route>
 
-					<Route path={"chatbot"}>
+					<Route path={"lumen"}>
 						<Route index element={<ChatbotPage />} />
 					</Route>
 				</Route>
