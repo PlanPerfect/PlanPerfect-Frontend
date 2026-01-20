@@ -11,6 +11,7 @@ import GetStarted from './pages/StyleMatch/GetStarted.jsx'
 import Reccomendations from './pages/StyleMatch/Reccomendations.jsx'
 import ExistingHomeOwner from './pages/ExistingHomeOwner/ExistingHomeOwner.jsx'
 import ChatbotPage from "./pages/Chatbot/ChatbotPage"
+import NotFound from './pages/NotFound.jsx'
 
 createRoot(document.getElementById('root')).render(
   <Provider value={system}>
@@ -39,6 +40,8 @@ createRoot(document.getElementById('root')).render(
 					<Route path={"lumen"}>
 						<Route path={"chat"} element={<ChatbotPage />} />
 					</Route>
+
+					<Route path="*" element={<NotFound />} />
 				</Route>
 			</Routes>
 		</BrowserRouter>
