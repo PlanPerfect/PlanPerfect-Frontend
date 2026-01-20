@@ -11,18 +11,6 @@ function StyleResults({ analysisResults, roomImage }) {
 		"Modern": "Sleek, streamlined design with emphasis on horizontal and vertical lines",
 		"Scandinavian": "Light, airy spaces with functional furniture and natural materials",
 		"Boho": "Eclectic, colorful style with global influences and layered textures",
-		"Boutique": "Chic, sophisticated spaces with curated designer pieces",
-		"Classical": "Timeless elegance with traditional architectural details",
-		"Contemporary": "Current, cutting-edge design with clean lines",
-		"Country": "Rustic charm with natural materials and cozy elements",
-		"Eclectic": "Mix-and-match style combining various design periods",
-		"Luxury": "Opulent, high-end finishes and premium materials",
-		"Japanese": "Zen-inspired with natural elements and minimalist aesthetics",
-		"Persian": "Rich patterns, intricate details, and luxurious textiles",
-		"Vintage": "Nostalgic pieces from past decades with character",
-		"Wabi Sabi": "Beauty in imperfection with natural, aged materials",
-		"Japandi": "Fusion of Japanese and Scandinavian minimalism",
-		"Peranakan": "Vibrant colors and ornate patterns from Southeast Asian heritage",
 	};
 
 	return (
@@ -47,10 +35,10 @@ function StyleResults({ analysisResults, roomImage }) {
 				</Box>
 
 				{/* Style Information */}
-				<Box flex="1" border="2px solid #D4AF37" borderRadius="12px" p={6} bg="white">
-					<Flex direction="column" gap={4} h="100%">
+				<Box flex="1" border="2px solid #D4AF37" borderRadius="12px" p={6} bg="white" display="flex" alignItems="center">
+					<Flex direction="column" gap={4} w="100%" textAlign="center">
 						<Box>
-							<Text fontSize="md" color="gray.600" mb={2} fontWeight="bold">
+							<Text fontSize="xl" color="gray.600" mb={2} fontWeight="bold">
 								Detected Style
 							</Text>
 							<Heading size="2xl" color="#D4AF37">
@@ -58,8 +46,8 @@ function StyleResults({ analysisResults, roomImage }) {
 							</Heading>
 						</Box>
 
-						<Box flex="1">
-							<Text fontSize="md" color="gray.600" mb={2} fontWeight="bold">
+						<Box>
+							<Text fontSize="xl" color="gray.600" mb={2} fontWeight="bold">
 								About This Style
 							</Text>
 							<Text fontSize="md" color="gray.700">

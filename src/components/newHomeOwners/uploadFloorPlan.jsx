@@ -6,7 +6,7 @@ function UploadFloorPlan({ onFileChange }) {
 	const [uploadedFile, setUploadedFile] = useState(null);
 	const [error, setError] = useState("");
 
-	const MAX_FILE_SIZE = 15 * 1024 * 1024; // 15MB in bytes
+	const MAX_FILE_SIZE = 15 * 1024 * 1024; // 15MB
 	const ALLOWED_TYPES = ["image/png", "image/jpg", "image/jpeg"];
 
 	const handleFileAccept = (details) => {
@@ -122,8 +122,8 @@ function UploadFloorPlan({ onFileChange }) {
 							<Text fontSize="sm" color="gray.500" mt={2}>
 								Supports: PNG, JPG and JPEG
 							</Text>
-							<Text fontSize="sm" color="gray.500">
-								Max File Size: 1 File, 15MB
+							<Text fontSize="sm" color="gray.500" as="span" fontWeight="bold" >
+								Max File & Size: 1 File, 15MB
 							</Text>
 						</Box>
 					</Flex>

@@ -1,4 +1,4 @@
-import { Box, Flex, Heading, Text, Button, Steps, useSteps, Container, Stack } from "@chakra-ui/react";
+import { Box, Flex, Heading, Text, Button, Steps, useSteps, Container, Stack, Spinner, Image } from "@chakra-ui/react";
 import { BsPalette2 } from "react-icons/bs";
 import { RiFileUploadFill } from "react-icons/ri";
 import { FaCheck, FaEye } from "react-icons/fa6";
@@ -8,17 +8,20 @@ import StyleAnalysis from "@/components/existingHomeOwner/styleAnalysis";
 import StyleResults from "@/components/existingHomeOwner/styleResults";
 import StyleSelector from "@/components/existingHomeOwner/styleSelector";
 import { useState, useRef } from "react";
+import server from "../../../networking";
 
 function ExistingHomeOwner() {
 	const [preferences, setPreferences] = useState(null);
 	const [uploadedRoomImage, setUploadedRoomImage] = useState(null);
 	const [analysisResults, setAnalysisResults] = useState(null);
 	const [selectedStyles, setSelectedStyles] = useState([]);
-	const hasAppliedDetectedStyle = useRef(false);
+	const [isGenerating, setIsGenerating] = useState(false);
+	const [generatedImage, setGeneratedImage] = useState(null);
+	const [generationError, setGenerationError] = useState(null);
 
 	const steps = useSteps({
 		defaultStep: 0,
-		count: 5  // Changed from 4 to 5
+		count: 5  
 	});
 
 	const handleAnalysisComplete = (results) => {
@@ -29,6 +32,39 @@ function ExistingHomeOwner() {
 	const handleStylesChange = (styles) => {
 		console.log("handleStylesChange received:", styles);
 		setSelectedStyles(styles);
+	};
+
+	const handleGenerateDesign = async () => {
+		setIsGenerating(true);
+		setGenerationError(null);
+		
+		try {
+			// Prepare form data
+			const formData = new FormData();
+			
+			// Add the original uploaded file
+			formData.append('file', uploadedRoomImage.file);
+			
+			// Join selected styles into a comma-separated string
+			const stylesString = selectedStyles.join(', ');
+			formData.append('styles', stylesString);
+			
+
+			// Call the API using server instance
+			const response = await server.post('/image/generate', formData, {
+				responseType: 'blob' // Important: tells axios to expect binary data
+			});
+
+			// Create object URL from the blob response
+			const imageUrl = URL.createObjectURL(response.data);
+			
+			setGeneratedImage(imageUrl);
+		} catch (error) {
+			console.error('Error generating image:', error);
+			setGenerationError(error.response?.data?.detail || error.message || 'Failed to generate design. Please try again.');
+		} finally {
+			setIsGenerating(false);
+		}
 	};
 
 	console.log("Current selectedStyles state:", selectedStyles);
@@ -86,10 +122,72 @@ function ExistingHomeOwner() {
 			content: (
 				<Box w="100%" maxW="1000px" mx="auto" p={8}>
 					<Heading size="2xl" textAlign="center" mb={8} color="#D4AF37">
-						Preview Your Selections
+						{generatedImage ? "Your Generated Design" : "Preview Your Selections"}
 					</Heading>
 
-					<Flex direction="column" gap={6}>
+					{/* Show generated image if available */}
+					{generatedImage && (
+						<Box mb={8}>
+							<Flex gap={6} justify="center" align="start" flexWrap="wrap">
+								{/* Original Image */}
+								<Box flex="1" minW="300px" maxW="450px">
+									<Text fontSize="lg" fontWeight="600" mb={3} textAlign="center" color="gray.700">
+										Original Room
+									</Text>
+									<Image
+										src={uploadedRoomImage?.preview}
+										borderRadius="12px"
+										boxShadow="lg"
+										w="100%"
+										h="auto"
+									/>
+								</Box>
+
+								{/* Generated Image */}
+								<Box flex="1" minW="300px" maxW="450px">
+									<Text fontSize="lg" fontWeight="600" mb={3} textAlign="center" color="#D4AF37">
+										✨ AI Generated Design
+									</Text>
+									<Image
+										src={generatedImage}
+										borderRadius="12px"
+										boxShadow="lg"
+										border="3px solid #D4AF37"
+										w="100%"
+										h="auto"
+									/>
+								</Box>
+							</Flex>
+
+							{/* Download/Regenerate buttons */}
+							<Flex justify="center" gap={4} mt={6}>
+								<Button
+									as="a"
+									href={generatedImage}
+									download="generated-design.png"
+									size="lg"
+									bg="green.500"
+									color="white"
+									_hover={{ bg: "green.600" }}
+								>
+									Download Image
+								</Button>
+								<Button
+									onClick={handleGenerateDesign}
+									size="lg"
+									bg="#D4AF37"
+									color="white"
+									_hover={{ bg: "#C9A961" }}
+									isLoading={isGenerating}
+								>
+									Regenerate Design
+								</Button>
+							</Flex>
+						</Box>
+					)}
+
+					{/* Summary - always visible */}
+					<Flex direction="column" gap={6} mt={generatedImage ? 8 : 0}>
 						{/* Preferences Summary */}
 						<Box border="2px solid #D4AF37" borderRadius="12px" p={6} bg="white" boxShadow="sm">
 							<Heading size="lg" mb={4} color="#D4AF37" textAlign="center">
@@ -159,52 +257,111 @@ function ExistingHomeOwner() {
 							)}
 						</Box>
 
-						{/* Summary Card */}
-						<Box border="2px solid #D4AF37" borderRadius="12px" p={6} bg="#FFFDF7" textAlign="center">
-							<Text fontSize="lg" color="gray.700" mb={2}>
-								🎉 You're all set! Review your selections above and click below to generate your personalized design recommendations.
-							</Text>
-						</Box>
-
-						{/* Submit Button */}
-						<Flex justify="center" mt={4} position="relative">
-							<Button
-								size="xl"
-								borderRadius="md"
-								bg="#D4AF37"
-								color="white"
-								px={16}
-								py={7}
-								fontSize="xl"
-								fontWeight="700"
-								_hover={{
-									bg: "#C9A961",
-									transform: "translateY(-2px)",
-									boxShadow: "xl",
-								}}
-								transition="all 0.2s"
+						{/* Error Message */}
+						{generationError && (
+							<Box
+								bg="red.50"
+								border="2px solid"
+								borderColor="red.400"
+								borderRadius="12px"
+								p={4}
+								textAlign="center"
 							>
-								Submit & Generate Design 🚀
-							</Button>
-							
-							{/* Back Button - Bottom Right Corner */}
-							<Steps.PrevTrigger asChild>
-								<Button
-									position="absolute"
-									right={0}
-									bottom={0}
-									size="md"
-									variant="ghost"
-									color="gray.600"
-									_hover={{
-										bg: "gray.100",
-										color: "gray.800"
-									}}
-								>
-									← Back
-								</Button>
-							</Steps.PrevTrigger>
-						</Flex>
+								<Text color="red.600" fontWeight="600">
+									⚠️ {generationError}
+								</Text>
+							</Box>
+						)}
+
+						{/* Loading State */}
+						{isGenerating && (
+							<Box
+								border="2px solid #D4AF37"
+								borderRadius="12px"
+								p={8}
+								bg="#FFFDF7"
+								textAlign="center"
+							>
+								<Spinner size="xl" color="#D4AF37" mb={4} />
+								<Text fontSize="lg" color="gray.700" fontWeight="600">
+									✨ Generating your personalized design...
+								</Text>
+								<Text fontSize="md" color="gray.600" mt={2}>
+									This may take a few moments. Please wait.
+								</Text>
+							</Box>
+						)}
+
+						{/* Submit Button - only show if image hasn't been generated */}
+						{!generatedImage && !isGenerating && (
+							<>
+								<Box border="2px solid #D4AF37" borderRadius="12px" p={6} bg="#FFFDF7" textAlign="center">
+									<Text fontSize="lg" color="gray.700" mb={2}>
+										🎉 You're all set! Review your selections above and click below to generate your personalized design recommendations.
+									</Text>
+								</Box>
+
+								<Flex justify="center" mt={4} position="relative">
+									<Button
+										onClick={handleGenerateDesign}
+										size="xl"
+										borderRadius="md"
+										bg="#D4AF37"
+										color="white"
+										px={16}
+										py={7}
+										fontSize="xl"
+										fontWeight="700"
+										_hover={{
+											bg: "#C9A961",
+											transform: "translateY(-2px)",
+											boxShadow: "xl",
+										}}
+										transition="all 0.2s"
+										isLoading={isGenerating}
+									>
+										Submit & Generate Design 🚀
+									</Button>
+									
+									{/* Back Button - Bottom Right Corner */}
+									<Steps.PrevTrigger asChild>
+										<Button
+											position="absolute"
+											right={0}
+											bottom={0}
+											size="md"
+											variant="ghost"
+											color="gray.600"
+											_hover={{
+												bg: "gray.100",
+												color: "gray.800"
+											}}
+										>
+											← Back
+										</Button>
+									</Steps.PrevTrigger>
+								</Flex>
+							</>
+						)}
+
+						{/* Back button when image is shown */}
+						{generatedImage && (
+							<Flex justify="center" mt={4}>
+								<Steps.PrevTrigger asChild>
+									<Button
+										size="md"
+										variant="ghost"
+										color="gray.600"
+										_hover={{
+											bg: "gray.100",
+											color: "gray.800"
+										}}
+									>
+										← Back to Style Selection
+									</Button>
+								</Steps.PrevTrigger>
+							</Flex>
+						)}
 					</Flex>
 				</Box>
 			)
@@ -259,7 +416,7 @@ function ExistingHomeOwner() {
 								<Steps.Item key={index} index={index} display="flex" alignItems="center">
 									<Flex direction="column" align="center" mb={2}>
 										<Flex direction="column" align="center" gap={1}>
-											<Steps.Trigger cursor="pointer">
+											<Steps.Trigger cursor="default" pointerEvents="none">
 												<Steps.Indicator borderRadius="full" width="56px" height="56px" fontSize="24px">
 													<Steps.Status complete={<FaCheck />} incomplete={item.icon} />
 												</Steps.Indicator>
@@ -289,7 +446,7 @@ function ExistingHomeOwner() {
 
 						{showNavigationButtons && (
 							<Flex justify="center" gap={4} mt={6}>
-								{steps.value > 0 && steps.value < 4 && (
+								{steps.value > 0 && steps.value < 4 && !generatedImage && (
 									<Steps.PrevTrigger asChild>
 										<Button size="xl" borderRadius="md" bg="gray.300" color="black" _hover={{ bg: "gray.400" }}>
 											Back

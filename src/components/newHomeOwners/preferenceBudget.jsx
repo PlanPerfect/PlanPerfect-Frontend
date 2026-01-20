@@ -25,7 +25,7 @@ function PreferenceBudget({ onPreferenceChange, onBudgetChange }) {
 	const [budget, setBudget] = useState(250000);
 	const maxBudget = 500000;
 
-	// Notify parent component whenever preferences change
+	// Handle preferences change
 	useEffect(() => {
 		if (onPreferenceChange) {
 			const selectedThemeObjects = designThemes.filter(theme => 
@@ -33,18 +33,14 @@ function PreferenceBudget({ onPreferenceChange, onBudgetChange }) {
 			);
 			
 			const preferencesData = {
-				style: selectedThemeObjects.map(t => t.name).join(" & ") || "Not selected",
-				themes: selectedThemeObjects,
-				colors: selectedThemeObjects.map(t => t.color),
-				materials: [], // Can be extended later if needed
-				specialRequirements: ""
+				style: selectedThemeObjects.map(t => t.name).join(" & ") || "Not selected"
 			};
 			
 			onPreferenceChange(preferencesData);
 		}
 	}, [selectedThemes, onPreferenceChange]);
 
-	// Notify parent component whenever budget changes
+	// Handle budget changes
 	useEffect(() => {
 		if (onBudgetChange) {
 			onBudgetChange(formatCurrency(budget));
