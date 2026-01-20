@@ -36,8 +36,8 @@ createRoot(document.getElementById('root')).render(
 						<Route index element={<ExistingHomeOwner />} />
 					</Route>
 
-					<Route path={"lumen"}>
-						<Route index element={<ChatbotPage />} />
+					<Route path={"chat"}>
+						<Route path={"lumen"} element={<ChatbotPage />} />
 					</Route>
 				</Route>
 			</Routes>
