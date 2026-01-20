@@ -18,7 +18,6 @@ function ExistingHomeOwner() {
 	const [isGenerating, setIsGenerating] = useState(false);
 	const [generatedImage, setGeneratedImage] = useState(null);
 	const [generationError, setGenerationError] = useState(null);
-	const hasAppliedDetectedStyle = useRef(false);
 
 	const steps = useSteps({
 		defaultStep: 0,
