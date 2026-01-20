@@ -9,7 +9,7 @@ function ChatbotPage() {
 	const [messages, setMessages] = useState([
 		{
 			role: "assistant",
-			content: "Hello! I'm your AI interior design assistant. How can I help you transform your space today?",
+			content: "I'm Lumen AI, your personal AI interior design assistant. How can I help you transform your space today?",
 			timestamp: new Date()
 		}
 	]);
@@ -123,8 +123,6 @@ function ChatbotPage() {
 		}
 	};
 
-	const quickPrompts = ["Help me design my living room", "What colors work well together?", "Space-saving furniture ideas", "Budget-friendly decor tips"];
-
 	return (
 		<>
 			<Box
@@ -151,7 +149,7 @@ function ChatbotPage() {
 							</Box>
 							<VStack align="start" gap={0}>
 								<Heading size={{ base: "md", md: "lg" }} color="white" textShadow="0 2px 4px rgba(0,0,0,0.2)">
-									AI Design Assistant
+									Lumen AI
 								</Heading>
 								<Text
 									fontSize={{ base: "xs", md: "sm" }}
@@ -186,41 +184,6 @@ function ChatbotPage() {
 						}}
 					>
 						<VStack gap={4} align="stretch">
-							{messages.length === 1 && (
-								<Box mb={4}>
-									<Text fontSize="sm" color="rgba(255, 255, 255, 0.7)" mb={3}>
-										Try asking:
-									</Text>
-									<Flex gap={2} wrap="wrap">
-										{quickPrompts.map((prompt, idx) => (
-											<Box
-												key={idx}
-												as="button"
-												px={4}
-												py={2}
-												bg="rgba(255, 255, 255, 0.1)"
-												borderRadius="full"
-												border="1px solid rgba(255, 255, 255, 0.2)"
-												color="white"
-												fontSize="sm"
-												cursor="pointer"
-												transition="all 0.2s"
-												_hover={{
-													bg: "rgba(255, 255, 255, 0.2)",
-													transform: "translateY(-2px)"
-												}}
-												onClick={() => {
-													setInputValue(prompt);
-													inputRef.current?.focus();
-												}}
-											>
-												{prompt}
-											</Box>
-										))}
-									</Flex>
-								</Box>
-							)}
-
 							{messages.map((message, idx) => {
 								const shouldAnimate = !isInitialMount && idx >= initialMessageCount.current;
 
