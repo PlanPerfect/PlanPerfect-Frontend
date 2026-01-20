@@ -32,6 +32,10 @@ function ChatbotPage() {
 		setIsInitialMount(false);
 	}, []);
 
+	useEffect(() => {
+		messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
+	}, [messages, isTyping]);
+
 	const handleSend = async () => {
 		if (!inputValue.trim()) return;
 
@@ -101,7 +105,7 @@ function ChatbotPage() {
 				}}
 			/>
 
-			<Flex h="80vh" justify="center" align="center">
+			<Flex h="75vh" justify="center" align="center">
 				<Card.Root width="100%" height={{ base: "calc(100vh - 12rem)", md: "75vh" }} variant="elevated" borderRadius={{ base: 20, md: 35 }} style={glassStyle} overflow="hidden">
 					<Box borderBottom="1px solid rgba(255, 255, 255, 0.2)" p={{ base: 4, md: 6 }} bg="rgba(255, 255, 255, 0.05)">
 						<Flex align="center" gap={3}>
