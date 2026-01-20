@@ -1,3 +1,4 @@
+import { useState, useLayoutEffect } from 'react'
 import { Box, VStack, SimpleGrid } from '@chakra-ui/react'
 import { Key, Home } from 'lucide-react'
 import ServicesBackground from "../../assets/ServicesBackground.png"
@@ -5,6 +6,12 @@ import AnimatedHeading from '@/components/Onboarding/AnimatedHeading'
 import AnimatedCard from '@/components/Onboarding/AnimatedCard'
 
 function Services() {
+    const [isInitialMount, setIsInitialMount] = useState(true)
+
+    useLayoutEffect(() => {
+        setIsInitialMount(false)
+    }, [])
+
     return (
         <>
             <Box style={{
@@ -29,7 +36,7 @@ function Services() {
                 paddingTop={{ base: 4, md: 8 }}
                 gap={8}
             >
-                <AnimatedHeading />
+                <AnimatedHeading shouldAnimate={isInitialMount} />
 
                 <SimpleGrid
                     columns={{ base: 1, md: 2 }}
@@ -37,37 +44,27 @@ function Services() {
                     gap={8}
                     w="full"
                 >
-                    <AnimatedCard icon={Key} iconColor={"blue.500"} title={"New Homeowner"} description={"Let us help you design your perfect home with our AI-powered tools"} delay={0.5} />
+                    <AnimatedCard
+                        icon={Key}
+                        iconColor={"blue.500"}
+                        title={"New Homeowner"}
+                        description={"Let us help you design your perfect home with our AI-powered tools"}
+                        delay={0.5}
+                        destination={"/newhomeowner"}
+                        shouldAnimate={isInitialMount}
+                    />
 
-                    <AnimatedCard icon={Home} iconColor={"green.500"} title={"Existing Homeowner"} description={"Explore intelligent design solutions that breathe new life into your home"} delay={1.0} />
+                    <AnimatedCard
+                        icon={Home}
+                        iconColor={"green.500"}
+                        title={"Existing Homeowner"}
+                        description={"Explore intelligent design solutions that breathe new life into your home"}
+                        delay={1.0}
+                        destination={"/existinghomeowner"}
+                        shouldAnimate={isInitialMount}
+                    />
                 </SimpleGrid>
             </VStack>
-
-            <style>
-                {`
-                    @keyframes fadeInDown {
-                        from {
-                            opacity: 0;
-                            transform: translateY(-20px);
-                        }
-                        to {
-                            opacity: 1;
-                            transform: translateY(0);
-                        }
-                    }
-
-                    @keyframes fadeInUp {
-                        from {
-                            opacity: 0;
-                            transform: translateY(20px);
-                        }
-                        to {
-                            opacity: 1;
-                            transform: translateY(0);
-                        }
-                    }
-                `}
-            </style>
         </>
     )
 }
