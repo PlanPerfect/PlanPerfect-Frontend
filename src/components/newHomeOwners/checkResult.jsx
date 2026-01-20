@@ -1,19 +1,24 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import { Box, Flex, Heading, Text, Image, IconButton, Input, Grid } from "@chakra-ui/react";
-import { IoBed, IoRestaurant, IoWater } from "react-icons/io5";
+import { IoBed } from "react-icons/io5";
 import { IoIosTv } from "react-icons/io";
-import { MdBalcony, MdKitchen } from "react-icons/md";
+import { MdBalcony, MdKitchen, MdBathtub } from "react-icons/md";
 import { FaPlus, FaMinus } from "react-icons/fa";
+import { GiFlatPlatform } from "react-icons/gi";
 
-function CheckResult({ extractionResults }) {
+function CheckResult({ extractionResults, onUpdateExtractionResults }) {
 	const [roomCounts, setRoomCounts] = useState({
-		bedroom: 2,
-		bathroom: 1,
-		ledge: 1,
-		kitchen: 1,
-		livingRoom: 1,
+		bedroom: 0,
+		bathroom: 0,
+		ledge: 0,
+		kitchen: 0,
+		livingRoom: 0,
 		balcony: 0,
 	});
+	const [unitRooms, setUnitRooms] = useState(extractionResults?.unitInfo?.unit_rooms || "");
+	const [unitType, setUnitType] = useState(extractionResults?.unitInfo?.unit_types || "");
+	const [unitSize, setUnitSize] = useState(extractionResults?.unitInfo?.unit_sizes || "");
+	const inputRef = useRef(null);
 
 	// Initialize room counts from extraction results
 	useEffect(() => {
@@ -28,42 +33,82 @@ function CheckResult({ extractionResults }) {
 				balcony: counts.BALCONY || 0,
 			});
 		}
+		if (extractionResults?.unitInfo) {
+			setUnitRooms(extractionResults.unitInfo.unit_rooms || "");
+			setUnitType(extractionResults.unitInfo.unit_types || "");
+			setUnitSize(extractionResults.unitInfo.unit_sizes || "");
+		}
 	}, [extractionResults]);
 
 	const handleIncrement = (room) => {
-		setRoomCounts((prev) => ({
-			...prev,
-			[room]: Math.min(10, prev[room] + 1),
-		}));
+		setRoomCounts((prev) => {
+			const newCounts = {
+				...prev,
+				[room]: Math.min(10, prev[room] + 1),
+			};
+			updateExtractionResults(newCounts);
+			return newCounts;
+		});
 	};
 
 	const handleDecrement = (room) => {
-		setRoomCounts((prev) => ({
-			...prev,
-			[room]: Math.max(0, prev[room] - 1),
-		}));
+		setRoomCounts((prev) => {
+			const newCounts = {
+				...prev,
+				[room]: Math.max(0, prev[room] - 1),
+			};
+			updateExtractionResults(newCounts);
+			return newCounts;
+		});
 	};
 
 	const handleInputChange = (room, value) => {
 		const numValue = parseInt(value) || 0;
-		setRoomCounts((prev) => ({
+		setRoomCounts((prev) => {
+			const newCounts = {
+				...prev,
+				[room]: Math.min(10, Math.max(0, numValue)),
+			};
+			updateExtractionResults(newCounts);
+			return newCounts;
+		});
+	};
+
+	// Extract image URL from extraction results
+	const imageUrl = extractionResults?.segmentedImage || null;
+
+	const updateUnitInfo = (key, value) => {
+		onUpdateExtractionResults((prev) => ({
 			...prev,
-			[room]: Math.min(10, Math.max(0, numValue)),
+			unitInfo: {
+				...prev.unitInfo,
+				[key]: value,
+			},
 		}));
 	};
 
-	// Extract image URL from results
-	const imageUrl = extractionResults?.segmentedImage || null;
-
-	// Extract unit information
-	const unitRooms = extractionResults?.unitInfo?.unit_rooms || "2-Bedroom";
-	const unitType = extractionResults?.unitInfo?.unit_types?.[0] || "Type B2";
-	const unitSize = extractionResults?.unitInfo?.unit_sizes?.[0] || "55 sq m";
+	// Function to update extraction results with new room counts
+	const updateExtractionResults = (newCounts) => {
+		onUpdateExtractionResults((prev) => ({
+			...prev,
+			unitInfo: {
+				...prev.unitInfo,
+				room_counts: {
+					BEDROOM: newCounts.bedroom,
+					BATH: newCounts.bathroom,
+					LEDGE: newCounts.ledge,
+					KITCHEN: newCounts.kitchen,
+					LIVING: newCounts.livingRoom,
+					BALCONY: newCounts.balcony,
+				},
+			},
+		}));
+	};
 
 	const rooms = [
 		{ key: "bedroom", label: "Bedroom", icon: IoBed },
-		{ key: "bathroom", label: "Bathroom", icon: IoWater },
-		{ key: "ledge", label: "Ledge", icon: IoRestaurant },
+		{ key: "bathroom", label: "Bathroom", icon: MdBathtub },
+		{ key: "ledge", label: "Ledge", icon: GiFlatPlatform },
 		{ key: "kitchen", label: "Kitchen", icon: MdKitchen },
 		{ key: "livingRoom", label: "Living Room", icon: IoIosTv },
 		{ key: "balcony", label: "Balcony", icon: MdBalcony },
@@ -113,11 +158,16 @@ function CheckResult({ extractionResults }) {
 						</Text>
 					</Flex>
 					<Input
-						placeholder={unitRooms}
+						ref={inputRef}
+						value={unitRooms}
 						bg="white"
 						border="2px solid #D4AF37"
 						borderRadius="md"
 						size="lg"
+						onChange={(e) => {
+							setUnitRooms(e.currentTarget.value);
+							updateUnitInfo("unit_rooms", e.currentTarget.value);
+						}}
 					/>
 				</Box>
 
@@ -128,11 +178,16 @@ function CheckResult({ extractionResults }) {
 						</Text>
 					</Flex>
 					<Input
-						placeholder={unitType}
+						ref={inputRef}
+						value={unitType}
 						bg="white"
 						border="2px solid #D4AF37"
 						borderRadius="md"
 						size="lg"
+						onChange={(e) => {
+							setUnitType(e.currentTarget.value);
+							updateUnitInfo("unit_types", [e.currentTarget.value]);
+						}}
 					/>
 				</Box>
 
@@ -143,11 +198,16 @@ function CheckResult({ extractionResults }) {
 						</Text>
 					</Flex>
 					<Input
-						placeholder={unitSize}
+						ref={inputRef}
+						value={unitSize}
 						bg="white"
 						border="2px solid #D4AF37"
 						borderRadius="md"
 						size="lg"
+						onChange={(e) => {
+							setUnitSize(e.currentTarget.value);
+							updateUnitInfo("unit_sizes", [e.currentTarget.value]);
+						}}
 					/>
 				</Box>
 			</Grid>
@@ -214,7 +274,7 @@ function CheckResult({ extractionResults }) {
 										: "pointer"
 								}
 								_hover={
-									roomCounts[key] === 0
+									roomCounts[key] === 10
 										? {}
 										: { bg: "#F4E5B2" }
 								}
