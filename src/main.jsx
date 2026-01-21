@@ -11,6 +11,7 @@ import GetStarted from './pages/StyleMatch/GetStarted.jsx'
 import Reccomendations from './pages/StyleMatch/Reccomendations.jsx'
 import ExistingHomeOwner from './pages/ExistingHomeOwner/ExistingHomeOwner.jsx'
 import ChatbotPage from "./pages/Chatbot/ChatbotPage"
+import DesignDocumentPage from "./pages/DesignDocument/DesignDocumentPage"
 import NotFound from './pages/NotFound.jsx'
 
 createRoot(document.getElementById('root')).render(
@@ -39,6 +40,10 @@ createRoot(document.getElementById('root')).render(
 
 					<Route path={"lumen"}>
 						<Route path={"chat"} element={<ChatbotPage />} />
+					</Route>
+
+					<Route path={"designDocument"}>
+						<Route index element={<DesignDocumentPage />} />
 					</Route>
 
 					<Route path="*" element={<NotFound />} />
