@@ -1,9 +1,8 @@
 import { Box, Flex, Heading, Text, Button, Steps, useSteps } from "@chakra-ui/react";
 import { BsPalette2 } from "react-icons/bs";
 import { RiFileUploadFill } from "react-icons/ri";
-import { IoSparkles } from "react-icons/io5";
+import { IoSparkles, IoDocumentAttachSharp } from "react-icons/io5";
 import { LuFileCheck2 } from "react-icons/lu";
-import { MdOutlineSupportAgent } from "react-icons/md";
 import { FaCheck } from "react-icons/fa6";
 import PreferenceBudget from "@/components/newHomeOwners/preferenceBudget";
 import UploadFloorPlan from "@/components/newHomeOwners/uploadFloorPlan";
@@ -53,7 +52,7 @@ function NewHomeOwnerPage() {
 
 	const items = [
 		{
-			title: "Preference & Budget",
+			title: "Preferences",
 			icon: <BsPalette2 />,
 			content: <PreferenceBudget onPreferenceChange={handlePreferenceChange} onBudgetChange={handleBudgetChange} />
 		},
@@ -74,7 +73,7 @@ function NewHomeOwnerPage() {
 		},
 		{
 			title: "Get Results!",
-			icon: <MdOutlineSupportAgent />,
+			icon: <IoDocumentAttachSharp />,
 			content: <GenerateDesignDocument floorPlanFile={uploadedFloorPlan} preferences={preferences} budget={budget} extractionResults={extractionResults} />
 		},
 	];
@@ -188,9 +187,9 @@ function NewHomeOwnerPage() {
 											align="center"
 											gap={1}
 										>
-											<Steps.Trigger cursor="pointer">
+											<Steps.Trigger cursor="default" pointerEvents="none">
 												<Steps.Indicator
-													borderRadius="8px"
+													borderRadius="full"
 													width="48px"
 													height="48px"
 												>
