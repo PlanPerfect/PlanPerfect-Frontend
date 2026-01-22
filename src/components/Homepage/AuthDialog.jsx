@@ -29,14 +29,14 @@ function AuthDialog({ trigger, size = "md", placement = "center", motionPreset =
 	};
 
 	return (
-		<Dialog.Root placement={placement} motionPreset={motionPreset} size={size} open={open} onOpenChange={setOpen}>
+		<Dialog.Root placement={placement} motionPreset={motionPreset} size={size} open={open} onOpenChange={(e) => setOpen(e.open)}>
 			<Dialog.Trigger asChild>{trigger}</Dialog.Trigger>
 			<Portal>
 				<Dialog.Backdrop bg="blackAlpha.600" backdropFilter="blur(4px)" />
 				<Dialog.Positioner>
 					<Dialog.Content borderRadius={20} bg="whiteAlpha.900" backdropFilter="blur(10px)" border="2px solid" borderColor="transparent" p={8} maxW="400px" boxShadow="0 20px 60px rgba(0, 0, 0, 0.3)">
-						<Dialog.CloseTrigger asChild position="absolute" top="16px" right="16px" zIndex={10}>
-							<CloseButton size="sm" />
+						<Dialog.CloseTrigger asChild>
+							<CloseButton size="sm" position="absolute" top="16px" right="16px" />
 						</Dialog.CloseTrigger>
 
 						<VStack spacing={6} align="center" py={4}>
