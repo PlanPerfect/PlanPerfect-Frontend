@@ -46,7 +46,7 @@ function Recommendations() {
 				}
 			});
 		}
-	}, [furnitures, style, navigate]);
+	}, [furnitures, style]);
 
 	const fetchRecommendations = async furnitureName => {
 		setLoadingRecs(true);
