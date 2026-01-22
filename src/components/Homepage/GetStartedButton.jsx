@@ -143,7 +143,7 @@ function GetStartedButton({ width, destination, delay, loading, auth }) {
 								</Box>
 
 								<Text fontSize="xs" color="gray.500" textAlign="center" px={4}>
-									Secure authentication provided by Google
+									Secure authentication provided by Firebase
 								</Text>
 							</VStack>
 						</Dialog.Content>
