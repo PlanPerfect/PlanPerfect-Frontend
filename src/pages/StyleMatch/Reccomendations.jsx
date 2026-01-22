@@ -21,7 +21,7 @@ function Recommendations() {
 	const [isInitialMount, setIsInitialMount] = useState(true);
 	const navigate = useNavigate();
 
-	useLayoutEffect(() => {
+	useEffect(() => {
 		setIsInitialMount(false);
 	}, []);
 
@@ -38,6 +38,8 @@ function Recommendations() {
 	}, [furnitures]);
 
 	useEffect(() => {
+		if (isInitialMount) return;
+
 		if (!furnitures || furnitures.length === 0 || !style) {
 			ShowToast("info", "Please go back to upload an image for style matching.", "", {
 				action: {
@@ -46,7 +48,7 @@ function Recommendations() {
 				}
 			});
 		}
-	}, [furnitures, style]);
+	}, [furnitures, style, navigate, isInitialMount]);
 
 	const fetchRecommendations = async furnitureName => {
 		setLoadingRecs(true);
