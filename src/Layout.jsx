@@ -1,4 +1,3 @@
-/* eslint-disable react-hooks/exhaustive-deps */
 import './App.css'
 import { Outlet, useLocation, Navigate } from 'react-router-dom'
 import { Toaster } from "@/components/ui/toaster"
@@ -9,15 +8,13 @@ function AppLayout() {
 	const { user, loading } = useAuth();
 	const location = useLocation();
 
-	if (loading) {
-		return <div>Loading...</div>;
-	}
+	if (loading) return null;
 
-	if (!loading && !user && location.pathname !== "/") {
+	if (!user && location.pathname !== "/") {
 		return <Navigate to="/" replace state={{ from: location.pathname }} />;
 	}
 
-	if (!loading) return (
+	return (
 		<div className='defaultLayout'>
 			<Toaster />
 			<Navbar />
