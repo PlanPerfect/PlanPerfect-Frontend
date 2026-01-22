@@ -1,8 +1,33 @@
 import { Dialog, Portal, CloseButton, VStack, Box, Text, Heading } from "@chakra-ui/react";
+import { signInWithPopup } from "firebase/auth";
+import { useNavigate } from "react-router-dom";
+import { useState } from "react";
+import { auth, googleProvider } from "../../firebase";
 
 function AuthDialog({ trigger, size = "md", placement = "center", motionPreset = "slide-in-bottom" }) {
+	const [isLoading, setIsLoading] = useState(false);
+	const [error, setError] = useState(null);
+	const [open, setOpen] = useState(false);
+	const navigate = useNavigate();
+
+	const handleGoogleSignIn = async () => {
+		setIsLoading(true);
+		setError(null);
+
+		try {
+			await signInWithPopup(auth, googleProvider);
+			setOpen(false);
+			navigate("/");
+		} catch (error) {
+			console.error("Error signing in:", error);
+			setError(error.message);
+		} finally {
+			setIsLoading(false);
+		}
+	};
+
 	return (
-		<Dialog.Root placement={placement} motionPreset={motionPreset} size={size}>
+		<Dialog.Root placement={placement} motionPreset={motionPreset} size={size} open={open} onOpenChange={setOpen}>
 			<Dialog.Trigger asChild>{trigger}</Dialog.Trigger>
 			<Portal>
 				<Dialog.Backdrop bg="blackAlpha.600" backdropFilter="blur(4px)" />
@@ -22,12 +47,14 @@ function AuthDialog({ trigger, size = "md", placement = "center", motionPreset =
 							<Box width="100%">
 								<button
 									className="gsi-material-button"
+									onClick={handleGoogleSignIn}
+									disabled={isLoading}
 									style={{
 										height: "52px",
 										borderRadius: "12px",
 										border: "2px solid #e8e8e8",
 										backgroundColor: "white",
-										cursor: "pointer",
+										cursor: isLoading ? "not-allowed" : "pointer",
 										display: "flex",
 										alignItems: "center",
 										padding: "0",
@@ -35,12 +62,15 @@ function AuthDialog({ trigger, size = "md", placement = "center", motionPreset =
 										overflow: "hidden",
 										boxShadow: "0 4px 12px rgba(0, 0, 0, 0.1)",
 										transition: "all 0.3s ease",
-										width: "100%"
+										width: "100%",
+										opacity: isLoading ? 0.6 : 1
 									}}
 									onMouseEnter={e => {
-										e.currentTarget.style.transform = "translateY(-2px)";
-										e.currentTarget.style.boxShadow = "0 8px 20px rgba(0, 0, 0, 0.15)";
-										e.currentTarget.style.borderColor = "#d4d4d4";
+										if (!isLoading) {
+											e.currentTarget.style.transform = "translateY(-2px)";
+											e.currentTarget.style.boxShadow = "0 8px 20px rgba(0, 0, 0, 0.15)";
+											e.currentTarget.style.borderColor = "#d4d4d4";
+										}
 									}}
 									onMouseLeave={e => {
 										e.currentTarget.style.transform = "translateY(0)";
@@ -78,11 +108,17 @@ function AuthDialog({ trigger, size = "md", placement = "center", motionPreset =
 												letterSpacing: "0.25px"
 											}}
 										>
-											Continue with Google
+											{isLoading ? "Redirecting..." : "Continue with Google"}
 										</span>
 									</div>
 								</button>
 							</Box>
+
+							{error && (
+								<Text fontSize="sm" color="red.500" textAlign="center" px={4}>
+									{error}
+								</Text>
+							)}
 
 							<Text fontSize="xs" color="gray.500" textAlign="center" px={4}>
 								Secure authentication provided by Firebase
