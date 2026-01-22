@@ -1,10 +1,23 @@
+import { useEffect } from 'react'
+import { useLocation, useNavigate } from 'react-router-dom'
 import { Box, VStack } from '@chakra-ui/react'
 import LandingBackground from '../assets/LandingBackground.png'
 import GetStartedButton from '@/components/Homepage/GetStartedButton'
 import AnimatedLogo from '@/components/Homepage/AnimatedLogo'
 import AnimatedHeading from '@/components/Homepage/AnimatedHeading'
+import ShowToast from '@/Extensions/ShowToast'
 
 function Homepage() {
+    const location = useLocation();
+    const navigate = useNavigate();
+
+    useEffect(() => {
+        if (location.state?.authRedirect) {
+            ShowToast("warning", "Please login first.");
+            navigate(location.pathname, { replace: true, state: {} });
+        }
+    }, [location.state, navigate, location.pathname]);
+
     return (
         <>
             <Box style={{

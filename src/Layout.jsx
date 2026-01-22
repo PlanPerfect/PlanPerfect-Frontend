@@ -11,7 +11,7 @@ function AppLayout() {
 	if (loading) return null;
 
 	if (!user && location.pathname !== "/") {
-		return <Navigate to="/" replace state={{ from: location.pathname }} />;
+		return <Navigate to="/" replace state={{ from: location.pathname, authRedirect: true }} />;
 	}
 
 	return (
