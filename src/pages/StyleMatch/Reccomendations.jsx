@@ -41,7 +41,8 @@ function Recommendations() {
 		if (isInitialMount) return;
 
 		if (!furnitures || furnitures.length === 0 || !style) {
-			ShowToast("info", "Please go back to upload an image for style matching.", "", {
+			ShowToast("info", "Please upload an image for processing before using this search feature.", "", {
+				persistent: true,
 				action: {
 					label: "Go Back",
 					onClick: () => navigate("/stylematch")
