@@ -3,6 +3,7 @@ import { signInWithPopup } from "firebase/auth";
 import { useNavigate } from "react-router-dom";
 import { useState } from "react";
 import { auth, googleProvider } from "../../firebase";
+import { setPersistence, browserSessionPersistence } from "firebase/auth";
 
 function AuthDialog({ trigger, size = "md", placement = "center", motionPreset = "slide-in-bottom" }) {
 	const [isLoading, setIsLoading] = useState(false);
@@ -15,6 +16,7 @@ function AuthDialog({ trigger, size = "md", placement = "center", motionPreset =
 		setError(null);
 
 		try {
+			await setPersistence(auth, browserSessionPersistence);
 			await signInWithPopup(auth, googleProvider);
 			setOpen(false);
 			navigate("/");
