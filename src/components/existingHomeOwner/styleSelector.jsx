@@ -20,7 +20,7 @@ const designThemes = [
 	{ id: 16, name: "Peranakan", icon: "🏛️", color: "#E6E6FA" },
 ];
 
-function StyleSelector({ detectedStyle, onStylesChange, value = [] }) {
+function StyleSelector({ detectedStyle, onStylesChange, value = [], preferences, analysisResults }) {
 	const [localSelectedThemes, setLocalSelectedThemes] = useState(() =>
 		value.map(name => {
 			const match = designThemes.find(t => t.name === name);
@@ -28,7 +28,6 @@ function StyleSelector({ detectedStyle, onStylesChange, value = [] }) {
 		}).filter(Boolean)
 	);
 	
-
 	const didInitFromDetected = useRef(false);
 
 	// Optional: preselect detected style ONCE (doesn't fight user clicks)
@@ -64,8 +63,12 @@ function StyleSelector({ detectedStyle, onStylesChange, value = [] }) {
 			.map(id => designThemes.find(t => t.id === id)?.name)
 			.filter(Boolean);
 
-		onStylesChange?.(selectedNames); // ✅ one-way update to parent
+		onStylesChange?.(selectedNames);
 	};
+
+	const selectedThemeDetails = localSelectedThemes
+		.map(id => designThemes.find(t => t.id === id))
+		.filter(Boolean);
 
 	return (
 		<Box w="100%" maxW="1200px" mx="auto" p={8}>
@@ -138,7 +141,7 @@ function StyleSelector({ detectedStyle, onStylesChange, value = [] }) {
 			</Flex>
 
 			{/* Selection Counter */}
-			<Flex justify="center" align="center" gap={2}>
+			<Flex justify="center" align="center" gap={2} mb={8}>
 				<Box
 					bg={localSelectedThemes.length > 0 ? "#D4AF37" : "gray.200"}
 					color={localSelectedThemes.length > 0 ? "white" : "gray.600"}
@@ -152,6 +155,89 @@ function StyleSelector({ detectedStyle, onStylesChange, value = [] }) {
 					{localSelectedThemes.length} / 2 Selected
 				</Box>
 			</Flex>
+
+			{/* Preview Your Selections - Only shown when at least one style is selected */}
+			{localSelectedThemes.length > 0 && (
+				<Box mt={8}>
+					<Heading size="2xl" textAlign="center" mb={8} color="#D4AF37">
+						Preview Your Selections
+					</Heading>
+
+					<Flex direction="column" gap={6}>
+						{/* Preferences Summary */}
+						<Box border="2px solid #D4AF37" borderRadius="12px" p={6} bg="white" boxShadow="sm">
+							<Heading size="lg" mb={4} color="#D4AF37" textAlign="center">
+								📋 Your Property Preferences
+							</Heading>
+							<Flex direction="column" gap={3} align="center">
+								<Flex align="center" gap={2} justify="center">
+									<Text fontWeight="600" color="gray.700">Property Type:</Text>
+									<Text color="gray.600" fontSize="lg">{preferences?.propertyType || "Not selected"}</Text>
+								</Flex>
+								<Flex align="center" gap={2} justify="center">
+									<Text fontWeight="600" color="gray.700">Unit Type:</Text>
+									<Text color="gray.600" fontSize="lg">{preferences?.unitType || "Not selected"}</Text>
+								</Flex>
+								<Flex align="center" gap={2} justify="center">
+									<Text fontWeight="600" color="gray.700">Budget:</Text>
+									<Text color="gray.600" fontSize="lg">{preferences?.budget || "Not selected"}</Text>
+								</Flex>
+							</Flex>
+						</Box>
+
+						{/* Detected Style */}
+						<Box border="2px solid #D4AF37" borderRadius="12px" p={6} bg="white" boxShadow="sm">
+							<Heading size="lg" mb={4} color="#D4AF37" textAlign="center">
+								🎨 AI-Detected Style
+							</Heading>
+							<Flex justify="center" align="center" gap={3}>
+								<Box
+									bg="#D4AF37"
+									color="white"
+									px={6}
+									py={3}
+									borderRadius="full"
+									fontSize="xl"
+									fontWeight="700"
+								>
+									{analysisResults?.detected_style || "Unknown"}
+								</Box>
+							</Flex>
+						</Box>
+
+						{/* Selected Styles */}
+						<Box border="2px solid #D4AF37" borderRadius="12px" p={6} bg="white" boxShadow="sm">
+							<Heading size="lg" mb={4} color="#D4AF37" textAlign="center">
+								✨ Your Selected Design Themes
+							</Heading>
+							<Flex gap={3} flexWrap="wrap" justify="center">
+								{selectedThemeDetails.map((theme, index) => (
+									<Box
+										key={index}
+										bg="#F4E5B2"
+										color="#8B7355"
+										px={5}
+										py={3}
+										borderRadius="full"
+										fontSize="lg"
+										fontWeight="600"
+										border="2px solid #D4AF37"
+									>
+										{theme.name}
+									</Box>
+								))}
+							</Flex>
+						</Box>
+
+						{/* Ready to Continue Message */}
+						<Box border="2px solid #D4AF37" borderRadius="12px" p={6} bg="#FFFDF7" textAlign="center">
+							<Text fontSize="lg" color="gray.700">
+								🎉 You're all set! Review your selections above and click "Next" below to generate your personalized design recommendations.
+							</Text>
+						</Box>
+					</Flex>
+				</Box>
+			)}
 		</Box>
 	);
 }
