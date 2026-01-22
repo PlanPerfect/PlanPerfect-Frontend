@@ -225,7 +225,7 @@ function GetStarted() {
 						<Box mt={4} display="flex" justifyContent="center" width="100%">
 							{!detectionSuccess ? (
 								<Box onClick={!isLoading ? handleUploadClick : undefined} width="90%" opacity={isLoading ? 0.5 : 1}>
-									<GetStartedButton width="100%" destination={null} delay="0.5s" loading={isLoading} />
+									<GetStartedButton width="100%" destination={null} auth={false} delay="0.5s" loading={isLoading} />
 								</Box>
 							) : (
 								<Box width="90%">
