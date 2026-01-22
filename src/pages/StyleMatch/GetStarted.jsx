@@ -4,6 +4,7 @@ import { Card, Flex, Heading, Text, Box, Image, Avatar, Grid, IconButton, Carous
 import { LuChevronLeft, LuChevronRight } from "react-icons/lu";
 import { RxRocket } from "react-icons/rx";
 import { motion } from "framer-motion";
+import { useAuth } from "../../contexts/AuthContext";
 import StyleMatchBackground from "../../assets/StyleMatchBackground.png";
 import SampleStyleBackground from "../../assets/SampleStyleBackground.png";
 import AnimatedLogo from "@/components/Homepage/AnimatedLogo";
@@ -13,6 +14,7 @@ import ShowToast from "@/Extensions/ShowToast";
 import server from "../../../networking";
 
 function GetStarted() {
+	const { user, loading } = useAuth();
 	const [furnitureItems, setFurnitureItems] = useState([]);
 	const [isLoading, setIsLoading] = useState(false);
 	const [roomImage, setRoomImage] = useState(SampleStyleBackground);
@@ -82,18 +84,17 @@ function GetStarted() {
 
 				const { data } = await server.post("/stylematch/detection/detect-furniture", formData, {
 					headers: {
-						"Content-Type": "multipart/form-data"
+						"Content-Type": "multipart/form-data",
+						"X-User-ID": user.uid
 					},
 					timeout: 300000
 				});
 
-				if (data.detections && data.detections.length > 0) {
-					const timestamp = data.detections[0].timestamp;
+				console.log(data)
 
+				if (data.detections && data.detections.length > 0) {
 					const items = data.detections.map(item => {
-						const baseUrl = server.defaults.baseURL?.replace(/\/$/, "") || "";
-						const imagePath = `/static/predictions/furniture-detection/${timestamp}/${item.filename}`;
-						const imageUrl = `${baseUrl}${imagePath}`;
+						const imageUrl = item.url
 
 						const capitalizedName = item.class
 							? item.class
