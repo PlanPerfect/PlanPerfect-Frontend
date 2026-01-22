@@ -1,9 +1,10 @@
 import { Dialog, Portal, CloseButton, VStack, Box, Text, Heading } from "@chakra-ui/react";
 import { signInWithPopup } from "firebase/auth";
 import { useNavigate } from "react-router-dom";
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { auth, googleProvider } from "../../firebase";
 import { setPersistence, browserSessionPersistence } from "firebase/auth";
+import server from "../../../networking";
 
 function AuthDialog({ trigger, size = "md", placement = "center", motionPreset = "slide-in-bottom" }) {
 	const [isLoading, setIsLoading] = useState(false);
@@ -12,17 +13,31 @@ function AuthDialog({ trigger, size = "md", placement = "center", motionPreset =
 	const navigate = useNavigate();
 
 	const handleGoogleSignIn = async () => {
-		setIsLoading(true);
 		setError(null);
 
 		try {
 			await setPersistence(auth, browserSessionPersistence);
-			await signInWithPopup(auth, googleProvider);
+			const result = await signInWithPopup(auth, googleProvider);
+
+			setIsLoading(true);
+
+			const userData = {
+				uid: result.user.uid,
+				email: result.user.email,
+				displayName: result.user.displayName || result.user.email.split("@")[0]
+			};
+
+			await server.post("/auth/register", userData);
+
 			setOpen(false);
 			navigate("/");
 		} catch (error) {
-			console.error("Error signing in:", error);
-			setError(error.message);
+			if (error.code === "auth/popup-closed-by-user") {
+				return;
+			} else {
+				console.error("Error signing in:", error);
+				setError(error.message);
+			}
 		} finally {
 			setIsLoading(false);
 		}
@@ -123,7 +138,7 @@ function AuthDialog({ trigger, size = "md", placement = "center", motionPreset =
 							)}
 
 							<Text fontSize="xs" color="gray.500" textAlign="center" px={4}>
-								Secure authentication provided by Firebase
+								Secure authentication provided by Google
 							</Text>
 						</VStack>
 					</Dialog.Content>

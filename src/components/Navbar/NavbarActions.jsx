@@ -1,13 +1,16 @@
-import { useLocation } from "react-router-dom";
+import { useLocation, useNavigate } from "react-router-dom";
 import { Button, Text } from "@chakra-ui/react";
-import AuthDialog from "../Homepage/AuthDialog"
+import AuthDialog from "../Homepage/AuthDialog";
+import { useAuth } from "../../contexts/AuthContext";
 
 function NavbarActions() {
 	const location = useLocation();
+	const navigate = useNavigate();
+	const { user } = useAuth();
 
 	if (location.pathname !== "/") return null;
 
-	const trigger = (
+	const buttonElement = (
 		<Button
 			bg="transparent"
 			border="2px solid #D4AF37"
@@ -17,6 +20,7 @@ function NavbarActions() {
 			px={3}
 			_hover={{ bg: "rgba(212, 197, 160, 0.1)" }}
 			_active={{ bg: "rgba(212, 197, 160, 0.2)" }}
+			onClick={user ? () => navigate("/onboarding") : undefined}
 		>
 			<Text color="white" fontWeight="bold">
 				GET STARTED
@@ -24,7 +28,11 @@ function NavbarActions() {
 		</Button>
 	);
 
-	return <AuthDialog trigger={trigger} size="xs" />;
+	if (user) {
+		return buttonElement;
+	}
+
+	return <AuthDialog trigger={buttonElement} size="xs" />;
 }
 
 export default NavbarActions;
