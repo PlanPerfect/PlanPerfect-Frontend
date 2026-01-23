@@ -27,7 +27,7 @@ function DesignDocumentPage() {
 		// Check if required data exists
 		if (!floorPlanFile) {
 			ShowToast("error", "Missing floor plan data. Redirecting...");
-			navigate("/new-home-owner");
+			navigate("/newHomeOwner");
 			return;
 		}
 
