@@ -1,4 +1,4 @@
-import { useEffect, useState, useLayoutEffect } from "react";
+import { useEffect, useState } from "react";
 import { useLocation, useNavigate } from "react-router-dom";
 import { Card, Flex, Box, Text, Heading, Image, Badge, Button, HStack, VStack, Icon, SimpleGrid, Carousel, IconButton, Spinner } from "@chakra-ui/react";
 import { LuSparkles, LuSofa, LuShoppingCart, LuHeart, LuChevronLeft, LuChevronRight, LuCheck, LuX, LuPackageSearch } from "react-icons/lu";
@@ -21,7 +21,7 @@ function Recommendations() {
 	const [isInitialMount, setIsInitialMount] = useState(true);
 	const navigate = useNavigate();
 
-	useLayoutEffect(() => {
+	useEffect(() => {
 		setIsInitialMount(false);
 	}, []);
 
@@ -38,15 +38,30 @@ function Recommendations() {
 	}, [furnitures]);
 
 	useEffect(() => {
+		if (isInitialMount) return;
+
 		if (!furnitures || furnitures.length === 0 || !style) {
-			ShowToast("info", "Please go back to upload an image for style matching.", "", {
+			ShowToast("info", "Please upload an image for processing before using this search feature.", "", {
+				persistent: true,
 				action: {
 					label: "Go Back",
 					onClick: () => navigate("/stylematch")
 				}
 			});
 		}
-	}, [furnitures, style, navigate]);
+	}, [furnitures, style, navigate, isInitialMount]);
+
+	const getMatchBadge = (matchPercentage) => {
+		if (matchPercentage >= 90) {
+			return { text: "Perfect match", colorPalette: "green" };
+		} else if (matchPercentage >= 75) {
+			return { text: "Great match", colorPalette: "blue" };
+		} else if (matchPercentage >= 50) {
+			return { text: "Good match", colorPalette: "teal" };
+		} else {
+			return { text: "Decent match", colorPalette: "gray" };
+		}
+	};
 
 	const fetchRecommendations = async furnitureName => {
 		setLoadingRecs(true);
@@ -394,53 +409,69 @@ function Recommendations() {
 											<Carousel.Root slideCount={recommendations.length} index={currentCarouselIndex} onIndexChange={e => setCurrentCarouselIndex(e.index)} display="flex" flexDirection="column" height="100%">
 												<Box flex={1}>
 													<Carousel.ItemGroup height="100%">
-														{recommendations.map((rec, index) => (
-															<Carousel.Item key={rec.id} index={index} height="100%">
-																<MotionCard
-																	flexDirection="row"
-																	overflow="hidden"
-																	height="100%"
-																	bg="rgba(255, 255, 255, 0.95)"
-																	borderRadius={20}
-																	initial={isInitialMount ? { opacity: 0, y: 20 } : false}
-																	animate={{ opacity: 1, scale: 1, x: 0 }}
-																	transition={{ duration: 0.4, ease: "easeOut" }}
-																>
-																	<Box position="relative" minWidth={"220px"} maxWidth="30%" minH={"180px"} maxHeight="180px">
-																		<Image objectFit="cover" minWidth={"164px"} width="100%" minHeight={"171px"} height="100%" src={rec.image} alt={rec.name} />
-																	</Box>
-																	<Box flex={1} display="flex" flexDirection="column" justifyContent="space-between">
-																		<Card.Body py={3} px={4}>
-																			<Card.Title fontSize="lg" mb={2}>
-																				{rec.name}
-																			</Card.Title>
-																			<Card.Description fontSize="sm">{rec.description}</Card.Description>
-																		</Card.Body>
-																		<Card.Footer gap={2} pb={3} px={4}>
-																			<Button
-																				bgColor={isRecommendationSaved(rec.id) ? "#4CAF50" : "#D4AF37"}
-																				borderRadius={6}
-																				leftIcon={isRecommendationSaved(rec.id) ? <LuCheck /> : <LuHeart />}
-																				size="sm"
-																				onClick={() => toggleSaveRecommendation(rec)}
-																			>
-																				{isRecommendationSaved(rec.id) ? "Saved" : "Save"}
-																			</Button>
-																			<Button bgColor="#FF6B6B" borderRadius={6} size="sm" onClick={() => handleNotRelevant(rec.id, index)} color="white" disabled={removingRecId === rec.id}>
-																				{removingRecId === rec.id ? (
-																					<Spinner size="sm" color="white" />
-																				) : (
-																					<>
-																						<Icon as={LuX} mr={1} />
-																						Not Relevant
-																					</>
-																				)}
-																			</Button>
-																		</Card.Footer>
-																	</Box>
-																</MotionCard>
-															</Carousel.Item>
-														))}
+														{recommendations.map((rec, index) => {
+															const matchBadge = getMatchBadge(rec.match);
+															return (
+																<Carousel.Item key={rec.id} index={index} height="100%">
+																	<MotionCard
+																		flexDirection="row"
+																		overflow="hidden"
+																		height="100%"
+																		bg="rgba(255, 255, 255, 0.95)"
+																		borderRadius={20}
+																		initial={isInitialMount ? { opacity: 0, y: 20 } : false}
+																		animate={{ opacity: 1, scale: 1, x: 0 }}
+																		transition={{ duration: 0.4, ease: "easeOut"}}
+																		position="relative"
+																	>
+																		<Badge
+																			colorPalette={matchBadge.colorPalette}
+																			position="absolute"
+																			top={2}
+																			right={2}
+																			zIndex={10}
+																			fontSize="xs"
+																			fontWeight="semibold"
+																			borderRadius={10}
+																		>
+																			{matchBadge.text}
+																		</Badge>
+																		<Box position="relative" minWidth={"220px"} maxWidth="30%" minH={"180px"} maxHeight="180px">
+																			<Image objectFit="cover" minWidth={"164px"} width="100%" minHeight={"171px"} height="100%" src={rec.image} alt={rec.name} />
+																		</Box>
+																		<Box flex={1} display="flex" flexDirection="column" justifyContent="space-between">
+																			<Card.Body py={3} px={4}>
+																				<Card.Title fontSize="lg" mb={2}>
+																					{rec.name}
+																				</Card.Title>
+																				<Card.Description fontSize="sm">{rec.description}</Card.Description>
+																			</Card.Body>
+																			<Card.Footer gap={2} pb={3} px={4}>
+																				<Button
+																					bgColor={isRecommendationSaved(rec.id) ? "#4CAF50" : "#D4AF37"}
+																					borderRadius={6}
+																					leftIcon={isRecommendationSaved(rec.id) ? <LuCheck /> : <LuHeart />}
+																					size="sm"
+																					onClick={() => toggleSaveRecommendation(rec)}
+																				>
+																					{isRecommendationSaved(rec.id) ? "Saved" : "Save"}
+																				</Button>
+																				<Button bgColor="#FF6B6B" borderRadius={6} size="sm" onClick={() => handleNotRelevant(rec.id, index)} color="white" disabled={removingRecId === rec.id}>
+																					{removingRecId === rec.id ? (
+																						<Spinner size="sm" color="white" />
+																					) : (
+																						<>
+																							<Icon as={LuX} mr={1} />
+																							Not Relevant
+																						</>
+																					)}
+																				</Button>
+																			</Card.Footer>
+																		</Box>
+																	</MotionCard>
+																</Carousel.Item>
+															);
+														})}
 													</Carousel.ItemGroup>
 												</Box>
 

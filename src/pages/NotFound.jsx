@@ -2,10 +2,19 @@ import { Box } from '@chakra-ui/react'
 import LandingBackground from '../assets/LandingBackground.png'
 import ShowToast from '@/Extensions/ShowToast'
 import { useEffect } from 'react'
+import { useNavigate } from 'react-router-dom'
 
 function NotFound() {
+    const navigate = useNavigate();
+
     useEffect(() => {
-        ShowToast("error", "404 Not Found", "The page you are looking for does not exist.")
+        ShowToast("info", "Sorry, but we couldn't find the page you're looking for.", "", {
+            persistent: true,
+            action: {
+                label: "Go to Home",
+                onClick: () => navigate("/")
+            }
+        })
     }, [])
 
     return (
