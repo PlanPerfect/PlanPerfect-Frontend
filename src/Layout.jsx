@@ -1,19 +1,34 @@
-/* eslint-disable react-hooks/exhaustive-deps */
 import './App.css'
-import { Outlet } from 'react-router-dom'
+import { Outlet, useLocation, Navigate } from 'react-router-dom'
 import { Toaster } from "@/components/ui/toaster"
 import Navbar from './components/Navbar'
+import { AuthProvider, useAuth } from './contexts/AuthContext'
+
+function AppLayout() {
+	const { user, loading } = useAuth();
+	const location = useLocation();
+
+	if (loading) return null;
+
+	if (!user && location.pathname !== "/") {
+		return <Navigate to="/" replace state={{ from: location.pathname, authRedirect: true }} />;
+	}
+
+	return (
+		<div className='defaultLayout'>
+			<Toaster />
+			<Navbar />
+			<Outlet />
+		</div>
+	);
+}
 
 function App() {
 	return (
-		<>
-			<div className='defaultLayout'>
-				<Navbar />
-				<Outlet />
-				<Toaster />
-			</div>
-		</>
+		<AuthProvider>
+			<AppLayout />
+		</AuthProvider>
 	)
 }
 
-export default App
+export default App;
