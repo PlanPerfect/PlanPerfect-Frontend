@@ -49,7 +49,6 @@ function ExistingHomeOwner() {
 			const stylesString = selectedStyles.join(', ');
 			formData.append('styles', stylesString);
 			
-
 			// Call the API using server instance
 			const response = await server.post('/image/generate', formData, {
 				responseType: 'blob' // Important: tells axios to expect binary data
@@ -59,6 +58,7 @@ function ExistingHomeOwner() {
 			const imageUrl = URL.createObjectURL(response.data);
 			
 			setGeneratedImage(imageUrl);
+			steps.setStep(4); // Move to Preview step
 		} catch (error) {
 			console.error('Error generating image:', error);
 			setGenerationError(error.response?.data?.detail || error.message || 'Failed to generate design. Please try again.');
@@ -109,28 +109,97 @@ function ExistingHomeOwner() {
 			title: "Select Styles",
 			icon: <BsPalette2 />,
 			content: (
-				<StyleSelector
-					detectedStyle={analysisResults?.detected_style}
-					onStylesChange={handleStylesChange}
-					value={selectedStyles}
-				/>
+				<>
+					<StyleSelector
+						detectedStyle={analysisResults?.detected_style}
+						onStylesChange={handleStylesChange}
+						value={selectedStyles}
+						preferences={preferences}
+						analysisResults={analysisResults}
+					/>
+					
+					{/* Error Message */}
+					{generationError && (
+						<Box
+							mt={6}
+							bg="red.50"
+							border="2px solid"
+							borderColor="red.400"
+							borderRadius="12px"
+							p={4}
+							textAlign="center"
+							maxW="1200px"
+							mx="auto"
+						>
+							<Text color="red.600" fontWeight="600">
+								⚠️ {generationError}
+							</Text>
+						</Box>
+					)}
+
+					{/* Loading State */}
+					{isGenerating && (
+						<Box
+							mt={6}
+							border="2px solid #D4AF37"
+							borderRadius="12px"
+							p={8}
+							bg="#FFFDF7"
+							textAlign="center"
+							maxW="1200px"
+							mx="auto"
+						>
+							<Spinner size="xl" color="#D4AF37" mb={4} />
+							<Text fontSize="lg" color="gray.700" fontWeight="600">
+								✨ Generating your personalized design...
+							</Text>
+							<Text fontSize="md" color="gray.600" mt={2}>
+								This may take a few moments. Please wait.
+							</Text>
+						</Box>
+					)}
+
+					{/* Generate Button - shown when styles are selected and not generating */}
+					{selectedStyles.length > 0 && !isGenerating && (
+						<Flex justify="center" mt={8}>
+							<Button
+								onClick={handleGenerateDesign}
+								size="xl"
+								borderRadius="md"
+								bg="#D4AF37"
+								color="white"
+								px={16}
+								py={7}
+								fontSize="xl"
+								fontWeight="700"
+								_hover={{
+									bg: "#C9A961",
+									transform: "translateY(-2px)",
+									boxShadow: "xl",
+								}}
+								transition="all 0.2s"
+							>
+								Generate Design 🚀
+							</Button>
+						</Flex>
+					)}
+				</>
 			),
 		},
 		{
 			title: "Preview",
 			icon: <FaEye />,
 			content: (
-				<Box w="100%" maxW="1000px" mx="auto" p={8}>
+				<Box w="100%" maxW="1200px" mx="auto" p={8}>
 					<Heading size="2xl" textAlign="center" mb={8} color="#D4AF37">
-						{generatedImage ? "Your Generated Design" : "Preview Your Selections"}
+						Your Generated Design
 					</Heading>
 
-					{/* Show generated image if available */}
-					{generatedImage && (
-						<Box mb={8}>
-							<Flex gap={6} justify="center" align="start" flexWrap="wrap">
+					{generatedImage ? (
+						<>
+							<Flex gap={6} justify="center" align="start" flexWrap="wrap" mb={8}>
 								{/* Original Image */}
-								<Box flex="1" minW="300px" maxW="450px">
+								<Box flex="1" minW="300px" maxW="500px">
 									<Text fontSize="lg" fontWeight="600" mb={3} textAlign="center" color="gray.700">
 										Original Room
 									</Text>
@@ -144,7 +213,7 @@ function ExistingHomeOwner() {
 								</Box>
 
 								{/* Generated Image */}
-								<Box flex="1" minW="300px" maxW="450px">
+								<Box flex="1" minW="300px" maxW="500px">
 									<Text fontSize="lg" fontWeight="600" mb={3} textAlign="center" color="#D4AF37">
 										✨ AI Generated Design
 									</Text>
@@ -159,8 +228,8 @@ function ExistingHomeOwner() {
 								</Box>
 							</Flex>
 
-							{/* Download/Regenerate buttons */}
-							<Flex justify="center" gap={4} mt={6}>
+							{/* Action Buttons */}
+							<Flex justify="center" gap={4} flexWrap="wrap">
 								<Button
 									as="a"
 									href={generatedImage}
@@ -182,187 +251,29 @@ function ExistingHomeOwner() {
 								>
 									Regenerate Design
 								</Button>
-							</Flex>
-						</Box>
-					)}
-
-					{/* Summary - always visible */}
-					<Flex direction="column" gap={6} mt={generatedImage ? 8 : 0}>
-						{/* Preferences Summary */}
-						<Box border="2px solid #D4AF37" borderRadius="12px" p={6} bg="white" boxShadow="sm">
-							<Heading size="lg" mb={4} color="#D4AF37" textAlign="center">
-								📋 Your Property Preferences
-							</Heading>
-							<Flex direction="column" gap={3} align="center">
-								<Flex align="center" gap={2} justify="center">
-									<Text fontWeight="600" color="gray.700">Property Type:</Text>
-									<Text color="gray.600" fontSize="lg">{preferences?.propertyType || "Not selected"}</Text>
-								</Flex>
-								<Flex align="center" gap={2} justify="center">
-									<Text fontWeight="600" color="gray.700">Unit Type:</Text>
-									<Text color="gray.600" fontSize="lg">{preferences?.unitType || "Not selected"}</Text>
-								</Flex>
-								<Flex align="center" gap={2} justify="center">
-									<Text fontWeight="600" color="gray.700">Budget:</Text>
-									<Text color="gray.600" fontSize="lg">{preferences?.budget || "Not selected"}</Text>
-								</Flex>
-							</Flex>
-						</Box>
-
-						{/* Detected Style */}
-						<Box border="2px solid #D4AF37" borderRadius="12px" p={6} bg="white" boxShadow="sm">
-							<Heading size="lg" mb={4} color="#D4AF37" textAlign="center">
-								🎨 AI-Detected Style
-							</Heading>
-							<Flex justify="center" align="center" gap={3}>
-								<Box
-									bg="#D4AF37"
-									color="white"
-									px={6}
-									py={3}
-									borderRadius="full"
-									fontSize="xl"
-									fontWeight="700"
-								>
-									{analysisResults?.detected_style || "Unknown"}
-								</Box>
-							</Flex>
-						</Box>
-
-						{/* Selected Styles */}
-						<Box border="2px solid #D4AF37" borderRadius="12px" p={6} bg="white" boxShadow="sm">
-							<Heading size="lg" mb={4} color="#D4AF37" textAlign="center">
-								✨ Your Selected Design Themes
-							</Heading>
-							{selectedStyles && selectedStyles.length > 0 ? (
-								<Flex gap={3} flexWrap="wrap" justify="center">
-									{selectedStyles.map((style, index) => (
-										<Box
-											key={index}
-											bg="#F4E5B2"
-											color="#8B7355"
-											px={5}
-											py={3}
-											borderRadius="full"
-											fontSize="lg"
-											fontWeight="600"
-											border="2px solid #D4AF37"
-										>
-											{style}
-										</Box>
-									))}
-								</Flex>
-							) : (
-								<Text color="gray.500" fontSize="md" textAlign="center">No design themes selected yet</Text>
-							)}
-						</Box>
-
-						{/* Error Message */}
-						{generationError && (
-							<Box
-								bg="red.50"
-								border="2px solid"
-								borderColor="red.400"
-								borderRadius="12px"
-								p={4}
-								textAlign="center"
-							>
-								<Text color="red.600" fontWeight="600">
-									⚠️ {generationError}
-								</Text>
-							</Box>
-						)}
-
-						{/* Loading State */}
-						{isGenerating && (
-							<Box
-								border="2px solid #D4AF37"
-								borderRadius="12px"
-								p={8}
-								bg="#FFFDF7"
-								textAlign="center"
-							>
-								<Spinner size="xl" color="#D4AF37" mb={4} />
-								<Text fontSize="lg" color="gray.700" fontWeight="600">
-									✨ Generating your personalized design...
-								</Text>
-								<Text fontSize="md" color="gray.600" mt={2}>
-									This may take a few moments. Please wait.
-								</Text>
-							</Box>
-						)}
-
-						{/* Submit Button - only show if image hasn't been generated */}
-						{!generatedImage && !isGenerating && (
-							<>
-								<Box border="2px solid #D4AF37" borderRadius="12px" p={6} bg="#FFFDF7" textAlign="center">
-									<Text fontSize="lg" color="gray.700" mb={2}>
-										🎉 You're all set! Review your selections above and click below to generate your personalized design recommendations.
-									</Text>
-								</Box>
-
-								<Flex justify="center" mt={4} position="relative">
-									<Button
-										onClick={handleGenerateDesign}
-										size="xl"
-										borderRadius="md"
-										bg="#D4AF37"
-										color="white"
-										px={16}
-										py={7}
-										fontSize="xl"
-										fontWeight="700"
-										_hover={{
-											bg: "#C9A961",
-											transform: "translateY(-2px)",
-											boxShadow: "xl",
-										}}
-										transition="all 0.2s"
-										isLoading={isGenerating}
-									>
-										Submit & Generate Design 🚀
-									</Button>
-									
-									{/* Back Button - Bottom Right Corner */}
-									<Steps.PrevTrigger asChild>
-										<Button
-											position="absolute"
-											right={0}
-											bottom={0}
-											size="md"
-											variant="ghost"
-											color="gray.600"
-											_hover={{
-												bg: "gray.100",
-												color: "gray.800"
-											}}
-										>
-											← Back
-										</Button>
-									</Steps.PrevTrigger>
-								</Flex>
-							</>
-						)}
-
-						{/* Back button when image is shown */}
-						{generatedImage && (
-							<Flex justify="center" mt={4}>
 								<Steps.PrevTrigger asChild>
 									<Button
-										size="md"
-										variant="ghost"
-										color="gray.600"
+										size="lg"
+										variant="outline"
+										borderColor="#D4AF37"
+										color="#D4AF37"
 										_hover={{
-											bg: "gray.100",
-											color: "gray.800"
+											bg: "#F4E5B2"
 										}}
 									>
 										← Back to Style Selection
 									</Button>
 								</Steps.PrevTrigger>
 							</Flex>
-						)}
-					</Flex>
+						</>
+					) : (
+						<Box textAlign="center" p={8}>
+							<Spinner size="xl" color="#D4AF37" mb={4} />
+							<Text fontSize="lg" color="gray.600">
+								Loading your design...
+							</Text>
+						</Box>
+					)}
 				</Box>
 			)
 		}
@@ -371,11 +282,13 @@ function ExistingHomeOwner() {
 	// Disable next button logic
 	const isNextDisabled =
 		(steps.value === 0 && !preferences) ||
-		(steps.value === 1 && !analysisResults) ||  // Can only proceed after analysis is complete
-		(steps.value === 3 && selectedStyles.length === 0);  // Changed from step 2 to step 3
+		(steps.value === 1 && !analysisResults) ||
+		(steps.value === 3 && selectedStyles.length === 0);
 
-	// Hide navigation buttons during AI analysis
-	const showNavigationButtons = !(steps.value === 1 && uploadedRoomImage && !analysisResults);
+	// Hide navigation buttons during AI analysis or when generating
+	const showNavigationButtons = 
+		!(steps.value === 1 && uploadedRoomImage && !analysisResults) &&
+		!(steps.value === 3 && isGenerating);
 
 	return (
 		<>
@@ -446,14 +359,14 @@ function ExistingHomeOwner() {
 
 						{showNavigationButtons && (
 							<Flex justify="center" gap={4} mt={6}>
-								{steps.value > 0 && steps.value < 4 && !generatedImage && (
+								{steps.value > 0 && steps.value < 4 && (
 									<Steps.PrevTrigger asChild>
 										<Button size="xl" borderRadius="md" bg="gray.300" color="black" _hover={{ bg: "gray.400" }}>
 											Back
 										</Button>
 									</Steps.PrevTrigger>
 								)}
-								{steps.value < 4 && (  // Changed from 2 to 4
+								{steps.value < 3 && (
 									<Steps.NextTrigger asChild>
 										<Button
 											size="xl"
