@@ -1,11 +1,13 @@
 import { useState, useRef, useEffect, useLayoutEffect } from "react";
 import { Box, Card, Flex, Heading, Text, Input, VStack, HStack } from "@chakra-ui/react";
 import { Send, Bot, User, Sparkles, AlertCircle } from "lucide-react";
+import { useAuth } from "@/contexts/AuthContext";
 import LandingBackground from "../../assets/LandingBackground.png";
 import ShowToast from "@/Extensions/ShowToast";
 import server from "../../../networking";
 
 function ChatbotPage() {
+	const { user } = useAuth();
 	const [messages, setMessages] = useState([
 		{
 			role: "assistant",
@@ -84,6 +86,7 @@ function ChatbotPage() {
 
 		try {
 			const response = await server.post("/chatbot/chat-completion", {
+				uid: user.uid,
 				query: userMessage.content
 			});
 
