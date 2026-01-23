@@ -1,5 +1,6 @@
-import { Box, Flex, Heading, Text, Button, Slider } from "@chakra-ui/react";
+import { Box, Flex, Heading, Text, Button, Slider, InputGroup, NumberInput, Switch } from "@chakra-ui/react";
 import { useState, useEffect } from "react";
+import { LuDollarSign } from "react-icons/lu";
 
 const designThemes = [
 	{ id: 1, name: "Boutique", icon: "👗", color: "#FFB6C1" },
@@ -22,8 +23,10 @@ const designThemes = [
 
 function PreferenceBudget({ onPreferenceChange, onBudgetChange }) {
 	const [selectedThemes, setSelectedThemes] = useState([]);
-	const [budget, setBudget] = useState(250000);
-	const maxBudget = 500000;
+	const [budget, setBudget] = useState(75000);
+	const [isCustomBudget, setIsCustomBudget] = useState(false);
+	const [customBudgetInput, setCustomBudgetInput] = useState("");
+	const maxBudget = 150000;
 
 	// Handle preferences change
 	useEffect(() => {
@@ -56,7 +59,43 @@ function PreferenceBudget({ onPreferenceChange, onBudgetChange }) {
 	};
 
 	const formatCurrency = (value) => {
-		return `$${(value / 1000).toFixed(0)}k`;
+		if (value >= 1_000_000) {
+		  return `$${(value / 1_000_000).toFixed(1)}M`;
+		}
+	  
+		if (value >= 1_000) {
+		  return `$${(value / 1_000).toFixed(0)}k`;
+		}
+	  
+		return `$${value}`;
+	};	  
+
+	const handleCustomBudgetToggle = (checked) => {
+		setIsCustomBudget(checked);
+		if (checked) {
+			setCustomBudgetInput(budget.toString());
+		} else {
+			if (budget > maxBudget) {
+				setBudget(maxBudget);
+			}
+		}
+	};
+
+	const MIN_BUDGET = 0;
+	const MAX_BUDGET = 1_000_000;
+
+	const clamp = (value, min, max) =>
+		Math.min(Math.max(value, min), max);
+	  
+	const commitCustomBudget = (value) => {
+		const num = Number(value);
+	  
+		if (isNaN(num)) return;
+	  
+		const clamped = clamp(num, MIN_BUDGET, MAX_BUDGET);
+	  
+		setBudget(clamped);
+		setCustomBudgetInput(clamped.toString());
 	};
 
 	return (
@@ -131,57 +170,123 @@ function PreferenceBudget({ onPreferenceChange, onBudgetChange }) {
 						{formatCurrency(budget)}
 					</Box>
 
-					{/* Slider */}
-					<Box w="100%" maxW="500px">
-						<Slider.Root
-							value={[budget]}
-							onValueChange={(e) => setBudget(e.value[0])}
-							min={0}
-							max={maxBudget}
-							step={10000}
-						>
-							<Slider.Control>
-								<Slider.Track bg="gray.200" h="8px">
-									<Slider.Range bg="#D4AF37" />
-								</Slider.Track>
-								<Slider.Thumb
-									index={0}
-									bg="white"
-									border="3px solid #D4AF37"
-									w="20px"
-									h="20px"
-								/>
-							</Slider.Control>
-						</Slider.Root>
-					</Box>
+					{/* Conditional: Slider or Custom Input */}
+					{!isCustomBudget ? (
+						<>
+							{/* Slider */}
+							<Box w="100%" maxW="500px">
+								<Slider.Root
+									value={[budget]}
+									onValueChange={(e) => setBudget(e.value[0])}
+									min={0}
+									max={maxBudget}
+									step={10000}
+								>
+									<Slider.Control>
+										<Slider.Track bg="gray.200" h="8px">
+											<Slider.Range bg="#D4AF37" />
+										</Slider.Track>
+										<Slider.Thumb
+											index={0}
+											bg="white"
+											border="3px solid #D4AF37"
+											w="20px"
+											h="20px"
+										/>
+									</Slider.Control>
+								</Slider.Root>
+							</Box>
 
-					{/* Budget Input Fields */}
-					<Flex gap={4} align="center">
-						<Box
-							border="2px solid black"
-							borderRadius="10px"
-							px={6}
-							py={3}
-							bg="white"
-							minW="120px"
-							textAlign="center"
-							fontWeight="500"
+							{/* Budget Input Fields */}
+							<Flex gap={4} align="center">
+								<Box
+									border="2px solid black"
+									borderRadius="10px"
+									px={6}
+									py={3}
+									bg="white"
+									minW="120px"
+									textAlign="center"
+									fontWeight="500"
+								>
+									$0
+								</Box>
+								<Text fontWeight="600">–</Text>
+								<Box
+									border="2px solid black"
+									borderRadius="10px"
+									px={6}
+									py={3}
+									bg="white"
+									minW="120px"
+									textAlign="center"
+									fontWeight="500"
+								>
+									{formatCurrency(maxBudget)}
+								</Box>
+							</Flex>
+						</>
+					) : (
+						<>
+							{/* Custom Budget Input */}
+							<Box w="100%" maxW="400px">
+								<Text fontSize="sm" color="black" mb={2} textAlign="center">
+									Enter your budget amount
+								</Text>
+								<NumberInput.Root
+									allowMouseWheel
+									value={customBudgetInput}
+									step={1000}
+									min={MIN_BUDGET}
+									max={MAX_BUDGET}
+									border="2px solid #D4AF37" 
+									borderRadius="10px"
+									onValueChange={(e) => {
+										// typing only -> no clamping
+										setCustomBudgetInput(e.value);
+										const num = Number(e.value);
+										if (!isNaN(num)) {
+											setBudget(num); // live bubble update
+										}
+									}}
+									onValueCommit={(e) => {
+										// blur / enter -> perform clamping
+										commitCustomBudget(e.value);
+									}}
+									_focus={{
+										borderColor: "#D4AF37",
+										boxShadow: "0 0 0 3px rgba(212, 175, 55, 0.2)"
+									}}
+								>
+									<InputGroup startElement={<LuDollarSign />} endElement={
+										<NumberInput.Control border={"none"}>
+											<NumberInput.IncrementTrigger borderTopRightRadius={6} />
+											<NumberInput.DecrementTrigger borderBottomRightRadius={6} border={"none"} mb={0.2}/>
+										</NumberInput.Control>
+									}>
+										<NumberInput.Input fontWeight="500" fontSize="lg" border="none" textAlign="center" />
+									</InputGroup>
+								</NumberInput.Root>
+							</Box>
+							<Text fontSize="xs" color="gray.500" textAlign="center" maxW="400px">
+								💡 Tip: For $250,000 enter "250000"
+							</Text>
+						</>
+					)}
+					
+					{/* Custom Budget Toggle */}
+					<Flex align="center" gap={3}>
+						<Switch.Root
+							checked={isCustomBudget}
+							onCheckedChange={(e) => handleCustomBudgetToggle(e.checked)}
 						>
-							$0
-						</Box>
-						<Text fontWeight="600">–</Text>
-						<Box
-							border="2px solid black"
-							borderRadius="10px"
-							px={6}
-							py={3}
-							bg="white"
-							minW="120px"
-							textAlign="center"
-							fontWeight="500"
-						>
-							{formatCurrency(maxBudget)}
-						</Box>
+							
+							<Switch.HiddenInput />
+							<Switch.Control />
+							<Switch.Label fontSize="sm" fontWeight="500" color="gray.700">
+								Budget over $150k? Enter custom amount
+							</Switch.Label>
+						</Switch.Root>
 					</Flex>
 				</Flex>
 			</Box>
