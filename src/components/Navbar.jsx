@@ -9,12 +9,14 @@ const MotionFlex = motion.create(Flex);
 function Navbar() {
 	const location = useLocation();
 	const isHome = location.pathname === "/";
+	const isChatPage = location.pathname === "/lumen/chat";
 	const [isWide] = useMediaQuery("(min-width: 530px)");
 	const [isVisible] = useMediaQuery("(min-width: 325px)");
 
 	if (!isVisible) return null;
 
-	const justify = isHome && isWide ? "space-between" : "center";
+	const showActions = (isHome && isWide) || isChatPage;
+	const justify = showActions ? "space-between" : "center";
 
 	return (
 		<MotionFlex
@@ -53,7 +55,7 @@ function Navbar() {
 		>
 			<LogoWithText />
 
-			{isHome && isWide && (
+			{showActions && (
 				<>
 					<Spacer />
 					<NavbarActions />
