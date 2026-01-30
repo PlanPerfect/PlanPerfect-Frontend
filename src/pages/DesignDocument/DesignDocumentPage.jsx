@@ -1,15 +1,15 @@
 import { useState, useEffect } from "react";
 import { Box, Card, Flex, Heading, Text, VStack, Button, Spinner } from "@chakra-ui/react";
 import { FileText, Download, RefreshCw, CheckCircle, AlertCircle } from "lucide-react";
-import { useLocation, useNavigate } from "react-router-dom";
+import { useNavigate } from "react-router-dom";
 import LandingBackground from "../../assets/LandingBackground.png";
 import server from "../../../networking";
 import ShowToast from "@/Extensions/ShowToast";
+import { useAuth } from "../../contexts/AuthContext";
 
 function DesignDocumentPage() {
-	const location = useLocation();
 	const navigate = useNavigate();
-	const { floorPlanFile, preferences, budget, extractionResults } = location.state || {};
+	const { user } = useAuth();
 
 	const [isGenerating, setIsGenerating] = useState(true);
 	const [error, setError] = useState(null);
@@ -25,9 +25,9 @@ function DesignDocumentPage() {
 
 	useEffect(() => {
 		// Check if required data exists
-		if (!floorPlanFile) {
+		if (!user) {
 			ShowToast("error", "Missing floor plan data. Redirecting...");
-			navigate("/new-home-owner");
+			navigate("/onboarding");
 			return;
 		}
 
@@ -35,48 +35,50 @@ function DesignDocumentPage() {
 		generateDocument();
 	}, []);
 
+	const savePdfToCloud = async (pdfBlob) => {
+		const formData = new FormData();
+	
+		const timestamp = new Date()
+			.toISOString()
+			.replace(/[-:]/g, "")
+			.slice(0, 15);
+	
+		const pdfFile = new File(
+			[pdfBlob],
+			`design_document_${timestamp}.pdf`,
+			{ type: "application/pdf" }
+		);
+	
+		formData.append("pdf_file", pdfFile);
+		formData.append("user_id", user.uid);
+	
+		const res = await server.post(
+			`/newHomeOwners/documentLlm/savePdf/${user.uid}`,
+			formData,
+		);
+	
+		return res.data.result.pdf_url;
+	};	
+
 	const generateDocument = async () => {
 		setIsGenerating(true);
 		setError(null);
 		setGeneratedPdfUrl(null);
 
 		try {
-			const formData = new FormData();
-
-			// Raw floor plan image
-			if (floorPlanFile?.file) {
-				formData.append("floor_plan", floorPlanFile.file);
-			} else {
-				throw new Error("Floor plan file is missing");
-			}
-
-			// Preferences
-			const preferencesData = {
-				style: preferences?.style || "Modern"
-			};
-			formData.append("preferences", JSON.stringify(preferencesData));
-
-			// Budget
-			formData.append("budget", budget || "Not specified");
-
-			// Segmented floor plan and extracted data
-			if (extractionResults) {
-				formData.append(
-					"extraction_data",
-					JSON.stringify(extractionResults)
-				);
-			}
-
 			const response = await server.post(
-				"/newHomeOwners/documentLlm/generateDesignDocument",
-				formData,
+				`/newHomeOwners/documentLlm/generateDesignDocument/${user.uid}`,
+				{},
 				{
-					responseType: "blob"
+					responseType: 'blob' // For PDF download
 				}
 			);
 
 			// Get PDF blob
 			const blob = response.data;
+
+			// Save PDF to cloud storage
+			await savePdfToCloud(blob);
 
 			// Create preview URL
 			const url = window.URL.createObjectURL(blob);
@@ -118,16 +120,26 @@ function DesignDocumentPage() {
 
 	const handleDownload = () => {
 		if (!generatedPdfUrl) return;
-
+	
+		const now = new Date();
+	
+		const timestamp = now
+			.toISOString()
+			.replace(/[-:]/g, "") // remove - and :
+			.replace("T", "_") // replace T with _
+			.split(".")[0]; // remove milliseconds
+	
+		const filename = `segmented_floor_plan_${timestamp}.pdf`;
+	
 		const link = document.createElement("a");
 		link.href = generatedPdfUrl;
-		link.download = `interior_design_proposal_${Date.now()}.pdf`;
+		link.download = filename;
 		document.body.appendChild(link);
 		link.click();
 		document.body.removeChild(link);
-
+	
 		ShowToast("success", "PDF downloaded successfully!");
-	};
+	};	
 
 	const handleRegenerate = () => {
 		generateDocument();
