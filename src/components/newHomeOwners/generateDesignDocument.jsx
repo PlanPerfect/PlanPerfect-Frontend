@@ -1,26 +1,136 @@
 import { Box, Button, Flex, Heading, Text, VStack } from "@chakra-ui/react";
 import { IoSparkles } from "react-icons/io5";
 import { useNavigate } from "react-router-dom";
+import { useState } from "react";
+import { useAuth } from "../../contexts/AuthContext";
+import server from "../../../networking";
+import ShowToast from '@/Extensions/ShowToast';
 
 function GenerateDesignDocument({ floorPlanFile, preferences, budget, extractionResults }) {
 	const navigate = useNavigate();
+	const { user } = useAuth();
+	
+	const [isSaving, setIsSaving] = useState(false);
 
-	const handleNavigateToChatbot = () => {
-		navigate("/lumen/chat", {
-			// state: { floorPlanFile, preferences, budget, extractionResults }
-		});
+	function base64ToFile(base64, filename) {
+		const arr = base64.split(",");
+		const mime = arr[0].match(/:(.*?);/)[1];
+		const bstr = atob(arr[1]);
+		let n = bstr.length;
+		const u8arr = new Uint8Array(n);
+	  
+		while (n--) {
+		  u8arr[n] = bstr.charCodeAt(n);
+		}
+	  
+		return new File([u8arr], filename, { type: mime });
+	}	  
+
+	function filterThemes(preferences) {
+		// Nothing passed
+		if (!preferences) {
+			return ["Not Selected"];
+		}
+	
+		// Object case: { style: "Scandinavian & Peranakan" }
+		if (typeof preferences === "object" && preferences.style) {
+			return filterThemes(preferences.style);
+		}
+	
+		// Array
+		if (Array.isArray(preferences)) {
+			return preferences.length > 0 ? preferences : ["Not Selected"];
+		}
+	
+		// String case
+		if (typeof preferences === "string") {
+			if (preferences.toLowerCase() === "not selected") {
+				return ["Not Selected"];
+			}
+	
+			const themes = preferences
+				.split("&")
+				.map(t => t.trim())
+				.filter(Boolean);
+	
+			return themes.length > 0 ? themes : ["Not Selected"];
+		}
+	
+		// Fallback
+		return ["Not Selected"];
+	}
+	
+	const saveUserInputToDatabase = async () => {
+		try {
+			setIsSaving(true);
+
+			const formData = new FormData();
+			
+			// Add floor plan file
+			formData.append("floor_plan", floorPlanFile.file);
+			
+			// Add segmented floor plan
+			if (extractionResults?.segmentedImage) {
+				const segmentedFile = base64ToFile(
+					extractionResults.segmentedImage,
+					"segmented_floor_plan.webp"
+				);
+				formData.append("segmented_floor_plan", segmentedFile);
+			}
+			
+			// Add preferences
+			if (preferences) {
+				formData.append("preferences", JSON.stringify(filterThemes(preferences)));
+			}
+			
+			// Add budget
+			if (budget) {
+				formData.append("budget", budget);
+			}
+			
+			// Add unit information
+			if (extractionResults?.unitInfo) {
+				formData.append("unit_info", JSON.stringify(extractionResults.unitInfo));
+			}
+			
+			// Add user ID
+			formData.append("user_id", user.uid);
+
+			const response = await server.post("/newHomeOwners/extraction/saveUserInput", formData);
+
+			if (!response.data.success) {
+				throw new Error(response.data.result);
+			}
+
+			console.log("Save successful:", response.data);
+			setIsSaving(false);
+			return true;
+		} catch (error) {
+			console.error("Save user input error:", error);
+			setIsSaving(false);
+			
+			ShowToast("error", "Failed to save your inputs", "Please try again");
+			
+			return false;
+		}
 	};
 
-	const handleNavigateToDesignDocument = () => {
-		// Pass state to design document page
-		navigate("/designDocument", {
-			state: {
-				floorPlanFile,
-				preferences,
-				budget,
-				extractionResults
-			}
-		});
+	const handleNavigateToChatbot = async () => {
+		const saved = await saveUserInputToDatabase();
+		
+		if (saved) {
+			navigate("/lumen/chat");
+		}
+	};
+
+	const handleNavigateToDesignDocument = async () => {
+		const saved = await saveUserInputToDatabase();
+
+		console.log("Save user input result before navigating to design document:", saved);
+		
+		if (saved) {
+			navigate("/designDocument");
+		}
 	};
 
 	return (
@@ -133,6 +243,8 @@ function GenerateDesignDocument({ floorPlanFile, preferences, budget, extraction
 					fontSize="lg"
 					leftIcon={<IoSparkles />}
 					onClick={handleNavigateToChatbot}
+					isLoading={isSaving}
+					loadingText="Saving your inputs..."
 				>
 					Chat with our chatbot to get a more cohesive report
 				</Button>
@@ -147,6 +259,8 @@ function GenerateDesignDocument({ floorPlanFile, preferences, budget, extraction
 					_hover={{ bg: "yellow.50" }}
 					onClick={handleNavigateToDesignDocument}
 					disabled={!floorPlanFile}
+					isLoading={isSaving}
+					loadingText="Saving your inputs..."
 					leftIcon={<IoSparkles />}
 					w="100%"
 					h="60px"

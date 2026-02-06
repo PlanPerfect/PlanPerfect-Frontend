@@ -3,11 +3,13 @@ import { useLocation, useNavigate } from "react-router-dom";
 import { Card, Flex, Box, Text, Heading, Image, Badge, Button, HStack, VStack, Icon, SimpleGrid, Carousel, IconButton, Spinner } from "@chakra-ui/react";
 import { LuSparkles, LuSofa, LuShoppingCart, LuHeart, LuChevronLeft, LuChevronRight, LuCheck, LuX, LuPackageSearch } from "react-icons/lu";
 import { motion } from "framer-motion";
+import { useAuth } from "@/Contexts/AuthContext";
 import StyleMatchBackground from "../../assets/StyleMatchBackground.png";
 import server from "../../../networking";
 import ShowToast from "@/Extensions/ShowToast";
 
 function Recommendations() {
+	const { user } = useAuth();
 	const location = useLocation();
 	const { style, furnitures } = location.state || {};
 	const [uniqueFurniture, setUniqueFurniture] = useState([]);
@@ -18,11 +20,13 @@ function Recommendations() {
 	const [savedRecommendations, setSavedRecommendations] = useState([]);
 	const [currentCarouselIndex, setCurrentCarouselIndex] = useState(0);
 	const [removingRecId, setRemovingRecId] = useState(null);
+	const [savingRecId, setSavingRecId] = useState(null);
 	const [isInitialMount, setIsInitialMount] = useState(true);
 	const navigate = useNavigate();
 
 	useEffect(() => {
 		setIsInitialMount(false);
+		fetchSavedRecommendations();
 	}, []);
 
 	useEffect(() => {
@@ -51,7 +55,23 @@ function Recommendations() {
 		}
 	}, [furnitures, style, navigate, isInitialMount]);
 
-	const getMatchBadge = (matchPercentage) => {
+	const fetchSavedRecommendations = async () => {
+		try {
+			const response = await server.get("/stylematch/recommendations/get-saved-recommendations", {
+				headers: {
+					"Content-Type": "multipart/form-data",
+					"X-User-ID": user.uid
+				}
+			});
+			if (response.data && response.data.recommendations) {
+				setSavedRecommendations(response.data.recommendations);
+			}
+		} catch (err) {
+			console.error("Failed to fetch saved recommendations:", err);
+		}
+	};
+
+	const getMatchBadge = matchPercentage => {
 		if (matchPercentage >= 90) {
 			return { text: "Perfect match", colorPalette: "green" };
 		} else if (matchPercentage >= 75) {
@@ -77,7 +97,7 @@ function Recommendations() {
 
 				if (response.data && response.data.recommendations) {
 					const recs = response.data.recommendations.map((rec, index) => ({
-						id: `${rec.unsplashId}-${Date.now()}-${index}`,
+						id: rec.image,
 						...rec
 					}));
 					setRecommendations(recs);
@@ -139,7 +159,7 @@ function Recommendations() {
 			if (response.data.recommendations && response.data.recommendations.length > 0) {
 				const rec = response.data.recommendations[0];
 				return {
-					id: `${rec.unsplashId}-${Date.now()}-${Math.random()}`,
+					id: rec.image,
 					...rec
 				};
 			}
@@ -169,7 +189,10 @@ function Recommendations() {
 
 	const handleNotRelevant = async (recId, index) => {
 		setRemovingRecId(recId);
-		setSavedRecommendations(prev => prev.filter(saved => saved.id !== recId));
+
+		if (isRecommendationSaved(recId)) {
+			await handleUnsaveRecommendation(recId, true);
+		}
 
 		try {
 			const newRec = await fetchSingleRecommendation(selectedFurniture);
@@ -196,13 +219,93 @@ function Recommendations() {
 		}
 	};
 
-	const toggleSaveRecommendation = rec => {
-		const isAlreadySaved = savedRecommendations.some(saved => saved.id === rec.id);
+	const handleSaveRecommendation = async rec => {
+		setSavingRecId(rec.id);
+
+		try {
+			const response = await server.post(
+				"/stylematch/recommendations/save-recommendation",
+				{
+					name: rec.name,
+					image: rec.image,
+					description: rec.description,
+					match: rec.match
+				},
+				{
+					headers: {
+						"X-User-ID": user.uid
+					}
+				}
+			);
+
+			if (response.status === 200) {
+				setSavedRecommendations(prev => [...prev, { id: rec.id, ...rec }]);
+				ShowToast("success", "Recommendation saved!");
+			}
+		} catch (err) {
+			const backendError = err.response?.data?.error;
+
+			if (err.response?.status === 409) {
+				ShowToast("info", "This recommendation is already saved");
+			} else {
+				let errorMessage = "Failed to save recommendation";
+
+				if (backendError?.startsWith("UERROR: ")) {
+					errorMessage = backendError.substring("UERROR: ".length);
+				} else if (backendError) {
+					errorMessage = backendError;
+				}
+
+				ShowToast("error", errorMessage);
+			}
+		} finally {
+			setSavingRecId(null);
+		}
+	};
+
+	const handleUnsaveRecommendation = async (recId, skipToast = false) => {
+		setSavingRecId(recId);
+
+		try {
+			const encodedRecId = encodeURIComponent(recId);
+			const response = await server.delete(`/stylematch/recommendations/delete-recommendation/${encodedRecId}`, {
+				headers: {
+					"Content-Type": "multipart/form-data",
+					"X-User-ID": user.uid
+				}
+			});
+
+			if (response.status === 200) {
+				setSavedRecommendations(prev => prev.filter(saved => saved.id !== recId));
+				if (!skipToast) {
+					ShowToast("success", "Recommendation unsaved!");
+				}
+			}
+		} catch (err) {
+			const backendError = err.response?.data?.error;
+			let errorMessage = "Failed to remove recommendation";
+
+			if (backendError?.startsWith("UERROR: ")) {
+				errorMessage = backendError.substring("UERROR: ".length);
+			} else if (backendError) {
+				errorMessage = backendError;
+			}
+
+			if (!skipToast) {
+				ShowToast("error", errorMessage);
+			}
+		} finally {
+			setSavingRecId(null);
+		}
+	};
+
+	const toggleSaveRecommendation = async rec => {
+		const isAlreadySaved = isRecommendationSaved(rec.id);
 
 		if (isAlreadySaved) {
-			setSavedRecommendations(savedRecommendations.filter(saved => saved.id !== rec.id));
+			await handleUnsaveRecommendation(rec.id);
 		} else {
-			setSavedRecommendations([...savedRecommendations, rec]);
+			await handleSaveRecommendation(rec);
 		}
 	};
 
@@ -411,6 +514,7 @@ function Recommendations() {
 													<Carousel.ItemGroup height="100%">
 														{recommendations.map((rec, index) => {
 															const matchBadge = getMatchBadge(rec.match);
+															const isSaved = isRecommendationSaved(rec.id);
 															return (
 																<Carousel.Item key={rec.id} index={index} height="100%">
 																	<MotionCard
@@ -421,19 +525,10 @@ function Recommendations() {
 																		borderRadius={20}
 																		initial={isInitialMount ? { opacity: 0, y: 20 } : false}
 																		animate={{ opacity: 1, scale: 1, x: 0 }}
-																		transition={{ duration: 0.4, ease: "easeOut"}}
+																		transition={{ duration: 0.4, ease: "easeOut" }}
 																		position="relative"
 																	>
-																		<Badge
-																			colorPalette={matchBadge.colorPalette}
-																			position="absolute"
-																			top={2}
-																			right={2}
-																			zIndex={10}
-																			fontSize="xs"
-																			fontWeight="semibold"
-																			borderRadius={10}
-																		>
+																		<Badge colorPalette={matchBadge.colorPalette} position="absolute" top={2} right={2} zIndex={10} fontSize="xs" fontWeight="semibold" borderRadius={10}>
 																			{matchBadge.text}
 																		</Badge>
 																		<Box position="relative" minWidth={"220px"} maxWidth="30%" minH={"180px"} maxHeight="180px">
@@ -448,13 +543,14 @@ function Recommendations() {
 																			</Card.Body>
 																			<Card.Footer gap={2} pb={3} px={4}>
 																				<Button
-																					bgColor={isRecommendationSaved(rec.id) ? "#4CAF50" : "#D4AF37"}
+																					bgColor={isSaved ? "#4CAF50" : "#D4AF37"}
 																					borderRadius={6}
-																					leftIcon={isRecommendationSaved(rec.id) ? <LuCheck /> : <LuHeart />}
+																					leftIcon={isSaved ? <LuCheck /> : <LuHeart />}
 																					size="sm"
 																					onClick={() => toggleSaveRecommendation(rec)}
+																					disabled={savingRecId === rec.id}
 																				>
-																					{isRecommendationSaved(rec.id) ? "Saved" : "Save"}
+																					{savingRecId === rec.id ? <Spinner size="sm" color="white" /> : isSaved ? "Saved" : "Save"}
 																				</Button>
 																				<Button bgColor="#FF6B6B" borderRadius={6} size="sm" onClick={() => handleNotRelevant(rec.id, index)} color="white" disabled={removingRecId === rec.id}>
 																					{removingRecId === rec.id ? (
