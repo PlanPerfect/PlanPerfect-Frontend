@@ -41,18 +41,11 @@ function PropertyPreferences({ onPreferencesChange }) {
 				</Text>
 				<Flex gap={4} justify="center" flexWrap="wrap">
 					{propertyTypes.map((type) => (
-						<Button
-							key={type}
-							onClick={() => setSelectedPropertyType(type)}
+						<Button key={type} onClick={() => setSelectedPropertyType(type)}
 							bg={selectedPropertyType === type ? "#D4AF37" : "white"}
 							color={selectedPropertyType === type ? "white" : "black"}
-							border="2px solid #D4AF37"
-							borderRadius="md"
-							px={12}
-							py={6}
-							fontSize="md"
-							fontWeight="500"
-							minW="150px"
+							border="2px solid #D4AF37" borderRadius="md" px={12} py={6}
+							fontSize="md" fontWeight="500" minW="150px"
 							_hover={{
 								bg: selectedPropertyType === type ? "#C9A961" : "#F4E5B2",
 							}}
@@ -71,18 +64,11 @@ function PropertyPreferences({ onPreferencesChange }) {
 				</Text>
 				<Flex gap={4} justify="center" flexWrap="wrap">
 					{unitTypes.map((type) => (
-						<Button
-							key={type}
-							onClick={() => setSelectedUnitType(type)}
+						<Button key={type} onClick={() => setSelectedUnitType(type)}
 							bg={selectedUnitType === type ? "#D4AF37" : "white"}
 							color={selectedUnitType === type ? "white" : "black"}
-							border="2px solid #D4AF37"
-							borderRadius="md"
-							px={8}
-							py={6}
-							fontSize="md"
-							fontWeight="500"
-							minW="120px"
+							border="2px solid #D4AF37" borderRadius="md" px={8}
+							py={6} fontSize="md" fontWeight="500" minW="120px"
 							_hover={{
 								bg: selectedUnitType === type ? "#C9A961" : "#F4E5B2",
 							}}
@@ -101,18 +87,11 @@ function PropertyPreferences({ onPreferencesChange }) {
 				</Text>
 				<Flex gap={4} justify="center" flexWrap="wrap">
 					{budgetRanges.map((range) => (
-						<Button
-							key={range}
-							onClick={() => setSelectedBudget(range)}
+						<Button key={range} onClick={() => setSelectedBudget(range)}
 							bg={selectedBudget === range ? "#D4AF37" : "white"}
 							color={selectedBudget === range ? "white" : "black"}
-							border="2px solid #D4AF37"
-							borderRadius="md"
-							px={8}
-							py={6}
-							fontSize="md"
-							fontWeight="500"
-							minW="180px"
+							border="2px solid #D4AF37" borderRadius="md" px={8} py={6}
+							fontSize="md" fontWeight="500" minW="180px"
 							_hover={{
 								bg: selectedBudget === range ? "#C9A961" : "#F4E5B2",
 							}}
