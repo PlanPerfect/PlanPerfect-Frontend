@@ -7,13 +7,14 @@ import UploadRoomImage from "@/components/existingHomeOwner/uploadRoomImage";
 import StyleAnalysis from "@/components/existingHomeOwner/styleAnalysis";
 import StyleResults from "@/components/existingHomeOwner/styleResults";
 import StyleSelector from "@/components/existingHomeOwner/styleSelector";
-import { useState, useRef } from "react";
+import { useState } from "react";
 import server from "../../../networking";
 
 function ExistingHomeOwner() {
 	const [preferences, setPreferences] = useState(null);
 	const [uploadedRoomImage, setUploadedRoomImage] = useState(null);
 	const [analysisResults, setAnalysisResults] = useState(null);
+	const [uploadedImageUrl, setUploadedImageUrl] = useState(null); // Cloudinary URL
 	const [selectedStyles, setSelectedStyles] = useState([]);
 	const [isGenerating, setIsGenerating] = useState(false);
 	const [generatedImage, setGeneratedImage] = useState(null);
@@ -21,44 +22,48 @@ function ExistingHomeOwner() {
 
 	const steps = useSteps({
 		defaultStep: 0,
-		count: 5  
+		count: 5
 	});
 
+	// Handler: Analysis Complete
 	const handleAnalysisComplete = (results) => {
+		console.log("=== ANALYSIS COMPLETE ===");
+		console.log("Full results:", results);
+		console.log("Cloudinary Image URL:", results.image_url);
+		console.log("Cloudinary File ID:", results.file_id);
+		console.log("Detected Style:", results.detected_style);
+		console.log("Confidence:", results.confidence);
+		console.log("========================");
+
 		setAnalysisResults(results);
-		steps.setStep(2);  // Move to StyleResults step
+		setUploadedImageUrl(results.image_url); // Store URL separately for easy access
+		steps.setStep(2);
 	};
 
 	const handleStylesChange = (styles) => {
-		console.log("handleStylesChange received:", styles);
 		setSelectedStyles(styles);
 	};
 
 	const handleGenerateDesign = async () => {
 		setIsGenerating(true);
 		setGenerationError(null);
-		
 		try {
-			// Prepare form data
 			const formData = new FormData();
-			
-			// Add the original uploaded file
-			formData.append('file', uploadedRoomImage.file);
-			
-			// Join selected styles into a comma-separated string
-			const stylesString = selectedStyles.join(', ');
-			formData.append('styles', stylesString);
-			
-			// Call the API using server instance
-			const response = await server.post('/image/generate', formData, {
-				responseType: 'blob' // Important: tells axios to expect binary data
-			});
+			formData.append('file_id', analysisResults.file_id);
+			formData.append('styles', selectedStyles.join(', '));
 
-			// Create object URL from the blob response
-			const imageUrl = URL.createObjectURL(response.data);
-			
-			setGeneratedImage(imageUrl);
-			steps.setStep(4); // Move to Preview step
+			console.log("=== GENERATING IMAGE ===");
+			console.log("Using file_id:", analysisResults.file_id);
+			console.log("Selected styles:", selectedStyles.join(', '));
+
+			const response = await server.post('/image/generate', formData);
+			const { url } = response.data;
+
+			console.log("Generated image URL:", url);
+			console.log("=======================");
+
+			setGeneratedImage(url);
+			steps.setStep(4);
 		} catch (error) {
 			console.error('Error generating image:', error);
 			setGenerationError(error.response?.data?.detail || error.message || 'Failed to generate design. Please try again.');
@@ -66,9 +71,6 @@ function ExistingHomeOwner() {
 			setIsGenerating(false);
 		}
 	};
-
-	console.log("Current selectedStyles state:", selectedStyles);
-	console.log("Current step:", steps.value);
 
 	const items = [
 		{
@@ -80,7 +82,6 @@ function ExistingHomeOwner() {
 			title: "Upload a Photo",
 			icon: <RiFileUploadFill />,
 			content: analysisResults ? (
-				// If analysis is complete, show a completion message
 				<Box w="100%" maxW="800px" mx="auto" p={8} textAlign="center">
 					<Heading size="2xl" mb={4} color="#D4AF37">
 						✓ Upload Complete
@@ -88,6 +89,12 @@ function ExistingHomeOwner() {
 					<Text fontSize="lg" color="gray.600">
 						Your image has been uploaded and analyzed successfully. Click Next to see the results.
 					</Text>
+					{/* Debug Info - Remove in production */}
+					<Box mt={4} p={4} bg="gray.100" borderRadius="md" fontSize="sm" textAlign="left">
+						<Text fontWeight="bold">Debug Info:</Text>
+						<Text>Image URL: {uploadedImageUrl}</Text>
+						<Text>File ID: {analysisResults?.file_id}</Text>
+					</Box>
 				</Box>
 			) : uploadedRoomImage ? (
 				<StyleAnalysis file={uploadedRoomImage} onComplete={handleAnalysisComplete} />
@@ -117,19 +124,10 @@ function ExistingHomeOwner() {
 						preferences={preferences}
 						analysisResults={analysisResults}
 					/>
-					
-					{/* Error Message */}
+
 					{generationError && (
-						<Box
-							mt={6}
-							bg="red.50"
-							border="2px solid"
-							borderColor="red.400"
-							borderRadius="12px"
-							p={4}
-							textAlign="center"
-							maxW="1200px"
-							mx="auto"
+						<Box mt={6} bg="red.50" border="2px solid" borderColor="red.400" borderRadius="12px" p={4}
+							textAlign="center" maxW="1200px" mx="auto"
 						>
 							<Text color="red.600" fontWeight="600">
 								⚠️ {generationError}
@@ -137,17 +135,9 @@ function ExistingHomeOwner() {
 						</Box>
 					)}
 
-					{/* Loading State */}
 					{isGenerating && (
-						<Box
-							mt={6}
-							border="2px solid #D4AF37"
-							borderRadius="12px"
-							p={8}
-							bg="#FFFDF7"
-							textAlign="center"
-							maxW="1200px"
-							mx="auto"
+						<Box mt={6} border="2px solid #D4AF37" borderRadius="12px" p={8}
+							bg="#FFFDF7" textAlign="center" maxW="1200px" mx="auto"
 						>
 							<Spinner size="xl" color="#D4AF37" mb={4} />
 							<Text fontSize="lg" color="gray.700" fontWeight="600">
@@ -159,19 +149,10 @@ function ExistingHomeOwner() {
 						</Box>
 					)}
 
-					{/* Generate Button - shown when styles are selected and not generating */}
 					{selectedStyles.length > 0 && !isGenerating && (
 						<Flex justify="center" mt={8}>
-							<Button
-								onClick={handleGenerateDesign}
-								size="xl"
-								borderRadius="md"
-								bg="#D4AF37"
-								color="white"
-								px={16}
-								py={7}
-								fontSize="xl"
-								fontWeight="700"
+							<Button onClick={handleGenerateDesign} size="xl" borderRadius="md" bg="#D4AF37"
+								color="white" px={16} py={7} fontSize="xl" fontWeight="700"
 								_hover={{
 									bg: "#C9A961",
 									transform: "translateY(-2px)",
@@ -191,28 +172,63 @@ function ExistingHomeOwner() {
 			icon: <FaEye />,
 			content: (
 				<Box w="100%" maxW="1200px" mx="auto" p={8}>
-					<Heading size="2xl" textAlign="center" mb={8} color="#D4AF37">
+					<Heading size="2xl" textAlign="center" mb={4} color="#D4AF37">
 						Your Generated Design
 					</Heading>
 
-					{generatedImage ? (
+					{selectedStyles.length > 0 && (
+						<Flex justify="center" align="center" gap={3} mb={8} flexWrap="wrap">
+							<Text fontSize="md" color="gray.600" fontWeight="500">
+								✨ Applied Styles:
+							</Text>
+							{selectedStyles.map((style, index) => (
+								<Box key={index} bg="#F4E5B2" color="#8B7355" px={4} py={2}
+									borderRadius="full" fontSize="md" fontWeight="600" border="2px solid #D4AF37"
+								>
+									{style}
+								</Box>
+							))}
+						</Flex>
+					)}
+
+					{isGenerating ? (
+						<Box border="2px solid #D4AF37" borderRadius="12px" p={8} bg="#FFFDF7"
+							textAlign="center" minH="400px" display="flex" flexDirection="column"
+							justifyContent="center" alignItems="center"
+						>
+							<Spinner size="xl" color="#D4AF37" mb={4} />
+							<Text fontSize="lg" color="gray.700" fontWeight="600">
+								✨ Generating your personalized design...
+							</Text>
+							<Text fontSize="md" color="gray.600" mt={2}>
+								This may take a few moments. Please wait.
+							</Text>
+						</Box>
+					) : generatedImage ? (
 						<>
 							<Flex gap={6} justify="center" align="start" flexWrap="wrap" mb={8}>
-								{/* Original Image */}
 								<Box flex="1" minW="300px" maxW="500px">
 									<Text fontSize="lg" fontWeight="600" mb={3} textAlign="center" color="gray.700">
 										Original Room
 									</Text>
-									<Image
-										src={uploadedRoomImage?.preview}
-										borderRadius="12px"
-										boxShadow="lg"
-										w="100%"
-										h="auto"
-									/>
+									{uploadedImageUrl ? (
+										<Image
+											src={uploadedImageUrl}
+											borderRadius="12px"
+											boxShadow="lg"
+											w="100%"
+											h="auto"
+										/>
+									) : (
+										<Box borderRadius="12px" boxShadow="lg" bg="gray.100" p={8} textAlign="center">
+											<Text color="gray.500">
+												No Cloudinary image available
+											</Text>
+										</Box>
+									)}
 								</Box>
 
-								{/* Generated Image */}
+								{/* Generated Image - Uses Cloudinary URL */}
 								<Box flex="1" minW="300px" maxW="500px">
 									<Text fontSize="lg" fontWeight="600" mb={3} textAlign="center" color="#D4AF37">
 										✨ AI Generated Design
@@ -228,15 +244,19 @@ function ExistingHomeOwner() {
 								</Box>
 							</Flex>
 
-							{/* Action Buttons */}
+							{generationError && (
+								<Box mb={4} bg="red.50" border="2px solid" borderColor="red.400"
+									borderRadius="12px" p={4} textAlign="center"
+								>
+									<Text color="red.600" fontWeight="600">
+										⚠️ {generationError}
+									</Text>
+								</Box>
+							)}
+
 							<Flex justify="center" gap={4} flexWrap="wrap">
-								<Button
-									as="a"
-									href={generatedImage}
-									download="generated-design.png"
-									size="lg"
-									bg="green.500"
-									color="white"
+								<Button as="a" href={generatedImage}
+									download="generated-design.png" size="lg" bg="green.500" color="white"
 									_hover={{ bg: "green.600" }}
 								>
 									Download Image
@@ -252,10 +272,7 @@ function ExistingHomeOwner() {
 									Regenerate Design
 								</Button>
 								<Steps.PrevTrigger asChild>
-									<Button
-										size="lg"
-										variant="outline"
-										borderColor="#D4AF37"
+									<Button size="lg" variant="outline" borderColor="#D4AF37"
 										color="#D4AF37"
 										_hover={{
 											bg: "#F4E5B2"
@@ -279,21 +296,22 @@ function ExistingHomeOwner() {
 		}
 	];
 
-	// Disable next button logic
+	// Navigation Logic
 	const isNextDisabled =
 		(steps.value === 0 && !preferences) ||
 		(steps.value === 1 && !analysisResults) ||
 		(steps.value === 3 && selectedStyles.length === 0);
 
-	// Hide navigation buttons during AI analysis or when generating
-	const showNavigationButtons = 
+	const showNavigationButtons =
 		!(steps.value === 1 && uploadedRoomImage && !analysisResults) &&
 		!(steps.value === 3 && isGenerating);
 
 	return (
 		<>
+			{/* Background */}
 			<Box
-				style={{ position: "fixed", top: 0, left: 0, right: 0, bottom: 0,
+				style={{
+					position: "fixed", top: 0, left: 0, right: 0, bottom: 0,
 					backgroundImage: `linear-gradient(rgba(0,0,0,0.5), rgba(0,0,0,0.5)),url('/newHomeOwnerHero.png')`,
 					backgroundSize: "cover",
 					backgroundPosition: "center",
@@ -344,7 +362,7 @@ function ExistingHomeOwner() {
 							))}
 						</Steps.List>
 					</Box>
-					<Box w="80%" mx="auto" textAlign="center" borderRadius="10px" zIndex={0} position="relative" px={6} py={12} mt={-11} display="flex" flexDirection="column" 
+					<Box w="80%" mx="auto" textAlign="center" borderRadius="10px" zIndex={0} position="relative" px={6} py={12} mt={-11} display="flex" flexDirection="column"
 						alignItems="center" justifyContent="center" boxShadow="2px 2px 1px 1px rgba(0, 0, 0, 0.10), 0px 0px 2px 1px rgba(0, 0, 0, 0.10)"
 						minH="600px" bg={"white"}
 					>
@@ -368,12 +386,8 @@ function ExistingHomeOwner() {
 								)}
 								{steps.value < 3 && (
 									<Steps.NextTrigger asChild>
-										<Button
-											size="xl"
-											borderRadius="md"
-											bg="#D4AF37"
-											color="white"
-											disabled={isNextDisabled}
+										<Button size="xl" borderRadius="md" bg="#D4AF37"
+											color="white" disabled={isNextDisabled}
 											_hover={{
 												bg: isNextDisabled ? "#D4AF37" : "#C9A961",
 											}}
@@ -390,4 +404,5 @@ function ExistingHomeOwner() {
 		</>
 	);
 }
+
 export default ExistingHomeOwner;

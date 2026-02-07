@@ -1,8 +1,6 @@
 import { Box, Flex, Heading, Text, Image } from "@chakra-ui/react";
 
-function StyleResults({ analysisResults, roomImage }) {
-	console.log("Analysis Results:", analysisResults);
-
+function StyleResults({ analysisResults }) {
 	const detectedStyle = analysisResults?.detected_style || "Unknown";
 
 	const styleDescriptions = {
@@ -11,6 +9,53 @@ function StyleResults({ analysisResults, roomImage }) {
 		"Modern": "Sleek, streamlined design with emphasis on horizontal and vertical lines",
 		"Scandinavian": "Light, airy spaces with functional furniture and natural materials",
 		"Boho": "Eclectic, colorful style with global influences and layered textures",
+		"Contemporary": "Clean lines with a mix of modern and traditional elements",
+		"Luxury": "High-end materials, rich textures, and sophisticated color palettes",
+		"Japanese": "Minimalist aesthetics with natural materials and zen principles",
+		"Japandi": "Fusion of Japanese and Scandinavian design principles",
+		"Wabi Sabi": "Embracing imperfection and natural aging in design",
+		"Classical": "Traditional elegance with ornate details and symmetry",
+		"Vintage": "Nostalgic charm with retro furniture and accessories",
+		"Country": "Rustic, cozy style with natural materials and warm tones",
+		"Persian": "Rich patterns, intricate designs, and luxurious textiles",
+		"Peranakan": "Colorful, ornate style blending Chinese and Malay influences",
+		"Boutique": "Curated, high-end aesthetic with unique statement pieces",
+		"Electic": "Mix of various styles, colors, and periods"
+	};
+
+	// Style compatibility recommendations
+	const styleRecommendations = {
+		"Scandinavian": {
+			recommended: ["Minimalist", "Modern", "Japandi", "Japanese"],
+			notRecommended: ["Luxury", "Persian", "Peranakan", "Boutique", "Classical"],
+			reason: "Scandinavian shares clean lines and natural materials with these styles"
+		},
+		"Modern": {
+			recommended: ["Contemporary", "Minimalist", "Industrial", "Scandinavian"],
+			notRecommended: ["Vintage", "Classical", "Persian", "Country"],
+			reason: "Modern design complements sleek, streamlined aesthetics"
+		},
+		"Minimalist": {
+			recommended: ["Scandinavian", "Modern", "Japanese", "Wabi Sabi"],
+			notRecommended: ["Luxury", "Boutique", "Peranakan", "Persian", "Electic"],
+			reason: "Minimalist pairs well with simple, uncluttered styles"
+		},
+		"Industrial": {
+			recommended: ["Modern", "Contemporary", "Electic"],
+			notRecommended: ["Classical", "Luxury", "Persian", "Peranakan"],
+			reason: "Industrial works with raw, modern aesthetics"
+		},
+		"Boho": {
+			recommended: ["Electic", "Vintage", "Country"],
+			notRecommended: ["Minimalist", "Modern", "Japanese"],
+			reason: "Boho embraces eclectic, layered design"
+		}
+	};
+
+	const recommendations = styleRecommendations[detectedStyle] || {
+		recommended: [],
+		notRecommended: [],
+		reason: "Style compatibility information not available"
 	};
 
 	return (
@@ -23,13 +68,18 @@ function StyleResults({ analysisResults, roomImage }) {
 			<Flex direction={{ base: "column", md: "row" }} gap={8} mb={8} align="stretch">
 				{/* Room Image */}
 				<Box flex="1" border="2px solid #D4AF37" borderRadius="12px" p={4} bg="gray.50">
-					{roomImage ? (
-						<Image src={roomImage}  alt="Your Room" maxH="400px" w="100%" objectFit="contain" borderRadius="8px"/>
+					{analysisResults?.image_url ? (
+						<Image 
+							src={analysisResults.image_url} 
+							alt="Your Room" 
+							maxH="400px" 
+							w="100%" 
+							objectFit="contain" 
+							borderRadius="8px"
+						/>
 					) : (
 						<Box textAlign="center" py={20}>
-							<Text color="gray.500">
-								No image available
-							</Text>
+							<Text color="gray.500">No Cloudinary image available</Text>
 						</Box>
 					)}
 				</Box>
