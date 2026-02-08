@@ -2,6 +2,7 @@ import { useState, useRef, useEffect, useLayoutEffect } from "react";
 import { Box, Card, Flex, Heading, Text, Input, VStack, HStack } from "@chakra-ui/react";
 import { Send, Bot, User, Sparkles, AlertCircle } from "lucide-react";
 import { useAuth } from "@/contexts/AuthContext";
+import { useNavigate } from "react-router-dom";
 import LandingBackground from "../../assets/LandingBackground.png";
 import ShowToast from "@/Extensions/ShowToast";
 import server from "../../../networking";
@@ -22,6 +23,7 @@ function ChatbotPage() {
 	const messagesEndRef = useRef(null);
 	const inputRef = useRef(null);
 	const initialMessageCount = useRef(1);
+	const navigate = useNavigate();
 
 	const glassStyle = {
 		background: "rgba(255, 255, 255, 0.1)",
@@ -127,9 +129,7 @@ function ChatbotPage() {
 	};
 
 	const handleSwitchToAgentMode = () => {
-		// Add your agent mode switch logic here
-		console.log("Switching to Agent Mode");
-		ShowToast("info", "Switching to Agent Mode...");
+		navigate("/lumen/agent");
 	};
 
 	return (
@@ -155,7 +155,7 @@ function ChatbotPage() {
 						<Flex align="center" justify="space-between" gap={3}>
 							<Flex align="center" gap={3}>
 								<Box bg="rgba(255, 240, 189, 0.2)" p={2} borderRadius="full" animation="pulse 2s infinite">
-									<Sparkles size={24} color="#fff0bd" />
+									<Bot size={24} color="#fff0bd" />
 								</Box>
 								<VStack align="start" gap={0}>
 									<Heading size={{ base: "md", md: "lg" }} color="white" textShadow="0 2px 4px rgba(0,0,0,0.2)">
@@ -185,28 +185,15 @@ function ChatbotPage() {
 								fontSize={{ base: "xs", md: "sm" }}
 								fontWeight="600"
 								cursor="pointer"
-								transition="all 0.4s cubic-bezier(0.4, 0, 0.2, 1)"
+								transition="all 0.4s ease, box-shadow 0.4s ease"
 								whiteSpace="nowrap"
 								overflow="hidden"
 								boxShadow="0 4px 15px rgba(212, 175, 55, 0.2), inset 0 1px 0 rgba(255, 255, 255, 0.2)"
-								_before={{
-									content: '""',
-									position: "absolute",
-									top: 0,
-									left: "-100%",
-									width: "100%",
-									height: "100%",
-									background: "linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.3), transparent)",
-									transition: "left 0.6s ease"
-								}}
 								_hover={{
 									bg: "linear-gradient(135deg, rgba(212, 175, 55, 0.4), rgba(255, 215, 0, 0.4))",
 									border: "1px solid rgba(255, 215, 0, 0.8)",
 									transform: "translateY(-2px) scale(1.02)",
-									boxShadow: "0 8px 25px rgba(212, 175, 55, 0.4), 0 0 20px rgba(255, 215, 0, 0.3), inset 0 1px 0 rgba(255, 255, 255, 0.3)",
-									_before: {
-										left: "100%"
-									}
+									boxShadow: "0 8px 25px rgba(212, 175, 55, 0.4), 0 0 20px rgba(255, 215, 0, 0.3), inset 0 1px 0 rgba(255, 255, 255, 0.3)"
 								}}
 								_active={{
 									transform: "translateY(0) scale(0.98)",
