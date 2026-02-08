@@ -126,6 +126,12 @@ function ChatbotPage() {
 		}
 	};
 
+	const handleSwitchToAgentMode = () => {
+		// Add your agent mode switch logic here
+		console.log("Switching to Agent Mode");
+		ShowToast("info", "Switching to Agent Mode...");
+	};
+
 	return (
 		<>
 			<Box
@@ -146,22 +152,72 @@ function ChatbotPage() {
 			<Flex h="75vh" justify="center" align="center">
 				<Card.Root width="100%" height={{ base: "calc(100vh - 12rem)", md: "75vh" }} variant="elevated" borderRadius={{ base: 20, md: 35 }} style={glassStyle} overflow="hidden">
 					<Box borderBottom="1px solid rgba(255, 255, 255, 0.2)" p={{ base: 4, md: 6 }} bg="rgba(255, 255, 255, 0.05)">
-						<Flex align="center" gap={3}>
-							<Box bg="rgba(255, 240, 189, 0.2)" p={2} borderRadius="full" animation="pulse 2s infinite">
-								<Sparkles size={24} color="#fff0bd" />
+						<Flex align="center" justify="space-between" gap={3}>
+							<Flex align="center" gap={3}>
+								<Box bg="rgba(255, 240, 189, 0.2)" p={2} borderRadius="full" animation="pulse 2s infinite">
+									<Sparkles size={24} color="#fff0bd" />
+								</Box>
+								<VStack align="start" gap={0}>
+									<Heading size={{ base: "md", md: "lg" }} color="white" textShadow="0 2px 4px rgba(0,0,0,0.2)">
+										Lumen AI
+									</Heading>
+									<Text
+										fontSize={{ base: "xs", md: "sm" }}
+										color="rgba(255, 255, 255, 0.7)"
+										transition="all 0.3s ease"
+									>
+										Powered by {formatModelName(currentModel)}
+									</Text>
+								</VStack>
+							</Flex>
+
+							<Box
+								as="button"
+								onClick={handleSwitchToAgentMode}
+								position="relative"
+								bg="linear-gradient(135deg, rgba(212, 175, 55, 0.25), rgba(255, 215, 0, 0.25))"
+								backdropFilter="blur(15px)"
+								border="1px solid rgba(212, 175, 55, 0.5)"
+								borderRadius="full"
+								px={{ base: 3, md: 5 }}
+								py={{ base: 2, md: 2.5 }}
+								color="white"
+								fontSize={{ base: "xs", md: "sm" }}
+								fontWeight="600"
+								cursor="pointer"
+								transition="all 0.4s cubic-bezier(0.4, 0, 0.2, 1)"
+								whiteSpace="nowrap"
+								overflow="hidden"
+								boxShadow="0 4px 15px rgba(212, 175, 55, 0.2), inset 0 1px 0 rgba(255, 255, 255, 0.2)"
+								_before={{
+									content: '""',
+									position: "absolute",
+									top: 0,
+									left: "-100%",
+									width: "100%",
+									height: "100%",
+									background: "linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.3), transparent)",
+									transition: "left 0.6s ease"
+								}}
+								_hover={{
+									bg: "linear-gradient(135deg, rgba(212, 175, 55, 0.4), rgba(255, 215, 0, 0.4))",
+									border: "1px solid rgba(255, 215, 0, 0.8)",
+									transform: "translateY(-2px) scale(1.02)",
+									boxShadow: "0 8px 25px rgba(212, 175, 55, 0.4), 0 0 20px rgba(255, 215, 0, 0.3), inset 0 1px 0 rgba(255, 255, 255, 0.3)",
+									_before: {
+										left: "100%"
+									}
+								}}
+								_active={{
+									transform: "translateY(0) scale(0.98)",
+									boxShadow: "0 2px 10px rgba(212, 175, 55, 0.3), inset 0 2px 4px rgba(0, 0, 0, 0.1)"
+								}}
+							>
+								<Flex align="center" gap={2}>
+									<Sparkles size={16} style={{ animation: "pulse 2s ease-in-out infinite" }} />
+									<Text as="span">Switch to Agent Mode</Text>
+								</Flex>
 							</Box>
-							<VStack align="start" gap={0}>
-								<Heading size={{ base: "md", md: "lg" }} color="white" textShadow="0 2px 4px rgba(0,0,0,0.2)">
-									Lumen AI
-								</Heading>
-								<Text
-									fontSize={{ base: "xs", md: "sm" }}
-									color="rgba(255, 255, 255, 0.7)"
-									transition="all 0.3s ease"
-								>
-									Powered by {formatModelName(currentModel)}
-								</Text>
-							</VStack>
 						</Flex>
 					</Box>
 
