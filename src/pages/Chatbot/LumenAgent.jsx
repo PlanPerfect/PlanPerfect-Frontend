@@ -140,10 +140,10 @@ function AgentPage() {
 				}}
 			/>
 
-			<Flex h="80vh" direction="column" w="100%" px={{ base: 4, md: 6, lg: 8 }} py={{ base: 4, md: 6 }}>
+			<Flex h="82vh" direction="column" w="100%" py={{ base: 4, md: 6 }} mt={-6}>
 				{/* Header */}
-				<Box mb={4} w="100%">
-					<Flex align="center" justify="space-between" maxW="2000px" mx="auto" w="100%">
+				<Box mb={4} w="100%" ml={3}>
+					<Flex align="center" justify="space-between" mx="auto" w="100%">
 						<Flex align="center" gap={3}>
 							<Box
 								bg="linear-gradient(135deg, rgba(212, 175, 55, 0.3), rgba(255, 215, 0, 0.3))"
@@ -179,7 +179,6 @@ function AgentPage() {
 					display="flex"
 					flexDirection="column"
 					w="100%"
-					maxW="2000px"
 					mx="auto"
 				>
 					<Box
@@ -422,8 +421,10 @@ function AgentPage() {
 									backdropFilter="blur(10px)"
 									border="1px solid rgba(255, 255, 255, 0.15)"
 									borderRadius="2xl"
-									p={3}
+									p={1}
 									transition="all 0.3s ease"
+									display="flex"
+									alignItems="center"
 									_focusWithin={{
 										border: "1px solid rgba(255, 215, 0, 0.4)",
 										boxShadow: "0 0 0 3px rgba(255, 215, 0, 0.1)"
@@ -440,9 +441,12 @@ function AgentPage() {
 										color="white"
 										fontSize={{ base: "sm", md: "md" }}
 										resize="none"
-										minH="20px"
+										minH="16px"
 										maxH="200px"
 										rows={1}
+										py={2}
+										px={3}
+										lineHeight="1.5"
 										disabled={isProcessing}
 										_placeholder={{
 											color: "rgba(255, 255, 255, 0.4)"
@@ -462,7 +466,7 @@ function AgentPage() {
 									as="button"
 									onClick={handleSend}
 									bg={inputValue.trim() && !isProcessing ? "linear-gradient(135deg, #D4AF37, #FFD700)" : "rgba(255, 255, 255, 0.1)"}
-									px={6}
+									px={4}
 									borderRadius="xl"
 									cursor={inputValue.trim() && !isProcessing ? "pointer" : "not-allowed"}
 									opacity={inputValue.trim() && !isProcessing ? 1 : 0.4}
