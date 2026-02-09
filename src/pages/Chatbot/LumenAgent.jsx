@@ -378,42 +378,6 @@ function AgentPage() {
 						w="100%"
 					>
 						<Box w="100%">
-							{/* Quick Actions */}
-							<Flex gap={2} mb={3} flexWrap="wrap">
-								{[
-									{ icon: ImageIcon, label: "Generate Design" },
-									{ icon: Code, label: "Analyze Space" },
-									{ icon: FileText, label: "Create Report" }
-								].map((action, i) => (
-									<Box
-										key={i}
-										as="button"
-										onClick={() => setInputValue(action.label + " ")}
-										bg="rgba(255, 255, 255, 0.06)"
-										backdropFilter="blur(10px)"
-										border="1px solid rgba(255, 255, 255, 0.1)"
-										borderRadius="xl"
-										px={3}
-										py={2}
-										display="flex"
-										alignItems="center"
-										gap={2}
-										cursor="pointer"
-										transition="all 0.3s ease"
-										_hover={{
-											bg: "rgba(255, 215, 0, 0.15)",
-											border: "1px solid rgba(255, 215, 0, 0.3)",
-											transform: "translateY(-2px)"
-										}}
-									>
-										<action.icon size={14} color="rgba(255, 255, 255, 0.7)" />
-										<Text fontSize="xs" color="rgba(255, 255, 255, 0.7)" fontWeight="500">
-											{action.label}
-										</Text>
-									</Box>
-								))}
-							</Flex>
-
 							<Flex gap={3} align="stretch" w="100%">
 								<Box
 									flex="1"
