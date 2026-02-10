@@ -339,17 +339,6 @@ function DesignDocumentPage() {
 										<Button
 											flex="1"
 											size="lg"
-											bg="#D4AF37"
-											color="white"
-											_hover={{ bg: "#C9A961" }}
-											onClick={handleDownload}
-											leftIcon={<Download size={20} />}
-										>
-											Download PDF
-										</Button>
-										<Button
-											flex="1"
-											size="lg"
 											variant="outline"
 											borderColor="rgba(255, 255, 255, 0.3)"
 											color="white"
@@ -361,6 +350,17 @@ function DesignDocumentPage() {
 											leftIcon={<RefreshCw size={20} />}
 										>
 											Regenerate
+										</Button>
+										<Button
+											flex="1"
+											size="lg"
+											bg="#D4AF37"
+											color="white"
+											_hover={{ bg: "#C9A961" }}
+											onClick={handleDownload}
+											leftIcon={<Download size={20} />}
+										>
+											Download PDF
 										</Button>
 									</Flex>
 								</VStack>
