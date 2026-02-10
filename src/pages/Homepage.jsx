@@ -38,7 +38,7 @@ function Homepage() {
 				}}
 			/>
 
-			<VStack position="relative" justify="center" align="center" height="80vh" gap={8}>
+			<VStack position="relative" justify="center" align="center" height="70vh" gap={8}>
 				<AnimatedLogo />
 
 				<AnimatedHeading />
