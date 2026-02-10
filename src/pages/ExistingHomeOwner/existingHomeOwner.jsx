@@ -2,6 +2,7 @@ import { Box, Flex, Heading, Text, Button, Steps, useSteps, Container, Stack } f
 import { BsPalette2 } from "react-icons/bs";
 import { RiFileUploadFill } from "react-icons/ri";
 import { FaCheck, FaEye } from "react-icons/fa6";
+import { FaPalette } from "react-icons/fa";
 import PropertyPreferences from "@/components/existingHomeOwner/propertyPreference";
 import UploadRoomImage from "@/components/existingHomeOwner/uploadRoomImage";
 import StyleAnalysis from "@/components/existingHomeOwner/styleAnalysis";
@@ -19,7 +20,7 @@ function ExistingHomeOwner() {
 
 	const steps = useSteps({
 		defaultStep: 0,
-		count: 4
+		count: 5
 	});
 
 	// Handler: Analysis Complete
@@ -82,8 +83,21 @@ function ExistingHomeOwner() {
 			),
 		},
 		{
+			title: "Select Styles",
+			icon: <FaPalette />,
+			content: (
+				<StyleSelector
+					detectedStyle={analysisResults?.detected_style}
+					onStylesChange={handleStylesChange}
+					value={selectedStyles}
+					preferences={preferences}
+					analysisResults={analysisResults}
+				/>
+			),
+		},
+		{
 			title: "Preview",
-			icon: <BsPalette2 />,
+			icon: <FaCheck />,
 			content: (
 				<PreviewSelections
 					preferences={preferences}
@@ -91,15 +105,7 @@ function ExistingHomeOwner() {
 					selectedStyles={selectedStyles}
 					uploadedImageUrl={uploadedImageUrl}
 					onStylesChange={handleStylesChange}
-					StyleSelectorComponent={
-						<StyleSelector
-							detectedStyle={analysisResults?.detected_style}
-							onStylesChange={handleStylesChange}
-							value={selectedStyles}
-							preferences={preferences}
-							analysisResults={analysisResults}
-						/>
-					}
+					onBack={() => steps.setStep(3)}
 				/>
 			),
 		}
@@ -108,9 +114,10 @@ function ExistingHomeOwner() {
 	// Navigation Logic
 	const isNextDisabled =
 		(steps.value === 0 && !preferences) ||
-		(steps.value === 1 && !analysisResults);
+		(steps.value === 1 && !analysisResults) ||
+		(steps.value === 3 && selectedStyles.length === 0);
 
-	const showNavigationButtons = !(steps.value === 1 && uploadedRoomImage && !analysisResults);
+	const showNavigationButtons = !(steps.value === 1 && uploadedRoomImage && !analysisResults) && steps.value !== 4;
 
 	return (
 		<>
@@ -226,7 +233,7 @@ function ExistingHomeOwner() {
 							<Steps.CompletedContent>All steps are complete!</Steps.CompletedContent>
 						</Box>
 
-						{showNavigationButtons && steps.value < 3 && (
+						{showNavigationButtons && steps.value < 4 && (
 							<Flex justify="center" gap={4} mt={6}>
 								{steps.value > 0 && (
 									<Steps.PrevTrigger asChild>
@@ -241,7 +248,7 @@ function ExistingHomeOwner() {
 										</Button>
 									</Steps.PrevTrigger>
 								)}
-								{steps.value < 3 && (
+								{steps.value < 4 && (
 									<Steps.NextTrigger asChild>
 										<Button 
 											size="xl" 

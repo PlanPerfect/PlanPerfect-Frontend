@@ -1,5 +1,5 @@
 import { Box, Flex, Heading, Text, Button } from "@chakra-ui/react";
-import { FaCheckCircle, FaPalette, FaHome, FaDollarSign, FaPaintBrush } from "react-icons/fa";
+import { FaCheckCircle, FaPalette, FaHome, FaDollarSign, FaPaintBrush, FaArrowLeft } from "react-icons/fa";
 import { useNavigate } from "react-router-dom";
 import { useState } from "react";
 import { useAuth } from "../../contexts/AuthContext";
@@ -20,7 +20,7 @@ function PreviewSelections({
 	selectedStyles,
 	uploadedImageUrl,
 	onStylesChange,
-	StyleSelectorComponent 
+	onBack
 }) {
 	const navigate = useNavigate();
 	const { user } = useAuth();
@@ -58,51 +58,6 @@ function PreviewSelections({
 			console.log("===============================");
 			// Navigate to StyleMatch page
 			navigate('/StyleMatch');
-		} catch (error) {
-			console.error('Error saving data:', error);
-			setSaveError(
-				error.response?.data?.detail || 
-				error.response?.data?.result ||
-				error.message || 
-				'Failed to save data. Please try again.'
-			);
-		} finally {
-			setIsSaving(false);
-		}
-	};
-
-	const handleGoToImageGeneration = async () => {
-		setIsSaving(true);
-		setSaveError(null);
-		try {
-			// ================================
-			// Save preferences to database
-			// ================================
-			const prefsFormData = new FormData();
-			prefsFormData.append('preferences', JSON.stringify(preferences));
-			prefsFormData.append('analysis', JSON.stringify({
-				detected_style: analysisResults?.detected_style,
-				confidence: analysisResults?.confidence,
-				original_image_url: uploadedImageUrl,
-				file_id: analysisResults?.file_id,
-				filename: analysisResults?.filename
-			}));
-			prefsFormData.append('selected_styles', JSON.stringify(selectedStyles));
-			prefsFormData.append('user_id', user.uid);
-			console.log("=== SAVING PREFERENCES DATA ===");
-			console.log("User ID:", user.uid);
-			console.log("Preferences:", preferences);
-			console.log("Selected styles:", selectedStyles);
-			// Save preferences to database
-			const prefsResponse = await server.post(
-				'/existingHomeOwners/styleClassification/savePreferences', 
-				prefsFormData
-			);
-			
-			console.log("Preferences save response:", prefsResponse.data);
-			console.log("===============================");
-			// Navigate to imageGeneration page
-			navigate('/imageGeneration');
 		} catch (error) {
 			console.error('Error saving data:', error);
 			setSaveError(
@@ -195,7 +150,7 @@ function PreviewSelections({
 					<Flex align="center" justify="center" gap={3} mb={4}>
 						<FaPalette color="#D4AF37" size={24} />
 						<Heading size="lg" color="#D4AF37">
-							Your Selected Design Themes
+							Your Selected Design Theme
 						</Heading>
 					</Flex>
 					
@@ -218,17 +173,9 @@ function PreviewSelections({
 							))}
 						</Flex>
 					) : (
-						<>
-							{/* Show Style Selector if no styles selected yet */}
-							{StyleSelectorComponent && (
-								<Box mb={4}>
-									{StyleSelectorComponent}
-								</Box>
-							)}
-							<Text textAlign="center" color="gray.500" fontSize="md">
-								Please select at least one design style above to continue
-							</Text>
-						</>
+						<Text textAlign="center" color="gray.500" fontSize="md">
+							No design style selected
+						</Text>
 					)}
 				</Box>
 				{/* Call to Action Card */}
@@ -242,7 +189,7 @@ function PreviewSelections({
 					<Flex align="center" justify="center" gap={3} mb={3}>
 						<FaCheckCircle color="#4299E1" size={24} />
 						<Text fontSize="lg" fontWeight="600" color="gray.700" textAlign="center">
-							You're all set! Review your selections above and click "Continue to StyleMatch" below.
+							You're all set! Review your selections above and click "Next Step" below.
 						</Text>
 					</Flex>
 				</Box>
@@ -261,8 +208,30 @@ function PreviewSelections({
 						</Text>
 					</Box>
 				)}
-				{/* Action Button */}
+				{/* Action Buttons */}
 				<Flex justify="center" mt={4} gap={4}>
+					{onBack && (
+						<Button 
+							onClick={onBack}
+							size="xl" 
+							borderRadius="md" 
+							bg="gray.300"
+							color="black" 
+							px={12} 
+							py={7} 
+							fontSize="xl" 
+							fontWeight="700"
+							leftIcon={<FaArrowLeft />}
+							_hover={{
+								bg: "gray.400",
+								transform: "translateY(-2px)",
+								boxShadow: "xl",
+							}}
+							transition="all 0.2s"
+						>
+							Back
+						</Button>
+					)}
 					<Button 
 						onClick={handleProceedToGeneration}
 						isDisabled={!selectedStyles || selectedStyles.length === 0}
@@ -289,33 +258,6 @@ function PreviewSelections({
 						transition="all 0.2s"
 					>
 						Next Step 🎨
-					</Button>
-					<Button 
-						onClick={handleGoToImageGeneration}
-						isDisabled={!selectedStyles || selectedStyles.length === 0}
-						isLoading={isSaving}
-						loadingText="Saving..."
-						size="xl" 
-						borderRadius="md" 
-						bg="#4299E1"
-						color="white" 
-						px={16} 
-						py={7} 
-						fontSize="xl" 
-						fontWeight="700"
-						_hover={{
-							bg: "#3182CE",
-							transform: "translateY(-2px)",
-							boxShadow: "xl",
-						}}
-						_disabled={{
-							bg: "gray.300",
-							cursor: "not-allowed",
-							transform: "none"
-						}}
-						transition="all 0.2s"
-					>
-						Go to Image Generation
 					</Button>
 				</Flex>
 			</Flex>
