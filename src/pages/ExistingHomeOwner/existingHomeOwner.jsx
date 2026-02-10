@@ -117,6 +117,7 @@ function ExistingHomeOwner() {
 		(steps.value === 1 && !analysisResults) ||
 		(steps.value === 3 && selectedStyles.length === 0);
 
+	// Hide default navigation buttons during upload/analysis and on the Preview step
 	const showNavigationButtons = !(steps.value === 1 && uploadedRoomImage && !analysisResults) && steps.value !== 4;
 
 	return (
