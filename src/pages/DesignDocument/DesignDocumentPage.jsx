@@ -37,28 +37,28 @@ function DesignDocumentPage() {
 
 	const savePdfToCloud = async (pdfBlob) => {
 		const formData = new FormData();
-	
+
 		const timestamp = new Date()
 			.toISOString()
 			.replace(/[-:]/g, "")
 			.slice(0, 15);
-	
+
 		const pdfFile = new File(
 			[pdfBlob],
 			`design_document_${timestamp}.pdf`,
 			{ type: "application/pdf" }
 		);
-	
+
 		formData.append("pdf_file", pdfFile);
 		formData.append("user_id", user.uid);
-	
+
 		const res = await server.post(
 			`/newHomeOwners/documentLlm/savePdf/${user.uid}`,
 			formData,
 		);
-	
+
 		return res.data.result.pdf_url;
-	};	
+	};
 
 	const generateDocument = async () => {
 		setIsGenerating(true);
@@ -120,26 +120,26 @@ function DesignDocumentPage() {
 
 	const handleDownload = () => {
 		if (!generatedPdfUrl) return;
-	
+
 		const now = new Date();
-	
+
 		const timestamp = now
 			.toISOString()
 			.replace(/[-:]/g, "") // remove - and :
 			.replace("T", "_") // replace T with _
 			.split(".")[0]; // remove milliseconds
-	
+
 		const filename = `segmented_floor_plan_${timestamp}.pdf`;
-	
+
 		const link = document.createElement("a");
 		link.href = generatedPdfUrl;
 		link.download = filename;
 		document.body.appendChild(link);
 		link.click();
 		document.body.removeChild(link);
-	
+
 		ShowToast("success", "PDF downloaded successfully!");
-	};	
+	};
 
 	const handleRegenerate = () => {
 		generateDocument();
@@ -167,8 +167,8 @@ function DesignDocumentPage() {
 			<Flex h="75vh" justify="center" align="center">
 				<Card.Root
 					width="100%"
-                    mt={{base: 4, md: isSuccess ? "25vh" : "10vh"}}
-					height={{ base: "calc(100vh - 12rem)", md: isSuccess ? "100vh" : "85vh" }}
+                    mt={{base: 4, md: isSuccess ? "25vh" : "5vh"}}
+					height={{ base: "calc(90vh - 12rem)", md: isSuccess ? "90vh" : "75vh" }}
 					variant="elevated"
 					borderRadius={{ base: 20, md: 35 }}
 					style={glassStyle}
