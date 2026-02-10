@@ -4,6 +4,7 @@ import { Card, Flex, Box, Text, Heading, Image, Badge, Button, HStack, VStack, I
 import { LuSparkles, LuSofa, LuShoppingCart, LuHeart, LuChevronLeft, LuChevronRight, LuCheck, LuX, LuPackageSearch } from "react-icons/lu";
 import { motion } from "framer-motion";
 import { useAuth } from "@/Contexts/AuthContext";
+import { useRecommendations } from "@/contexts/RecommendationsContext";
 import StyleMatchBackground from "../../assets/StyleMatchBackground.png";
 import server from "../../../networking";
 import ShowToast from "@/Extensions/ShowToast";
@@ -23,6 +24,20 @@ function Recommendations() {
 	const [savingRecId, setSavingRecId] = useState(null);
 	const [isInitialMount, setIsInitialMount] = useState(true);
 	const navigate = useNavigate();
+	const { setHasRecommendations, setSavedRecommendationsCount } = useRecommendations();
+
+	// Reset context when component unmounts
+	useEffect(() => {
+		return () => {
+			setHasRecommendations(false);
+			setSavedRecommendationsCount(0);
+		};
+	}, [setHasRecommendations, setSavedRecommendationsCount]);
+
+	// Update context when savedRecommendations changes
+	useEffect(() => {
+		setSavedRecommendationsCount(savedRecommendations.length);
+	}, [savedRecommendations, setSavedRecommendationsCount]);
 
 	useEffect(() => {
 		setIsInitialMount(false);
@@ -93,6 +108,11 @@ function Recommendations() {
 					style: style || "Modern",
 					furniture_name: furnitureName,
 					per_page: 5
+				}, {
+					headers: {
+						"Content-Type": "application/json",
+						"X-User-ID": user.uid
+					}
 				});
 
 				if (response.data && response.data.recommendations) {
@@ -101,6 +121,7 @@ function Recommendations() {
 						...rec
 					}));
 					setRecommendations(recs);
+					setHasRecommendations(true);
 					setCurrentCarouselIndex(0);
 					resolve(response.data);
 				}
@@ -154,6 +175,11 @@ function Recommendations() {
 				furniture_name: furnitureName,
 				per_page: 1,
 				page: randomPage
+			}, {
+				headers: {
+					"Content-Type": "application/json",
+					"X-User-ID": user.uid
+				}
 			});
 
 			if (response.data.recommendations && response.data.recommendations.length > 0) {
@@ -459,7 +485,7 @@ function Recommendations() {
 																animate={{ opacity: 1, scale: 1, y: 0 }}
 																transition={{ duration: 0.4, ease: "easeOut" }}
 															>
-																<Box position="relative" minWidth={"220px"} maxWidth={"220px"} minHeight="150px" maxHeight="150px">
+																<Box position="relative" minWidth={"240px"} maxWidth={"240px"} minHeight="170px" maxHeight="170px">
 																	<Image objectFit="cover" width="100%" height="100%" src={furnitures[index].image} alt={furnitures[index].name} />
 																</Box>
 																<Box flex={1} display="flex" flexDirection="column" justifyContent="space-between">

@@ -48,65 +48,76 @@ function GetStarted() {
 		const fetchPreferences = async () => {
 			if (!user?.uid || loading) return;
 
-			try {
-				const { data, status } = await server.get("/stylematch/recommendations/fetch-preferences", {
-					headers: {
-						"X-User-ID": user.uid
+			const preferencesPromise = new Promise(async (resolve, reject) => {
+				try {
+					const { data, status } = await server.get("/stylematch/recommendations/fetch-preferences", {
+						headers: {
+							"X-User-ID": user.uid
+						}
+					});
+
+					console.log("Preferences response:", data);
+
+					if (status === 404 || !data.preferences || Object.keys(data.preferences).length === 0) {
+						reject(new Error("NO_PREFERENCES"));
+						return;
 					}
-				});
 
-				if (status === 404 || !data.preferences || Object.keys(data.preferences).length === 0) {
-					ShowToast("info", "Please complete the Existing Homeowner service first to set your style preferences.", null, {
-						action: {
-							label: "Take me there",
-							onClick: () => navigate("/existinghomeowner")
-						},
-						duration: 6000
-					});
-					return;
+					const { image_url, style } = data.preferences;
+
+					if (image_url && style) {
+						setRoomImage(image_url);
+						setRoomStyle(Array.isArray(style) ? style[0] : style);
+						resolve({ image_url, style });
+					} else {
+						reject(new Error("NO_PREFERENCES"));
+					}
+				} catch (err) {
+					const backendError = err.response?.data?.error;
+					if (backendError) {
+						reject(new Error(backendError));
+					} else {
+						console.error("Failed to fetch preferences:", err);
+						reject(err);
+					}
 				}
+			});
 
-				const { image_url, style } = data.preferences;
+			ShowToast(null, null, null, {
+				promise: preferencesPromise,
+				success: (data) => ({
+					title: "Welcome to StyleMatch!",
+					duration: 3000
+				}),
+				error: (error) => {
+					if (error.message === "NO_PREFERENCES") {
+						// Show info toast with action button
+						setTimeout(() => {
+							ShowToast("info", "Please complete the Existing Homeowner service first to set your style preferences.", null, {
+								action: {
+									label: "Take me there",
+									onClick: () => navigate("/existinghomeowner")
+								},
+								duration: 6000
+							});
+						}, 100);
+						return null; // Return null to suppress the error toast from the promise
+					}
 
-				if (image_url && style) {
-					setRoomImage(image_url);
-					setRoomStyle(style);
-					ShowToast("success", "Preferences loaded successfully", "Welcome to StyleMatch!", { duration: 3000 });
-				} else {
-					ShowToast("info", "Please complete the Existing Homeowner service first to set your style preferences.", null, {
-						action: {
-							label: "Take me there",
-							onClick: () => navigate("/existinghomeowner")
-						},
-						duration: 6000
-					});
+					let errorTitle = "Failed to load preferences";
+					if (error.message?.startsWith("UERROR: ")) {
+						errorTitle = error.message.substring("UERROR: ".length);
+					} else if (error.message?.startsWith("ERROR: ")) {
+						errorTitle = error.message.substring("ERROR: ".length);
+					} else if (error.message) {
+						errorTitle = error.message;
+					}
+
+					return {
+						title: errorTitle
+					};
 				}
-			} catch (err) {
-				const backendError = err.response?.data?.error;
-
-				if (backendError?.includes("NO_PREFERENCES") || err.response?.status === 404) {
-					ShowToast("info", "Please analyse your style and room first.", null, {
-						action: {
-							label: "Take me there",
-							onClick: () => navigate("/existinghomeowner")
-						},
-						duration: 6000
-					});
-					return;
-				}
-
-				let errorTitle = "Failed to load preferences";
-				if (backendError?.startsWith("UERROR: ")) {
-					errorTitle = backendError.substring("UERROR: ".length);
-				} else if (backendError?.startsWith("ERROR: ")) {
-					errorTitle = backendError.substring("ERROR: ".length);
-				} else if (backendError) {
-					errorTitle = backendError;
-				}
-
-				console.error("Failed to fetch preferences:", err);
-				ShowToast("error", errorTitle, "Check console for more information");
-			}
+			});
 		};
 
 		fetchPreferences();
@@ -136,7 +147,6 @@ function GetStarted() {
 			return;
 		}
 
-		setIsLoading(true);
 		setFurnitureItems([]);
 		setDetectionSuccess(false);
 
@@ -155,6 +165,8 @@ function GetStarted() {
 					},
 					timeout: 300000
 				});
+
+				console.log(data)
 
 				if (data.detections && data.detections.length > 0) {
 					const items = data.detections.map(item => {
@@ -234,8 +246,29 @@ function GetStarted() {
 		}
 	};
 
-	const handleUploadClick = () => {
-		fileInputRef.current?.click();
+	const handleUploadClick = async () => {
+		if (!roomImage) {
+			ShowToast("error", "No room image available", "Please upload an image first");
+			return;
+		}
+
+		setIsLoading(true);
+
+		try {
+			// Fetch the image from the URL
+			const response = await fetch(roomImage);
+			const blob = await response.blob();
+
+			// Create a File object from the blob
+			const file = new File([blob], "room-image.png", { type: blob.type || "image/png" });
+
+			// Process the image
+			await processImage(file);
+		} catch (error) {
+			console.error("Failed to fetch room image:", error);
+			setIsLoading(false);
+			ShowToast("error", "Failed to load room image", "Please try again");
+		}
 	};
 
 	const handleFindRecommendations = () => {
