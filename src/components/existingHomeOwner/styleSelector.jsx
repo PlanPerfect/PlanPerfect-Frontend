@@ -2,7 +2,7 @@ import { Box, Flex, Heading, Text, Button } from "@chakra-ui/react";
 import { useEffect, useRef, useState } from "react";
 
 const designThemes = [
-	{ id: 1, name: "Boutique", icon: "💗", color: "#FFB6C1" },
+	{ id: 1, name: "Boutique", icon: "👗", color: "#FFB6C1" },
 	{ id: 2, name: "Classical", icon: "🏛️", color: "#87CEEB" },
 	{ id: 3, name: "Contemporary", icon: "🏢", color: "#E8F4F8" },
 	{ id: 4, name: "Country", icon: "🌳", color: "#90EE90" },
@@ -167,7 +167,7 @@ function StyleSelector({ detectedStyle, onStylesChange, value = [], preferences,
 		.filter(Boolean);
 
 	return (
-		<Box w="100%" maxW="1200px" mx="auto" p={8}>
+		<Box w="100%" maxW="1200px" mx="auto" p={{ base: 4, md: 8 }}>
 			{/* Header */}
 			<Box mb={8}>
 				<Heading size="xl" textAlign="center" mb={3}>
@@ -177,12 +177,12 @@ function StyleSelector({ detectedStyle, onStylesChange, value = [], preferences,
 
 			{/* Style Recommendations Section */}
 			{detectedStyle && (recommendations.recommended.length > 0 || recommendations.notRecommended.length > 0) && (
-				<Box mb={8}>
+				<Box mb={8} w="100%">
 					<Heading size="lg" textAlign="center" mb={6} color="#D4AF37">
 						💡 Style Transformation Guide
 					</Heading>
 
-					<Flex direction={{ base: "column", lg: "row" }} gap={6} mb={6}>
+					<Flex direction={{ base: "column", lg: "row" }} gap={6} mb={6} w="100%">
 						{/* Recommended Styles */}
 						<Box flex="1" border="2px solid #10B981" borderRadius="12px" p={6} bg="#F0FDF4">
 							<Flex align="center" gap={2} mb={4} justify="center">
@@ -197,15 +197,8 @@ function StyleSelector({ detectedStyle, onStylesChange, value = [], preferences,
 							<Flex flexWrap="wrap" gap={2} justify="center">
 								{recommendations.recommended.length > 0 ? (
 									recommendations.recommended.map((style, index) => (
-										<Box
-											key={index}
-											bg="#10B981"
-											color="white"
-											px={3}
-											py={1.5}
-											borderRadius="full"
-											fontSize="xs"
-											fontWeight="600"
+										<Box key={index} bg="#10B981" color="white" px={3} py={1.5} borderRadius="full"
+											fontSize="xs" fontWeight="600"
 										>
 											{style}
 										</Box>
@@ -235,15 +228,9 @@ function StyleSelector({ detectedStyle, onStylesChange, value = [], preferences,
 							<Flex flexWrap="wrap" gap={2} justify="center">
 								{recommendations.notRecommended.length > 0 ? (
 									recommendations.notRecommended.map((style, index) => (
-										<Box
-											key={index}
-											bg="#F59E0B"
-											color="white"
-											px={3}
-											py={1.5}
-											borderRadius="full"
-											fontSize="xs"
-											fontWeight="600"
+										<Box key={index} bg="#F59E0B" color="white"
+											px={3} py={1.5} borderRadius="full"
+											fontSize="xs" fontWeight="600"
 										>
 											{style}
 										</Box>
@@ -261,7 +248,7 @@ function StyleSelector({ detectedStyle, onStylesChange, value = [], preferences,
 					</Flex>
 
 					{/* Info Note */}
-					<Box border="2px solid #3B82F6" borderRadius="12px" p={4} bg="#EFF6FF">
+					<Box border="2px solid #3B82F6" borderRadius="12px" p={4} bg="#EFF6FF" w="100%">
 						<Flex align="start" gap={3}>
 							<Text fontSize="lg">ℹ️</Text>
 							<Box>
@@ -273,7 +260,8 @@ function StyleSelector({ detectedStyle, onStylesChange, value = [], preferences,
 					</Box>
 				</Box>
 			)}
-			<Box mb={8}>
+
+			<Box mb={8} w="100%">
 				<Text textAlign="center" color="gray.600" fontSize="lg" mb={2}>
 					You can choose up to maximum 2 choices.
 				</Text>
@@ -290,14 +278,13 @@ function StyleSelector({ detectedStyle, onStylesChange, value = [], preferences,
 			</Box>
 
 			{/* Theme Grid */}
-			<Flex flexWrap="wrap" gap={4} justify="center" mb={6}>
+			<Flex flexWrap="wrap" gap={4} justify="center" mb={6} w="100%">
 				{designThemes.map((theme) => {
 					const isSelected = localSelectedThemes.includes(theme.id);
 					const isDisabled = !isSelected && localSelectedThemes.length >= 2;
 
 					return (
-						<Button
-							key={theme.id}
+						<Button key={theme.id}
 							onClick={() => handleThemeSelect(theme.id)}
 							bg={isSelected ? "#D4AF37" : "white"}
 							color={isSelected ? "white" : "black"}
@@ -323,7 +310,7 @@ function StyleSelector({ detectedStyle, onStylesChange, value = [], preferences,
 			</Flex>
 
 			{/* Selection Counter */}
-			<Flex justify="center" align="center" gap={2} mb={8}>
+			<Flex justify="center" align="center" gap={2} mb={8} w="100%">
 				<Box bg={localSelectedThemes.length > 0 ? "#D4AF37" : "gray.200"}
 					color={localSelectedThemes.length > 0 ? "white" : "gray.600"}
 					px={4} py={2} borderRadius="full"
@@ -335,14 +322,14 @@ function StyleSelector({ detectedStyle, onStylesChange, value = [], preferences,
 
 			{/* Preview Your Selections - Only shown when at least one style is selected */}
 			{localSelectedThemes.length > 0 && (
-				<Box mt={8}>
+				<Box mt={8} w="100%">
 					<Heading size="2xl" textAlign="center" mb={8} color="#D4AF37">
 						Preview Your Selections
 					</Heading>
 
-					<Flex direction="column" gap={6}>
+					<Flex direction="column" gap={6} w="100%">
 						{/* Preferences Summary */}
-						<Box border="2px solid #D4AF37" borderRadius="12px" p={6} bg="white" boxShadow="sm">
+						<Box border="2px solid #D4AF37" borderRadius="12px" p={6} bg="white" boxShadow="sm" w="100%">
 							<Heading size="lg" mb={4} color="#D4AF37" textAlign="center">
 								📋 Your Property Preferences
 							</Heading>
@@ -363,7 +350,7 @@ function StyleSelector({ detectedStyle, onStylesChange, value = [], preferences,
 						</Box>
 
 						{/* Detected Style */}
-						<Box border="2px solid #D4AF37" borderRadius="12px" p={6} bg="white" boxShadow="sm">
+						<Box border="2px solid #D4AF37" borderRadius="12px" p={6} bg="white" boxShadow="sm" w="100%">
 							<Heading size="lg" mb={4} color="#D4AF37" textAlign="center">
 								🎨 AI-Detected Style
 							</Heading>
@@ -377,7 +364,7 @@ function StyleSelector({ detectedStyle, onStylesChange, value = [], preferences,
 						</Box>
 
 						{/* Selected Styles */}
-						<Box border="2px solid #D4AF37" borderRadius="12px" p={6} bg="white" boxShadow="sm">
+						<Box border="2px solid #D4AF37" borderRadius="12px" p={6} bg="white" boxShadow="sm" w="100%">
 							<Heading size="lg" mb={4} color="#D4AF37" textAlign="center">
 								✨ Your Selected Design Themes
 							</Heading>
@@ -391,7 +378,7 @@ function StyleSelector({ detectedStyle, onStylesChange, value = [], preferences,
 						</Box>
 
 						{/* Ready to Continue Message */}
-						<Box border="2px solid #D4AF37" borderRadius="12px" p={6} bg="#FFFDF7" textAlign="center">
+						<Box border="2px solid #D4AF37" borderRadius="12px" p={6} bg="#FFFDF7" textAlign="center" w="100%">
 							<Text fontSize="lg" color="gray.700">
 								🎉 You're all set! Review your selections above and click "Generate Design" below to generate your personalized design recommendations.
 							</Text>

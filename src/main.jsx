@@ -14,6 +14,7 @@ import ChatbotPage from "./pages/Chatbot/ChatbotPage"
 import LumenAgent from "./pages/Chatbot/LumenAgent"
 import DesignDocumentPage from "./pages/DesignDocument/DesignDocumentPage"
 import NotFound from './pages/NotFound.jsx'
+import ImageGeneration from "./pages/ImageGeneration/imageGeneration"
 
 createRoot(document.getElementById('root')).render(
   <Provider value={system}>
@@ -46,6 +47,10 @@ createRoot(document.getElementById('root')).render(
 
 					<Route path={"designDocument"}>
 						<Route index element={<DesignDocumentPage />} />
+					</Route>
+					
+					<Route path={"imageGeneration"}>
+						<Route index element={<ImageGeneration />} />
 					</Route>
 
 					<Route path="*" element={<NotFound />} />
