@@ -3,6 +3,7 @@ import { Outlet, useLocation, Navigate } from 'react-router-dom'
 import { Toaster } from "@/components/ui/toaster"
 import Navbar from './components/Navbar'
 import { AuthProvider, useAuth } from './contexts/AuthContext'
+import { RecommendationsProvider } from './contexts/RecommendationsContext'
 
 function AppLayout() {
 	const { user, loading } = useAuth();
@@ -26,7 +27,9 @@ function AppLayout() {
 function App() {
 	return (
 		<AuthProvider>
-			<AppLayout />
+			<RecommendationsProvider>
+				<AppLayout />
+			</RecommendationsProvider>
 		</AuthProvider>
 	)
 }

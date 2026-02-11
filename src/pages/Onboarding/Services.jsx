@@ -1,16 +1,27 @@
-import { useState, useLayoutEffect } from 'react'
+import { useState, useLayoutEffect, useEffect } from 'react'
+import { useLocation, useNavigate } from 'react-router-dom'
 import { Box, VStack, SimpleGrid } from '@chakra-ui/react'
 import { Key, Home } from 'lucide-react'
 import ServicesBackground from "../../assets/ServicesBackground.png"
 import AnimatedHeading from '@/components/Onboarding/AnimatedHeading'
 import AnimatedCard from '@/components/Onboarding/AnimatedCard'
+import ShowToast from '@/Extensions/ShowToast'
 
 function Services() {
     const [isInitialMount, setIsInitialMount] = useState(true)
+    const location = useLocation()
+    const navigate = useNavigate()
 
     useLayoutEffect(() => {
         setIsInitialMount(false)
     }, [])
+
+    useEffect(() => {
+        if (location.state?.loginSuccess) {
+            ShowToast("success", "Successfully logged in!")
+            navigate(location.pathname, { replace: true, state: {} })
+        }
+    }, [location.state, navigate, location.pathname])
 
     return (
         <>
