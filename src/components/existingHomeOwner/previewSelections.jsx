@@ -36,11 +36,9 @@ function PreviewSelections({
 			const prefsFormData = new FormData();
 			prefsFormData.append('preferences', JSON.stringify(preferences));
 			prefsFormData.append('selected_styles', JSON.stringify(selectedStyles));
+			prefsFormData.append('analysis_results', JSON.stringify(analysisResults));
 			prefsFormData.append('user_id', user.uid);
-			console.log("=== SAVING PREFERENCES DATA ===");
-			console.log("User ID:", user.uid);
-			console.log("Preferences:", preferences);
-			console.log("Selected styles:", selectedStyles);
+			
 			// Save preferences to database
 			const prefsResponse = await server.post(
 				'/existingHomeOwners/styleClassification/savePreferences', 

@@ -59,12 +59,6 @@ function ImageGeneration() {
 					// Set original image URL (fetched from Style Analysis node by backend)
 					setOriginalImageUrl(data.original_image_url || null);
 
-					console.log("=== DATA LOADED FROM DATABASE ===");
-					console.log("Preferences:", data);
-					console.log("Selected Styles:", data.selected_styles);
-					console.log("Detected Style:", data.detected_style);
-					console.log("Original Image URL:", data.original_image_url);
-					console.log("==================================");
 				} else {
 					setLoadError("No preferences found. Please complete the setup first.");
 				}
@@ -94,10 +88,6 @@ function ImageGeneration() {
 			const formData = new FormData();
 			formData.append('styles', selectedStyles.join(', '));
 
-			console.log("=== GENERATING IMAGE ===");
-			console.log("Selected styles:", selectedStyles.join(', '));
-			console.log("User ID:", user.uid);
-
 			const response = await server.post('/image/generate', formData, {
 				headers: {
 					'Content-Type': 'multipart/form-data',
@@ -105,10 +95,6 @@ function ImageGeneration() {
 				}
 			});
 			const { url, file_id, filename } = response.data;
-
-			console.log("Generated image URL:", url);
-			console.log("Generated file_id:", file_id);
-			console.log("=======================");
 
 			setGeneratedImage(url);
 		} catch (error) {

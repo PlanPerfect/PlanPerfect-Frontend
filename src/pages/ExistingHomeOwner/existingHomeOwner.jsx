@@ -25,14 +25,6 @@ function ExistingHomeOwner() {
 
 	// Handler: Analysis Complete
 	const handleAnalysisComplete = (results) => {
-		console.log("=== ANALYSIS COMPLETE ===");
-		console.log("Full results:", results);
-		console.log("Cloudinary Image URL:", results.image_url);
-		console.log("Cloudinary File ID:", results.file_id);
-		console.log("Detected Style:", results.detected_style);
-		console.log("Confidence:", results.confidence);
-		console.log("========================");
-
 		setAnalysisResults(results);
 		setUploadedImageUrl(results.image_url);
 		steps.setStep(2);

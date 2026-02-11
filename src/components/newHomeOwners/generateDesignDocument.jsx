@@ -102,7 +102,6 @@ function GenerateDesignDocument({ floorPlanFile, preferences, budget, extraction
 				throw new Error(response.data.result);
 			}
 
-			console.log("Save successful:", response.data);
 			setIsSaving(false);
 			return true;
 		} catch (error) {
@@ -126,8 +125,6 @@ function GenerateDesignDocument({ floorPlanFile, preferences, budget, extraction
 	const handleNavigateToDesignDocument = async () => {
 		const saved = await saveUserInputToDatabase();
 
-		console.log("Save user input result before navigating to design document:", saved);
-		
 		if (saved) {
 			navigate("/designDocument");
 		}
