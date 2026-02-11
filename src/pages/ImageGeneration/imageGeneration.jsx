@@ -1,4 +1,4 @@
-import { Box, Flex, Heading, Text, Button, Spinner, Image, Container } from "@chakra-ui/react";
+import { Box, Flex, Heading, Text, Button, Spinner, Image, Container, Textarea, VStack } from "@chakra-ui/react";
 import { useState, useEffect } from "react";
 import { FaPaintBrush, FaPalette } from "react-icons/fa";
 import { FaWandMagicSparkles } from "react-icons/fa6";
@@ -18,6 +18,10 @@ function ImageGeneration() {
 	const [isGenerating, setIsGenerating] = useState(false);
 	const [generatedImage, setGeneratedImage] = useState(null);
 	const [generationError, setGenerationError] = useState(null);
+	
+	// NEW: States for regeneration with custom input
+	const [showRegenerateInput, setShowRegenerateInput] = useState(false);
+	const [regeneratePrompt, setRegeneratePrompt] = useState("");
 
 	// ================================
 	// Fetch data from database on mount
@@ -78,7 +82,7 @@ function ImageGeneration() {
 	}, [user]);
 
 	// ================================
-	// Generate design handler
+	// Generate design handler (initial generation)
 	// ================================
 	const handleGenerateDesign = async () => {
 		setIsGenerating(true);
@@ -107,6 +111,55 @@ function ImageGeneration() {
 		} finally {
 			setIsGenerating(false);
 		}
+	};
+
+	// ================================
+	// NEW: Regenerate with custom prompt handler
+	// ================================
+	const handleRegenerateWithPrompt = async () => {
+		if (!regeneratePrompt.trim()) {
+			setGenerationError("Please enter what you'd like to change");
+			return;
+		}
+
+		setIsGenerating(true);
+		setGenerationError(null);
+		setShowRegenerateInput(false); // Hide input while generating
+		
+		try {
+			const formData = new FormData();
+			formData.append('styles', selectedStyles.join(', '));
+			formData.append('user_prompt', regeneratePrompt.trim());
+
+			const response = await server.post('/image/generate', formData, {
+				headers: {
+					'Content-Type': 'multipart/form-data',
+					'X-User-ID': user.uid,
+				}
+			});
+			const { url, file_id, filename } = response.data;
+
+			setGeneratedImage(url);
+			setRegeneratePrompt(""); // Clear the prompt after successful generation
+		} catch (error) {
+			console.error('Error regenerating image:', error);
+			setGenerationError(
+				error.response?.data?.detail || 
+				error.message || 
+				'Failed to regenerate design. Please try again.'
+			);
+			setShowRegenerateInput(true); // Show input again on error
+		} finally {
+			setIsGenerating(false);
+		}
+	};
+
+	// ================================
+	// NEW: Toggle regenerate input visibility
+	// ================================
+	const handleShowRegenerateInput = () => {
+		setShowRegenerateInput(!showRegenerateInput);
+		setGenerationError(null); // Clear any previous errors
 	};
 
 	// ================================
@@ -292,11 +345,11 @@ function ImageGeneration() {
 								<Flex align="center" justify="center" gap={3} mb={4}>
 									<FaPalette color="#D4AF37" size={24} />
 									<Heading size="lg" color="#D4AF37">
-										Your Selected Design Themes
+										Selected Design Themes
 									</Heading>
 								</Flex>
 								
-								{selectedStyles && selectedStyles.length > 0 ? (
+								{selectedStyles.length > 0 ? (
 									<Flex justify="center" align="center" gap={3} flexWrap="wrap">
 										{selectedStyles.map((style, index) => (
 											<Box 
@@ -315,41 +368,37 @@ function ImageGeneration() {
 										))}
 									</Flex>
 								) : (
-									<Text textAlign="center" color="gray.500" fontSize="md">
-										No design styles selected
+									<Text textAlign="center" color="gray.600">
+										No design themes selected yet.
 									</Text>
 								)}
 							</Box>
 
-							{/* Call to Action Card */}
-							<Box 
-								border="2px solid #8B5CF6" 
-								borderRadius="12px" 
-								p={6} 
-								bg="linear-gradient(135deg, #F3E8FF 0%, #EDE9FE 100%)"
-								boxShadow="md"
-							>
-								<Flex align="center" justify="center" gap={3} mb={3}>
-									<FaWandMagicSparkles color="#8B5CF6" size={24} />
-									<Text fontSize="lg" fontWeight="600" color="gray.700" textAlign="center">
-										Ready to see your dream design? Click "Generate Design" below!
-									</Text>
-								</Flex>
-							</Box>
-
-							{/* Error Display */}
-							{generationError && (
+							{/* Original Image Preview */}
+							{originalImageUrl && (
 								<Box 
-									bg="red.50" 
-									border="2px solid" 
-									borderColor="red.400" 
+									border="2px solid #D4AF37" 
 									borderRadius="12px" 
-									p={4}
-									textAlign="center"
+									p={6} 
+									bg="white"
+									boxShadow="md"
 								>
-									<Text color="red.600" fontWeight="600">
-										⚠️ {generationError}
-									</Text>
+									<Heading size="md" textAlign="center" mb={4} color="gray.700">
+										Your Room
+									</Heading>
+									<Flex justify="center">
+										<Image
+											src={originalImageUrl}
+											borderRadius="12px"
+											boxShadow="lg"
+											maxW="380px"
+											maxH="450px"
+											w="100%"
+											h="auto"
+											objectFit="cover"
+											border="2px solid #E2E8F0"
+										/>
+									</Flex>
 								</Box>
 							)}
 
@@ -486,9 +535,9 @@ function ImageGeneration() {
 								Before & After Transformation
 							</Heading>
 
-							<Flex gap={6} justify="center" align="start" flexWrap={{ base: "wrap", md: "nowrap" }}>
+							<Flex gap={4} justify="center" align="start" flexWrap={{ base: "wrap", md: "nowrap" }}>
 								{/* Original Image */}
-								<Box flex="1" minW={{ base: "100%", md: "300px" }} maxW="500px">
+								<Box flex="1" minW={{ base: "100%", md: "250px" }} maxW="380px">
 									<Text 
 										fontSize="lg" 
 										fontWeight="600" 
@@ -508,6 +557,8 @@ function ImageGeneration() {
 											boxShadow="lg"
 											w="100%"
 											h="auto"
+											maxH="450px"
+											objectFit="cover"
 											border="2px solid #E2E8F0"
 										/>
 									) : (
@@ -530,7 +581,7 @@ function ImageGeneration() {
 								</Box>
 
 								{/* Generated Image */}
-								<Box flex="1" minW={{ base: "100%", md: "300px" }} maxW="500px">
+								<Box flex="1" minW={{ base: "100%", md: "250px" }} maxW="380px">
 									<Text 
 										fontSize="lg" 
 										fontWeight="600" 
@@ -550,6 +601,8 @@ function ImageGeneration() {
 										border="3px solid #D4AF37"
 										w="100%"
 										h="auto"
+										maxH="450px"
+										objectFit="cover"
 									/>
 								</Box>
 							</Flex>
@@ -568,6 +621,84 @@ function ImageGeneration() {
 								<Text color="red.600" fontWeight="600">
 									⚠️ {generationError}
 								</Text>
+							</Box>
+						)}
+
+						{/* NEW: Regenerate Input Section */}
+						{showRegenerateInput && !isGenerating && (
+							<Box 
+								border="2px solid #D4AF37" 
+								borderRadius="12px" 
+								p={6} 
+								bg="#FFFDF7"
+								boxShadow="md"
+							>
+								<VStack spacing={4} align="stretch">
+									<Heading size="md" textAlign="center" color="#D4AF37">
+										🎨 Customize Your Design
+									</Heading>
+									<Text textAlign="center" color="gray.600" fontSize="md">
+										Tell us what you'd like to change or add to the design
+									</Text>
+									
+									<Textarea
+										value={regeneratePrompt}
+										onChange={(e) => setRegeneratePrompt(e.target.value)}
+										placeholder="E.g., Make the walls darker blue, add more plants, change the sofa to gray..."
+										size="lg"
+										minH="120px"
+										borderColor="#D4AF37"
+										focusBorderColor="#C9A961"
+										_hover={{ borderColor: "#C9A961" }}
+										fontSize="md"
+									/>
+									
+									<Flex gap={3} justify="center" flexWrap="wrap">
+										<Button
+											onClick={handleRegenerateWithPrompt}
+											size="lg"
+											bg="linear-gradient(135deg, #D4AF37 0%, #C9A961 100%)"
+											color="white"
+											px={8}
+											py={6}
+											fontSize="md"
+											fontWeight="700"
+											borderRadius="md"
+											leftIcon={<FaWandMagicSparkles />}
+											_hover={{ 
+												bg: "linear-gradient(135deg, #C9A961 0%, #B8984D 100%)",
+												transform: "translateY(-2px)",
+												boxShadow: "lg"
+											}}
+											transition="all 0.2s"
+											isDisabled={!regeneratePrompt.trim()}
+										>
+											Generate with Changes
+										</Button>
+										<Button
+											onClick={() => {
+												setShowRegenerateInput(false);
+												setRegeneratePrompt("");
+											}}
+											size="lg"
+											variant="outline"
+											borderColor="#D4AF37"
+											color="#D4AF37"
+											px={8}
+											py={6}
+											fontSize="md"
+											fontWeight="600"
+											borderRadius="md"
+											_hover={{ 
+												bg: "#FFFDF7",
+												borderColor: "#C9A961",
+												color: "#C9A961"
+											}}
+										>
+											Cancel
+										</Button>
+									</Flex>
+								</VStack>
 							</Box>
 						)}
 
@@ -615,7 +746,7 @@ function ImageGeneration() {
 									📥 Download Image
 								</Button>
 								<Button
-									onClick={handleGenerateDesign}
+									onClick={handleShowRegenerateInput}
 									size="xl"
 									bg="linear-gradient(135deg, #D4AF37 0%, #C9A961 100%)"
 									color="white"
@@ -632,7 +763,7 @@ function ImageGeneration() {
 									}}
 									transition="all 0.2s"
 								>
-									Regenerate Design
+									{showRegenerateInput ? "Hide Options" : "Regenerate Design"}
 								</Button>
 							</Flex>
 						)}
