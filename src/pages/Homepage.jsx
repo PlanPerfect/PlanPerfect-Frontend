@@ -15,9 +15,6 @@ function Homepage() {
 		if (location.state?.authRedirect) {
 			ShowToast("warning", "Please login first.");
 			navigate(location.pathname, { replace: true, state: {} });
-		} else if (location.state?.loginSuccess) {
-			ShowToast("success", "Successfully logged in!");
-			navigate(location.pathname, { replace: true, state: {} });
 		}
 	}, [location.state, navigate, location.pathname]);
 

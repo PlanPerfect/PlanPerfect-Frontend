@@ -1,10 +1,12 @@
 import { useEffect, useState } from "react";
 import { Box, Text, Spinner } from "@chakra-ui/react";
+import { useAuth } from "../../contexts/AuthContext";
 import server from "../../../networking";
 
 function StyleAnalysis({ file, onComplete }) {
 	const [status, setStatus] = useState("processing");
 	const [progress, setProgress] = useState("Preparing...");
+	const { user } = useAuth();
 
 	useEffect(() => {
 		if (!file) return;
@@ -18,8 +20,14 @@ function StyleAnalysis({ file, onComplete }) {
 				formData.append("file", file.file);
 
                 const response = await server.post(
-                "/existingHomeOwners/styleClassification/styleAnalysis",
-                formData,
+               		"/existingHomeOwners/styleClassification/styleAnalysis",
+                	formData,
+					{
+						headers: {
+							"Content-Type": "multipart/form-data",
+							"X-User-ID": user.uid,
+						},
+					}
                 );
 
 				const result = response.data.result;
@@ -66,7 +74,7 @@ function StyleAnalysis({ file, onComplete }) {
 						{progress}
 					</Text>
 					<Text fontSize="sm" color="gray.500" mt={2}>
-						Our AI will detect your interior design style and 
+						Our AI will detect your interior design style and
 						identify furniture in your room
 					</Text>
 				</>
@@ -74,7 +82,7 @@ function StyleAnalysis({ file, onComplete }) {
 
 			{status === "completed" && (
 				<>
-					<Box w="48px" h="48px" borderRadius="full" bg="green.500" display="flex" alignItems="center" justifyContent="center" 
+					<Box w="48px" h="48px" borderRadius="full" bg="green.500" display="flex" alignItems="center" justifyContent="center"
 						mx="auto" mb={4}>
 						<Text color="white" fontSize="2xl">
 							✓
@@ -91,7 +99,7 @@ function StyleAnalysis({ file, onComplete }) {
 
 			{status === "error" && (
 				<>
-					<Box w="48px" h="48px" borderRadius="full" bg="red.500" display="flex" alignItems="center" justifyContent="center" 
+					<Box w="48px" h="48px" borderRadius="full" bg="red.500" display="flex" alignItems="center" justifyContent="center"
 						mx="auto" mb={4}
 					>
 						<Text color="white" fontSize="2xl">

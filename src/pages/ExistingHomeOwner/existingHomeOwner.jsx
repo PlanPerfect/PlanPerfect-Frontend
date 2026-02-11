@@ -2,6 +2,7 @@ import { Box, Flex, Heading, Text, Button, Steps, useSteps, Container, Stack } f
 import { BsPalette2 } from "react-icons/bs";
 import { RiFileUploadFill } from "react-icons/ri";
 import { FaCheck, FaEye } from "react-icons/fa6";
+import { FaPalette } from "react-icons/fa";
 import PropertyPreferences from "@/components/existingHomeOwner/propertyPreference";
 import UploadRoomImage from "@/components/existingHomeOwner/uploadRoomImage";
 import StyleAnalysis from "@/components/existingHomeOwner/styleAnalysis";
@@ -19,7 +20,7 @@ function ExistingHomeOwner() {
 
 	const steps = useSteps({
 		defaultStep: 0,
-		count: 4
+		count: 5
 	});
 
 	// Handler: Analysis Complete
@@ -82,8 +83,21 @@ function ExistingHomeOwner() {
 			),
 		},
 		{
+			title: "Select Styles",
+			icon: <FaPalette />,
+			content: (
+				<StyleSelector
+					detectedStyle={analysisResults?.detected_style}
+					onStylesChange={handleStylesChange}
+					value={selectedStyles}
+					preferences={preferences}
+					analysisResults={analysisResults}
+				/>
+			),
+		},
+		{
 			title: "Preview",
-			icon: <BsPalette2 />,
+			icon: <FaCheck />,
 			content: (
 				<PreviewSelections
 					preferences={preferences}
@@ -91,15 +105,7 @@ function ExistingHomeOwner() {
 					selectedStyles={selectedStyles}
 					uploadedImageUrl={uploadedImageUrl}
 					onStylesChange={handleStylesChange}
-					StyleSelectorComponent={
-						<StyleSelector
-							detectedStyle={analysisResults?.detected_style}
-							onStylesChange={handleStylesChange}
-							value={selectedStyles}
-							preferences={preferences}
-							analysisResults={analysisResults}
-						/>
-					}
+					onBack={() => steps.setStep(3)}
 				/>
 			),
 		}
@@ -108,19 +114,21 @@ function ExistingHomeOwner() {
 	// Navigation Logic
 	const isNextDisabled =
 		(steps.value === 0 && !preferences) ||
-		(steps.value === 1 && !analysisResults);
+		(steps.value === 1 && !analysisResults) ||
+		(steps.value === 3 && selectedStyles.length === 0);
 
-	const showNavigationButtons = !(steps.value === 1 && uploadedRoomImage && !analysisResults);
+	// Hide default navigation buttons during upload/analysis and on the Preview step
+	const showNavigationButtons = !(steps.value === 1 && uploadedRoomImage && !analysisResults) && steps.value !== 4;
 
 	return (
 		<>
 			{/* Background */}
 			<Box
 				style={{
-					position: "fixed", 
-					top: 0, 
-					left: 0, 
-					right: 0, 
+					position: "fixed",
+					top: 0,
+					left: 0,
+					right: 0,
 					bottom: 0,
 					backgroundImage: `linear-gradient(rgba(0,0,0,0.5), rgba(0,0,0,0.5)),url('/newHomeOwnerHero.png')`,
 					backgroundSize: "cover",
@@ -162,21 +170,21 @@ function ExistingHomeOwner() {
 			{/* Action Steps */}
 			<Box pb={20} px={8}>
 				<Steps.RootProvider value={steps} colorPalette="yellow">
-					<Box 
-						w="75%" 
-						h="150px" 
-						mb={-12} 
-						mt={-20} 
-						mx="auto" 
-						textAlign="center" 
-						boxShadow="0 4px 10px rgba(0, 0, 0, 0.15)" 
+					<Box
+						w="75%"
+						h="150px"
+						mb={-12}
+						mt={-20}
+						mx="auto"
+						textAlign="center"
+						boxShadow="0 4px 10px rgba(0, 0, 0, 0.15)"
 						borderRadius="10px"
-						bgColor="#F0F0F0" 
-						zIndex={1} 
-						position="relative" 
-						display="flex" 
-						alignItems="center" 
-						justifyContent="center" 
+						bgColor="#F0F0F0"
+						zIndex={1}
+						position="relative"
+						display="flex"
+						alignItems="center"
+						justifyContent="center"
 						px={8}
 					>
 						<Steps.List display="flex" gap={0} alignItems="center" justifyContent="space-between" w="100%">
@@ -199,22 +207,22 @@ function ExistingHomeOwner() {
 							))}
 						</Steps.List>
 					</Box>
-					<Box 
-						w="80%" 
-						mx="auto" 
-						textAlign="center" 
-						borderRadius="10px" 
-						zIndex={0} 
-						position="relative" 
-						px={6} 
-						py={12} 
-						mt={-11} 
-						display="flex" 
+					<Box
+						w="80%"
+						mx="auto"
+						textAlign="center"
+						borderRadius="10px"
+						zIndex={0}
+						position="relative"
+						px={6}
+						py={12}
+						mt={-11}
+						display="flex"
 						flexDirection="column"
-						alignItems="center" 
-						justifyContent="center" 
+						alignItems="center"
+						justifyContent="center"
 						boxShadow="2px 2px 1px 1px rgba(0, 0, 0, 0.10), 0px 0px 2px 1px rgba(0, 0, 0, 0.10)"
-						minH="600px" 
+						minH="600px"
 						bg="white"
 					>
 						<Box flex="1" display="flex" alignItems="center" justifyContent="center" w="100%">
@@ -226,28 +234,28 @@ function ExistingHomeOwner() {
 							<Steps.CompletedContent>All steps are complete!</Steps.CompletedContent>
 						</Box>
 
-						{showNavigationButtons && steps.value < 3 && (
+						{showNavigationButtons && steps.value < 4 && (
 							<Flex justify="center" gap={4} mt={6}>
 								{steps.value > 0 && (
 									<Steps.PrevTrigger asChild>
-										<Button 
-											size="xl" 
-											borderRadius="md" 
-											bg="gray.300" 
-											color="black" 
+										<Button
+											size="xl"
+											borderRadius="md"
+											bg="gray.300"
+											color="black"
 											_hover={{ bg: "gray.400" }}
 										>
 											Back
 										</Button>
 									</Steps.PrevTrigger>
 								)}
-								{steps.value < 3 && (
+								{steps.value < 4 && (
 									<Steps.NextTrigger asChild>
-										<Button 
-											size="xl" 
-											borderRadius="md" 
+										<Button
+											size="xl"
+											borderRadius="md"
 											bg="#D4AF37"
-											color="white" 
+											color="white"
 											disabled={isNextDisabled}
 											_hover={{
 												bg: isNextDisabled ? "#D4AF37" : "#C9A961",

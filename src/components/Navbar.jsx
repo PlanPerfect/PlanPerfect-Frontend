@@ -3,6 +3,7 @@ import { useLocation } from "react-router-dom";
 import { motion } from "framer-motion";
 import LogoWithText from "./Navbar/LogoWithText";
 import NavbarActions from "./Navbar/NavbarActions";
+import { useRecommendations } from "../contexts/RecommendationsContext";
 
 const MotionFlex = motion.create(Flex);
 
@@ -10,12 +11,14 @@ function Navbar() {
 	const location = useLocation();
 	const isHome = location.pathname === "/";
 	const isChatPage = location.pathname === "/lumen/chat";
+	const isRecommendationsPage = location.pathname === "/stylematch/reccomendations";
+	const { hasRecommendations } = useRecommendations();
 	const [isWide] = useMediaQuery("(min-width: 530px)");
 	const [isVisible] = useMediaQuery("(min-width: 325px)");
 
 	if (!isVisible) return null;
 
-	const showActions = (isHome && isWide) || isChatPage;
+	const showActions = (isHome && isWide) || isChatPage || (isRecommendationsPage && hasRecommendations);
 	const justify = showActions ? "space-between" : "center";
 
 	return (

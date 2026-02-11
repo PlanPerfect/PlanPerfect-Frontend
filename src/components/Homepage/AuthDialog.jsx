@@ -30,7 +30,7 @@ function AuthDialog({ trigger, size = "md", placement = "center", motionPreset =
 			await server.post("/auth/register", userData);
 
 			setOpen(false);
-			navigate("/", { state: { loginSuccess: true } });
+			navigate("/onboarding", { state: { loginSuccess: true } });
 		} catch (error) {
 			if (error.code === "auth/popup-closed-by-user") {
 				return;
