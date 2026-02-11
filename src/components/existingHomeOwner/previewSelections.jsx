@@ -35,13 +35,6 @@ function PreviewSelections({
 			// ================================
 			const prefsFormData = new FormData();
 			prefsFormData.append('preferences', JSON.stringify(preferences));
-			prefsFormData.append('analysis', JSON.stringify({
-				detected_style: analysisResults?.detected_style,
-				confidence: analysisResults?.confidence,
-				original_image_url: uploadedImageUrl,
-				file_id: analysisResults?.file_id,
-				filename: analysisResults?.filename
-			}));
 			prefsFormData.append('selected_styles', JSON.stringify(selectedStyles));
 			prefsFormData.append('user_id', user.uid);
 			console.log("=== SAVING PREFERENCES DATA ===");
@@ -54,9 +47,7 @@ function PreviewSelections({
 				prefsFormData
 			);
 			
-			console.log("Preferences save response:", prefsResponse.data);
-			console.log("===============================");
-			// Navigate to StyleMatch page
+			// Navigate to StyleMatch GetStarted page
 			navigate('/StyleMatch');
 		} catch (error) {
 			console.error('Error saving data:', error);
@@ -106,7 +97,12 @@ function PreviewSelections({
 						</Flex>
 						<Flex align="center" gap={2}>
 							<Text fontWeight="600" color="gray.700">Budget:</Text>
-							<Text color="gray.600">{preferences?.budget || 'Not specified'}</Text>
+							<Text color="gray.600">
+								{preferences?.budgetMin && preferences?.budgetMax 
+									? `SGD $${(preferences.budgetMin / 1000).toFixed(0)}k - $${(preferences.budgetMax / 1000).toFixed(0)}k`
+									: 'Not specified'
+								}
+							</Text>
 						</Flex>
 					</Flex>
 				</Box>

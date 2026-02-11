@@ -10,7 +10,7 @@ function ImageGeneration() {
 	const [preferences, setPreferences] = useState(null);
 	const [analysisResults, setAnalysisResults] = useState(null);
 	const [selectedStyles, setSelectedStyles] = useState([]);
-	const [uploadedImageUrl, setUploadedImageUrl] = useState(null);
+	const [originalImageUrl, setOriginalImageUrl] = useState(null);
 	
 	const [isLoading, setIsLoading] = useState(true);
 	const [loadError, setLoadError] = useState(null);
@@ -44,26 +44,26 @@ function ImageGeneration() {
 					setPreferences({
 						propertyType: data.property_type,
 						unitType: data.unit_type,
-						budget: data.budget
+						budgetMin: data.budget_min,
+						budgetMax: data.budget_max
 					});
 
-					// Set analysis results
+					// Set analysis results (detected_style comes from Preferences node)
 					setAnalysisResults({
-						detected_style: data.detected_style,
-						confidence: data.confidence,
-						file_id: data.file_id,
-						filename: data.filename
+						detected_style: data.detected_style
 					});
 
 					// Set selected styles
 					setSelectedStyles(data.selected_styles || []);
 
-					// Set uploaded image URL
-					setUploadedImageUrl(data.original_image_url);
+					// Set original image URL (fetched from Style Analysis node by backend)
+					setOriginalImageUrl(data.original_image_url || null);
 
 					console.log("=== DATA LOADED FROM DATABASE ===");
 					console.log("Preferences:", data);
 					console.log("Selected Styles:", data.selected_styles);
+					console.log("Detected Style:", data.detected_style);
+					console.log("Original Image URL:", data.original_image_url);
 					console.log("==================================");
 				} else {
 					setLoadError("No preferences found. Please complete the setup first.");
@@ -92,14 +92,18 @@ function ImageGeneration() {
 		
 		try {
 			const formData = new FormData();
-			formData.append('file_id', analysisResults.file_id);
 			formData.append('styles', selectedStyles.join(', '));
 
 			console.log("=== GENERATING IMAGE ===");
-			console.log("Using file_id:", analysisResults.file_id);
 			console.log("Selected styles:", selectedStyles.join(', '));
+			console.log("User ID:", user.uid);
 
-			const response = await server.post('/image/generate', formData);
+			const response = await server.post('/image/generate', formData, {
+				headers: {
+					'Content-Type': 'multipart/form-data',
+					'X-User-ID': user.uid,
+				}
+			});
 			const { url, file_id, filename } = response.data;
 
 			console.log("Generated image URL:", url);
@@ -170,7 +174,7 @@ function ImageGeneration() {
 					}}
 				/>
 
-				<Container maxW="6xl" py={24}>
+				<Container maxW="6xl" py={8}>
 					<Box 
 						bg="white" 
 						borderRadius="12px" 
@@ -210,7 +214,7 @@ function ImageGeneration() {
 					}}
 				/>
 
-				<Container maxW="6xl" py={24}>
+				<Container maxW="6xl" py={8}>
 					<Box 
 						bg="red.50" 
 						border="2px solid" 
@@ -251,7 +255,7 @@ function ImageGeneration() {
 					}}
 				/>
 
-				<Container maxW="6xl" py={24}>
+				<Container maxW="6xl" py={8}>
 					<Box bg="white" borderRadius="12px" p={8} boxShadow="xl">
 						<Heading size="2xl" textAlign="center" mb={2} color="#D4AF37">
 							Generate Your Design
@@ -438,7 +442,7 @@ function ImageGeneration() {
 				}}
 			/>
 
-			<Container maxW="6xl" py={24}>
+			<Container maxW="6xl" py={8}>
 				<Box bg="white" borderRadius="12px" p={8} boxShadow="xl">
 					<Heading size="2xl" textAlign="center" mb={2} color="#D4AF37">
 						✨ Your Dream Design is Ready!
@@ -511,9 +515,9 @@ function ImageGeneration() {
 									>
 										📸 Original Room
 									</Text>
-									{uploadedImageUrl ? (
+									{originalImageUrl ? (
 										<Image
-											src={uploadedImageUrl}
+											src={originalImageUrl}
 											borderRadius="12px"
 											boxShadow="lg"
 											w="100%"
@@ -581,50 +585,71 @@ function ImageGeneration() {
 							</Box>
 						)}
 
+						{/* Regenerating State */}
+						{isGenerating && (
+							<Box 
+								border="2px solid #D4AF37" 
+								borderRadius="12px" 
+								p={8} 
+								bg="#FFFDF7"
+							>
+								<Flex direction="column" align="center" gap={4}>
+									<Spinner size="xl" color="#D4AF37" thickness="4px" speed="0.65s" />
+									<Text fontSize="xl" fontWeight="600" color="#D4AF37">
+										✨ Creating Your New Design Magic...
+									</Text>
+									<Text fontSize="md" color="gray.600" textAlign="center">
+										Our AI is crafting your personalized design based on your selected styles.<br/>
+										This may take a few moments. Please wait.
+									</Text>
+								</Flex>
+							</Box>
+						)}
+
 						{/* Action Buttons */}
-						<Flex justify="center" gap={4} flexWrap="wrap" mt={4}>
-							<Button 
-								onClick={handleDownloadImage}
-								size="xl" 
-								bg="green.500" 
-								color="white"
-								px={12}
-								py={6}
-								fontSize="lg"
-								fontWeight="700"
-								borderRadius="md"
-								_hover={{ 
-									bg: "green.600",
-									transform: "translateY(-2px)",
-									boxShadow: "lg"
-								}}
-								transition="all 0.2s"
-							>
-								📥 Download Image
-							</Button>
-							<Button
-								onClick={handleGenerateDesign}
-								size="xl"
-								bg="linear-gradient(135deg, #D4AF37 0%, #C9A961 100%)"
-								color="white"
-								px={12}
-								py={6}
-								fontSize="lg"
-								fontWeight="700"
-								borderRadius="md"
-								leftIcon={<FaWandMagicSparkles />}
-								_hover={{ 
-									bg: "linear-gradient(135deg, #C9A961 0%, #B8984D 100%)",
-									transform: "translateY(-2px)",
-									boxShadow: "lg"
-								}}
-								isLoading={isGenerating}
-								loadingText="Regenerating..."
-								transition="all 0.2s"
-							>
-								Regenerate Design
-							</Button>
-						</Flex>
+						{!isGenerating && (
+							<Flex justify="center" gap={4} flexWrap="wrap" mt={4}>
+								<Button 
+									onClick={handleDownloadImage}
+									size="xl" 
+									bg="green.500" 
+									color="white"
+									px={12}
+									py={6}
+									fontSize="lg"
+									fontWeight="700"
+									borderRadius="md"
+									_hover={{ 
+										bg: "green.600",
+										transform: "translateY(-2px)",
+										boxShadow: "lg"
+									}}
+									transition="all 0.2s"
+								>
+									📥 Download Image
+								</Button>
+								<Button
+									onClick={handleGenerateDesign}
+									size="xl"
+									bg="linear-gradient(135deg, #D4AF37 0%, #C9A961 100%)"
+									color="white"
+									px={12}
+									py={6}
+									fontSize="lg"
+									fontWeight="700"
+									borderRadius="md"
+									leftIcon={<FaWandMagicSparkles />}
+									_hover={{ 
+										bg: "linear-gradient(135deg, #C9A961 0%, #B8984D 100%)",
+										transform: "translateY(-2px)",
+										boxShadow: "lg"
+									}}
+									transition="all 0.2s"
+								>
+									Regenerate Design
+								</Button>
+							</Flex>
+						)}
 					</Flex>
 				</Box>
 			</Container>
