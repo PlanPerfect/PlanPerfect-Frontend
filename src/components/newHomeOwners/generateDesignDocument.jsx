@@ -1,5 +1,4 @@
-import { Box, Button, Flex, Heading, Text, VStack } from "@chakra-ui/react";
-import { IoSparkles } from "react-icons/io5";
+import { Box, Button, Flex, Heading, Spinner, Text, VStack } from "@chakra-ui/react";
 import { useNavigate } from "react-router-dom";
 import { useState } from "react";
 import { useAuth } from "../../contexts/AuthContext";
@@ -10,7 +9,8 @@ function GenerateDesignDocument({ floorPlanFile, preferences, budget, extraction
 	const navigate = useNavigate();
 	const { user } = useAuth();
 	
-	const [isSaving, setIsSaving] = useState(false);
+	const [isSavingChatbot, setIsSavingChatbot] = useState(false);
+	const [isSavingDocument, setIsSavingDocument] = useState(false);
 
 	function base64ToFile(base64, filename) {
 		const arr = base64.split(",");
@@ -62,8 +62,6 @@ function GenerateDesignDocument({ floorPlanFile, preferences, budget, extraction
 	
 	const saveUserInputToDatabase = async () => {
 		try {
-			setIsSaving(true);
-
 			const formData = new FormData();
 			
 			// Add floor plan file
@@ -103,12 +101,9 @@ function GenerateDesignDocument({ floorPlanFile, preferences, budget, extraction
 			}
 
 			console.log("Save successful:", response.data);
-			setIsSaving(false);
 			return true;
 		} catch (error) {
 			console.error("Save user input error:", error);
-			setIsSaving(false);
-			
 			ShowToast("error", "Failed to save your inputs", "Please try again");
 			
 			return false;
@@ -116,22 +111,31 @@ function GenerateDesignDocument({ floorPlanFile, preferences, budget, extraction
 	};
 
 	const handleNavigateToChatbot = async () => {
+		setIsSavingChatbot(true);
+		
 		const saved = await saveUserInputToDatabase();
 		
 		if (saved) {
 			navigate("/lumen/chat");
+		} else {
+			setIsSavingChatbot(false);
 		}
 	};
 
 	const handleNavigateToDesignDocument = async () => {
+		setIsSavingDocument(true);
+		
 		const saved = await saveUserInputToDatabase();
-
-		console.log("Save user input result before navigating to design document:", saved);
 		
 		if (saved) {
 			navigate("/designDocument");
+		} else {
+			setIsSavingDocument(false);
 		}
 	};
+
+	// Check if any save operation is in progress
+	const isAnySaving = isSavingChatbot || isSavingDocument;
 
 	return (
 		<Box w="100%" pt={10}>
@@ -237,16 +241,22 @@ function GenerateDesignDocument({ floorPlanFile, preferences, budget, extraction
 					size="xl"
 					bg="#D4AF37"
 					color="white"
-					_hover={{ bg: "#C9A961" }}
+					_hover={{ bg: isAnySaving ? "#D4AF37" : "#C9A961" }}
 					w="100%"
 					h="60px"
 					fontSize="lg"
-					leftIcon={<IoSparkles />}
 					onClick={handleNavigateToChatbot}
-					isLoading={isSaving}
-					loadingText="Saving your inputs..."
+					disabled={isAnySaving}
+					cursor={isAnySaving ? "not-allowed" : "pointer"}
 				>
-					Chat with our chatbot to get a more cohesive report
+					{isSavingChatbot ? (
+						<Flex align="center" gap={2}>
+							<Spinner size="sm" />
+							<Text>Saving your inputs...</Text>
+						</Flex>
+					) : (
+						<Text>Chat with our chatbot to get a more cohesive report</Text>
+					)}
 				</Button>
 
 				{/* Skip & Generate Button - SECONDARY */}
@@ -256,17 +266,22 @@ function GenerateDesignDocument({ floorPlanFile, preferences, budget, extraction
 					borderColor="#D4AF37"
 					color="#D4AF37"
 					bg="transparent"
-					_hover={{ bg: "yellow.50" }}
+					_hover={{ bg: isAnySaving ? "transparent" : "yellow.50" }}
 					onClick={handleNavigateToDesignDocument}
-					disabled={!floorPlanFile}
-					isLoading={isSaving}
-					loadingText="Saving your inputs..."
-					leftIcon={<IoSparkles />}
+					disabled={!floorPlanFile || isAnySaving}
+					cursor={!floorPlanFile || isAnySaving ? "not-allowed" : "pointer"}
 					w="100%"
 					h="60px"
 					fontSize="lg"
 				>
-					Skip and generate design document now
+					{isSavingDocument ? (
+						<Flex align="center" gap={2}>
+							<Spinner size="sm" />
+							<Text>Saving your inputs...</Text>
+						</Flex>
+					) : (
+						<Text>Skip and generate design document now</Text>
+					)}
 				</Button>
 
 				<Text fontSize="xs" color="gray.500" textAlign="center">
