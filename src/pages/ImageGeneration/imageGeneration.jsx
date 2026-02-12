@@ -23,7 +23,7 @@ function ImageGeneration() {
 	const [generationError, setGenerationError] = useState(null);
 	const [isRestoredImage, setIsRestoredImage] = useState(false);
 	
-	// NEW: State for regeneration UI
+	// State for regeneration UI
 	const [showRegenerateInput, setShowRegenerateInput] = useState(false);
 
 	// Ref for scrolling to images section
@@ -53,11 +53,9 @@ function ImageGeneration() {
 		"Boho"
 	];
 
-	// ================================
 	// Eagerly restore generated image from sessionStorage
 	// Runs as soon as user is available, before fetchUserData completes,
 	// so the results view renders immediately on back-navigation
-	// ================================
 	useEffect(() => {
 		if (!user) return;
 		const savedImage = sessionStorage.getItem(`generatedImage_${user.uid}`);
@@ -67,9 +65,7 @@ function ImageGeneration() {
 		}
 	}, [user]);
 
-	// ================================
 	// Fetch data from database on mount
-	// ================================
 	useEffect(() => {
 		const fetchUserData = async () => {
 			if (!user) {
@@ -125,9 +121,7 @@ function ImageGeneration() {
 		fetchUserData();
 	}, [user]);
 
-	// ================================
 	// Auto-scroll to images when generated
-	// ================================
 	useEffect(() => {
 		if (generatedImage && imagesSectionRef.current && !isRestoredImage) {
 			setTimeout(() => {
@@ -139,9 +133,7 @@ function ImageGeneration() {
 		}
 	}, [generatedImage]);
 
-	// ================================
 	// Generate design handler (initial generation)
-	// ================================
 	const handleGenerateDesign = async () => {
 		setIsGenerating(true);
 		setGenerationError(null);
@@ -173,9 +165,7 @@ function ImageGeneration() {
 		}
 	};
 
-	// ================================
-	// NEW: Regenerate with custom options handler
-	// ================================
+	// Regenerate with custom options handler
 	const handleRegenerateDesign = async ({ prompt, styles }) => {
 		setIsGenerating(true);
 		setGenerationError(null);
@@ -215,9 +205,7 @@ function ImageGeneration() {
 		}
 	};
 
-	// ================================
 	// Toggle regenerate input visibility
-	// ================================
 	const handleShowRegenerateInput = () => {
 		const isOpening = !showRegenerateInput;
 		setShowRegenerateInput(isOpening);
@@ -233,9 +221,7 @@ function ImageGeneration() {
 		}
 	};
 
-	// ================================
 	// Download image handler
-	// ================================
 	const handleDownloadImage = async () => {
 		try {
 			// Fetch the image as a blob
@@ -262,15 +248,12 @@ function ImageGeneration() {
 		}
 	};
 
-	// ================================
 	// Loading state
-	// ================================
 	if (isLoading) {
 		return (
 			<>
 				{/* Background */}
-				<Box
-					style={{
+				<Box style={{
 						position: "fixed", 
 						top: 0, 
 						left: 0, 
@@ -302,15 +285,12 @@ function ImageGeneration() {
 		);
 	}
 
-	// ================================
 	// Error state
-	// ================================
 	if (loadError) {
 		return (
 			<>
 				{/* Background */}
-				<Box
-					style={{
+				<Box style={{
 						position: "fixed", 
 						top: 0, 
 						left: 0, 
@@ -325,15 +305,9 @@ function ImageGeneration() {
 				/>
 
 				<Container maxW="6xl" py={8}>
-					<Box 
-						bg="red.50" 
-						border="2px solid" 
-						borderColor="red.400"
-						borderRadius="12px" 
-						p={8}
-						textAlign="center"
-						boxShadow="xl"
-					>
+					<Box bg="red.50" border="2px solid" borderColor="red.400"
+						borderRadius="12px" p={8} textAlign="center"
+						boxShadow="xl">
 						<Text color="red.600" fontWeight="600" fontSize="xl">
 							⚠️ {loadError}
 						</Text>
@@ -343,15 +317,12 @@ function ImageGeneration() {
 		);
 	}
 
-	// ================================
 	// Main content - Before generation
-	// ================================
 	if (!generatedImage) {
 		return (
 			<>
 				{/* Background */}
-				<Box
-					style={{
+				<Box style={{
 						position: "fixed", 
 						top: 0, 
 						left: 0, 
@@ -391,27 +362,16 @@ function ImageGeneration() {
 								</Flex>
 								
 								<Flex justify="center" align="center" flexDirection="column" gap={2}>
-									<Box 
-										bg="#D4AF37" 
-										color="white" 
-										px={8} 
-										py={3}
-										borderRadius="full" 
-										fontSize="xl" 
-										fontWeight="700"
+									<Box bg="#D4AF37" color="white" px={8} py={3}
+										borderRadius="full" fontSize="xl" fontWeight="700"
 									>
 										{analysisResults?.detected_style || 'Unknown'}
 									</Box>
 								</Flex>
 							</Box>
 
-							{/* Selected Design Themes Card */}
-							<Box 
-								border="2px solid #D4AF37" 
-								borderRadius="12px" 
-								p={6} 
-								bg="white"
-								boxShadow="md"
+							<Box border="2px solid #D4AF37" borderRadius="12px" 
+								p={6} bg="white" boxShadow="md"
 							>
 								<Flex align="center" justify="center" gap={3} mb={4}>
 									<FaPalette color="#D4AF37" size={24} />
@@ -423,16 +383,9 @@ function ImageGeneration() {
 								{selectedStyles.length > 0 ? (
 									<Flex justify="center" align="center" gap={3} flexWrap="wrap">
 										{selectedStyles.map((style, index) => (
-											<Box 
-												key={index} 
-												bg="#F4E5B2" 
-												color="#8B7355" 
-												px={6} 
-												py={3}
-												borderRadius="full" 
-												fontSize="lg" 
-												fontWeight="600" 
-												border="2px solid #D4AF37"
+											<Box key={index} bg="#F4E5B2" color="#8B7355" 
+												px={6} py={3} borderRadius="full" fontSize="lg" 
+												fontWeight="600" border="2px solid #D4AF37"
 											>
 												{style}
 											</Box>
@@ -458,16 +411,9 @@ function ImageGeneration() {
 										Your Room
 									</Heading>
 									<Flex justify="center">
-										<Image
-											src={originalImageUrl}
-											borderRadius="12px"
-											boxShadow="lg"
-											maxW="380px"
-											maxH="450px"
-											w="100%"
-											h="auto"
-											objectFit="cover"
-											border="2px solid #E2E8F0"
+										<Image src={originalImageUrl} borderRadius="12px"
+											boxShadow="lg" maxW="380px" maxH="450px" w="100%"
+											h="auto" objectFit="cover" border="2px solid #E2E8F0"
 										/>
 									</Flex>
 								</Box>
@@ -475,11 +421,8 @@ function ImageGeneration() {
 
 							{/* Generating State */}
 							{isGenerating && (
-								<Box 
-									border="2px solid #D4AF37" 
-									borderRadius="12px" 
-									p={8} 
-									bg="#FFFDF7"
+								<Box border="2px solid #D4AF37" borderRadius="12px" 
+									p={8} bg="#FFFDF7"
 								>
 									<Flex direction="column" align="center" gap={4}>
 										<Spinner size="xl" color="#D4AF37" thickness="4px" speed="0.65s" />
@@ -497,24 +440,17 @@ function ImageGeneration() {
 							{/* Generate Button */}
 							{selectedStyles.length > 0 && !isGenerating && (
 								<Flex justify="center" mt={4}>
-									<Button 
-										onClick={handleGenerateDesign} 
-										size="xl" 
+									<Button onClick={handleGenerateDesign} size="xl" 
 										borderRadius="md" 
 										bg="linear-gradient(135deg, #D4AF37 0%, #C9A961 100%)"
-										color="white" 
-										px={16} 
-										py={7} 
-										fontSize="xl" 
-										fontWeight="700"
-										leftIcon={<FaWandMagicSparkles />}
+										color="white" px={16} py={7} fontSize="xl" 
+										fontWeight="700" leftIcon={<FaWandMagicSparkles />}
 										_hover={{
 											bg: "linear-gradient(135deg, #C9A961 0%, #B8984D 100%)",
 											transform: "translateY(-2px)",
 											boxShadow: "xl",
 										}}
-										transition="all 0.2s"
-										boxShadow="lg"
+										transition="all 0.2s" boxShadow="lg"
 									>
 										Generate Design ✨
 									</Button>
@@ -527,14 +463,11 @@ function ImageGeneration() {
 		);
 	}
 
-	// ================================
 	// After generation - Results view
-	// ================================
 	return (
 		<>
 			{/* Background */}
-			<Box
-				style={{
+			<Box style={{
 					position: "fixed", 
 					top: 0, 
 					left: 0, 
@@ -560,12 +493,8 @@ function ImageGeneration() {
 					<Flex direction="column" gap={6}>
 						{/* Applied Styles Card */}
 						{selectedStyles.length > 0 && (
-							<Box 
-								border="2px solid #D4AF37" 
-								borderRadius="12px" 
-								p={6} 
-								bg="white"
-								boxShadow="md"
+							<Box border="2px solid #D4AF37" borderRadius="12px" 
+								p={6} bg="white" boxShadow="md"
 							>
 								<Flex align="center" justify="center" gap={3} mb={4}>
 									<FaPalette color="#D4AF37" size={24} />
@@ -576,15 +505,9 @@ function ImageGeneration() {
 								
 								<Flex justify="center" align="center" gap={3} flexWrap="wrap">
 									{selectedStyles.map((style, index) => (
-										<Box 
-											key={index} 
-											bg="#F4E5B2" 
-											color="#8B7355" 
-											px={6} 
-											py={3}
-											borderRadius="full" 
-											fontSize="lg" 
-											fontWeight="600" 
+										<Box key={index} bg="#F4E5B2" color="#8B7355" 
+											px={6} py={3} borderRadius="full" 
+											fontSize="lg" fontWeight="600" 
 											border="2px solid #D4AF37"
 										>
 											{style}
@@ -595,13 +518,10 @@ function ImageGeneration() {
 						)}
 
 						{/* Image Comparison Card */}
-						<Box 
-							ref={imagesSectionRef}
+						<Box ref={imagesSectionRef}
 							border="2px solid #D4AF37" 
-							borderRadius="12px" 
-							p={6} 
-							bg="white"
-							boxShadow="md"
+							borderRadius="12px" p={6} 
+							bg="white" boxShadow="md"
 						>
 							<Heading size="md" textAlign="center" mb={6} color="gray.700">
 								Before & After Transformation
@@ -610,40 +530,23 @@ function ImageGeneration() {
 							<Flex gap={4} justify="center" align="start" flexWrap={{ base: "wrap", md: "nowrap" }}>
 								{/* Original Image */}
 								<Box flex="1" minW={{ base: "100%", md: "250px" }} maxW="380px">
-									<Text 
-										fontSize="lg" 
-										fontWeight="600" 
-										mb={3} 
-										textAlign="center" 
-										color="gray.600"
-										bg="gray.100"
-										py={2}
-										borderRadius="md"
+									<Text fontSize="lg" fontWeight="600" mb={3} 
+										textAlign="center" color="gray.600" bg="gray.100"
+										py={2} borderRadius="md"
 									>
 										📸 Original Room
 									</Text>
 									{originalImageUrl ? (
-										<Image
-											src={originalImageUrl}
-											borderRadius="12px"
-											boxShadow="lg"
-											w="100%"
-											h="auto"
-											maxH="450px"
-											objectFit="cover"
+										<Image src={originalImageUrl} borderRadius="12px"
+											boxShadow="lg" w="100%" h="auto"
+											maxH="450px" objectFit="cover"
 											border="2px solid #E2E8F0"
 										/>
 									) : (
-										<Box 
-											borderRadius="12px" 
-											boxShadow="lg" 
-											bg="gray.100" 
-											p={8} 
-											textAlign="center"
-											minH="300px"
-											display="flex"
-											alignItems="center"
-											justifyContent="center"
+										<Box borderRadius="12px" boxShadow="lg" 
+											bg="gray.100" p={8} textAlign="center"
+											minH="300px" display="flex"
+											alignItems="center" justifyContent="center"
 										>
 											<Text color="gray.500">
 												No original image available
@@ -654,27 +557,16 @@ function ImageGeneration() {
 
 								{/* Generated Image */}
 								<Box flex="1" minW={{ base: "100%", md: "250px" }} maxW="380px">
-									<Text 
-										fontSize="lg" 
-										fontWeight="600" 
-										mb={3} 
-										textAlign="center" 
-										color="white"
+									<Text fontSize="lg" fontWeight="600" mb={3} 
+										textAlign="center" color="white"
 										bg="linear-gradient(135deg, #D4AF37 0%, #C9A961 100%)"
-										py={2}
-										borderRadius="md"
+										py={2} borderRadius="md"
 									>
 										✨ AI Generated Design
 									</Text>
-									<Image
-										src={generatedImage}
-										borderRadius="12px"
-										boxShadow="2xl"
-										border="3px solid #D4AF37"
-										w="100%"
-										h="auto"
-										maxH="450px"
-										objectFit="cover"
+									<Image src={generatedImage} borderRadius="12px"
+										boxShadow="2xl" border="3px solid #D4AF37"
+										w="100%" h="auto" maxH="450px" objectFit="cover"
 									/>
 								</Box>
 							</Flex>
@@ -682,13 +574,8 @@ function ImageGeneration() {
 
 						{/* Error Display */}
 						{generationError && (
-							<Box 
-								bg="red.50" 
-								border="2px solid" 
-								borderColor="red.400"
-								borderRadius="12px" 
-								p={4} 
-								textAlign="center"
+							<Box bg="red.50" border="2px solid" borderColor="red.400"
+								borderRadius="12px" p={4} textAlign="center"
 							>
 								<Text color="red.600" fontWeight="600">
 									⚠️ {generationError}
@@ -696,7 +583,7 @@ function ImageGeneration() {
 							</Box>
 						)}
 
-						{/* NEW: Regenerate Input Section */}
+						{/* Regenerate Input Section */}
 						{showRegenerateInput && !isGenerating && (
 							<Box ref={regenerateInputRef}>
 								<RegenerateDesignInput
@@ -711,11 +598,8 @@ function ImageGeneration() {
 
 						{/* Regenerating State */}
 						{isGenerating && (
-							<Box 
-								border="2px solid #D4AF37" 
-								borderRadius="12px" 
-								p={8} 
-								bg="#FFFDF7"
+							<Box border="2px solid #D4AF37" borderRadius="12px" 
+								p={8} bg="#FFFDF7"
 							>
 								<Flex direction="column" align="center" gap={4}>
 									<Spinner size="xl" color="#D4AF37" thickness="4px" speed="0.65s" />
@@ -744,21 +628,13 @@ function ImageGeneration() {
 								</Box>
 
 								{/* Two Path Options */}
-								<Flex 
-									direction={{ base: "column", md: "row" }} 
-									gap={6} 
-									justify="center" 
-									align="stretch"
+								<Flex direction={{ base: "column", md: "row" }} gap={6} 
+									justify="center" align="stretch"
 								>
 									{/* Happy Path - Left Side */}
-									<Box 
-										flex="1"
-										maxW={{ base: "100%", md: "400px" }}
-										border="2px solid #10B981"
-										borderRadius="12px"
-										p={6}
-										bg="#F0FDF4"
-										textAlign="center"
+									<Box flex="1" maxW={{ base: "100%", md: "400px" }}
+										border="2px solid #10B981" borderRadius="12px"
+										p={6} bg="#F0FDF4" textAlign="center"
 									>
 										<Text fontSize="4xl" mb={3}>😊</Text>
 										<Heading size="md" color="#059669" mb={4}>
@@ -769,16 +645,10 @@ function ImageGeneration() {
 										</Text>
 										
 										<Flex direction="column" gap={3}>
-											<Button 
-												onClick={handleDownloadImage}
-												size="lg" 
-												bg="green.500" 
-												color="white"
-												w="100%"
-												py={6}
-												fontSize="md"
-												fontWeight="700"
-												borderRadius="md"
+											<Button onClick={handleDownloadImage}
+												size="lg" bg="green.500" color="white"
+												w="100%" py={6} fontSize="md"
+												fontWeight="700" borderRadius="md"
 												leftIcon={<Text fontSize="xl">📥</Text>}
 												_hover={{ 
 													bg: "green.600",
@@ -790,16 +660,10 @@ function ImageGeneration() {
 												Download Image
 											</Button>
 											
-											<Button
-												onClick={() => window.location.href = '/lumen/chat'}
-												size="lg"
+											<Button onClick={() => window.location.href = '/lumen/chat'}
+												size="lg" color="white" w="100%" py={6} fontSize="md"
 												bg="linear-gradient(135deg, #3B82F6 0%, #2563EB 100%)"
-												color="white"
-												w="100%"
-												py={6}
-												fontSize="md"
-												fontWeight="700"
-												borderRadius="md"
+												fontWeight="700" borderRadius="md"
 												leftIcon={<Text fontSize="xl">💬</Text>}
 												_hover={{ 
 													bg: "linear-gradient(135deg, #2563EB 0%, #1D4ED8 100%)",
@@ -814,14 +678,9 @@ function ImageGeneration() {
 									</Box>
 
 									{/* Unhappy Path - Right Side */}
-									<Box 
-										flex="1"
-										maxW={{ base: "100%", md: "400px" }}
-										border="2px solid #D4AF37"
-										borderRadius="12px"
-										p={6}
-										bg="#FFFDF7"
-										textAlign="center"
+									<Box flex="1" maxW={{ base: "100%", md: "400px" }}
+										border="2px solid #D4AF37" borderRadius="12px"
+										p={6} bg="#FFFDF7" textAlign="center"
 									>
 										<Text fontSize="4xl" mb={3}>🤔</Text>
 										<Heading size="md" color="#D4AF37" mb={4}>
@@ -831,17 +690,10 @@ function ImageGeneration() {
 											No problem! Customize the design or try a different style
 										</Text>
 										
-										<Button
-											onClick={handleShowRegenerateInput}
-											size="lg"
+										<Button onClick={handleShowRegenerateInput} size="lg"
 											bg="linear-gradient(135deg, #D4AF37 0%, #C9A961 100%)"
-											color="white"
-											w="100%"
-											py={6}
-											fontSize="md"
-											fontWeight="700"
-											borderRadius="md"
-											leftIcon={<FaWandMagicSparkles />}
+											color="white" w="100%" py={6} fontSize="md" fontWeight="700"
+											borderRadius="md" leftIcon={<FaWandMagicSparkles />}
 											_hover={{ 
 												bg: "linear-gradient(135deg, #C9A961 0%, #B8984D 100%)",
 												transform: "translateY(-2px)",

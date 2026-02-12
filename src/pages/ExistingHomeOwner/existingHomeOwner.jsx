@@ -162,22 +162,11 @@ function ExistingHomeOwner() {
 			{/* Action Steps */}
 			<Box pb={20} px={8}>
 				<Steps.RootProvider value={steps} colorPalette="yellow">
-					<Box
-						w="75%"
-						h="150px"
-						mb={-12}
-						mt={-20}
-						mx="auto"
-						textAlign="center"
-						boxShadow="0 4px 10px rgba(0, 0, 0, 0.15)"
-						borderRadius="10px"
-						bgColor="#F0F0F0"
-						zIndex={1}
-						position="relative"
-						display="flex"
-						alignItems="center"
-						justifyContent="center"
-						px={8}
+					<Box w="75%" h="150px" mb={-12} mt={-20} mx="auto"
+						textAlign="center" boxShadow="0 4px 10px rgba(0, 0, 0, 0.15)"
+						borderRadius="10px" bgColor="#F0F0F0"
+						zIndex={1} position="relative" display="flex"
+						alignItems="center" justifyContent="center" px={8}
 					>
 						<Steps.List display="flex" gap={0} alignItems="center" justifyContent="space-between" w="100%">
 							{items.map((item, index) => (
@@ -199,23 +188,11 @@ function ExistingHomeOwner() {
 							))}
 						</Steps.List>
 					</Box>
-					<Box
-						w="80%"
-						mx="auto"
-						textAlign="center"
-						borderRadius="10px"
-						zIndex={0}
-						position="relative"
-						px={6}
-						py={12}
-						mt={-11}
-						display="flex"
-						flexDirection="column"
-						alignItems="center"
-						justifyContent="center"
+					<Box w="80%" mx="auto" textAlign="center" borderRadius="10px" zIndex={0}
+						position="relative" px={6} py={12} mt={-11} display="flex"
+						flexDirection="column" alignItems="center" justifyContent="center"
 						boxShadow="2px 2px 1px 1px rgba(0, 0, 0, 0.10), 0px 0px 2px 1px rgba(0, 0, 0, 0.10)"
-						minH="600px"
-						bg="white"
+						minH="600px" bg="white"
 					>
 						<Box flex="1" display="flex" alignItems="center" justifyContent="center" w="100%">
 							{items.map((item, index) => (
@@ -230,10 +207,7 @@ function ExistingHomeOwner() {
 							<Flex justify="center" gap={4} mt={6}>
 								{steps.value > 0 && (
 									<Steps.PrevTrigger asChild>
-										<Button
-											size="xl"
-											borderRadius="md"
-											bg="gray.300"
+										<Button size="xl" borderRadius="md" bg="gray.300"
 											color="black"
 											_hover={{ bg: "gray.400" }}
 										>
@@ -243,11 +217,7 @@ function ExistingHomeOwner() {
 								)}
 								{steps.value < 4 && (
 									<Steps.NextTrigger asChild>
-										<Button
-											size="xl"
-											borderRadius="md"
-											bg="#D4AF37"
-											color="white"
+										<Button size="xl" borderRadius="md" bg="#D4AF37" color="white" 
 											disabled={isNextDisabled}
 											_hover={{
 												bg: isNextDisabled ? "#D4AF37" : "#C9A961",

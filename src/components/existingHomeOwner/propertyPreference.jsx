@@ -94,14 +94,8 @@ function PropertyPreferences({ onPreferencesChange }) {
 				<Box px={8}>
 					{/* Display Selected Range */}
 					<Flex justify="center" mb={6}>
-						<Box 
-							bg="#D4AF37" 
-							color="white" 
-							px={8} 
-							py={4} 
-							borderRadius="full"
-							fontSize="xl"
-							fontWeight="700"
+						<Box bg="#D4AF37" color="white" px={8} py={4} 
+							borderRadius="full" fontSize="xl" fontWeight="700"
 							boxShadow="md"
 						>
 							{formatCurrency(budgetValue[0])} - {formatCurrency(budgetValue[1])}

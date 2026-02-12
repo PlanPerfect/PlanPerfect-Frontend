@@ -70,12 +70,8 @@ function PreviewSelections({
 			</Text>
 			<Flex direction="column" gap={6}>
 				{/* Property Preferences Card */}
-				<Box 
-					border="2px solid #D4AF37" 
-					borderRadius="12px" 
-					p={6} 
-					bg="white"
-					boxShadow="md"
+				<Box border="2px solid #D4AF37" borderRadius="12px" 
+					p={6} bg="white" boxShadow="md"
 				>
 					<Flex align="center" justify="center" gap={3} mb={4}>
 						<FaHome color="#D4AF37" size={24} />
@@ -105,13 +101,7 @@ function PreviewSelections({
 					</Flex>
 				</Box>
 				{/* AI-Detected Style Card */}
-				<Box 
-					border="2px solid #D4AF37" 
-					borderRadius="12px" 
-					p={6} 
-					bg="white"
-					boxShadow="md"
-				>
+				<Box border="2px solid #D4AF37" borderRadius="12px" p={6} bg="white" boxShadow="md">
 					<Flex align="center" justify="center" gap={3} mb={4}>
 						<FaPaintBrush color="#D4AF37" size={24} />
 						<Heading size="lg" color="#D4AF37">
@@ -120,26 +110,16 @@ function PreviewSelections({
 					</Flex>
 					
 					<Flex justify="center" align="center" flexDirection="column" gap={2}>
-						<Box 
-							bg="#D4AF37" 
-							color="white" 
-							px={8} 
-							py={3}
-							borderRadius="full" 
-							fontSize="xl" 
-							fontWeight="700"
+						<Box bg="#D4AF37" color="white" px={8} py={3}
+							borderRadius="full" fontSize="xl" fontWeight="700"
 						>
 							{analysisResults?.detected_style || 'Unknown'}
 						</Box>
 					</Flex>
 				</Box>
 				{/* Selected Design Themes Card */}
-				<Box 
-					border="2px solid #D4AF37" 
-					borderRadius="12px" 
-					p={6} 
-					bg="white"
-					boxShadow="md"
+				<Box border="2px solid #D4AF37" borderRadius="12px" p={6} 
+					bg="white" boxShadow="md"
 				>
 					<Flex align="center" justify="center" gap={3} mb={4}>
 						<FaPalette color="#D4AF37" size={24} />
@@ -151,16 +131,9 @@ function PreviewSelections({
 					{selectedStyles && selectedStyles.length > 0 ? (
 						<Flex justify="center" align="center" gap={3} flexWrap="wrap">
 							{selectedStyles.map((style, index) => (
-								<Box 
-									key={index} 
-									bg="#F4E5B2" 
-									color="#8B7355" 
-									px={6} 
-									py={3}
-									borderRadius="full" 
-									fontSize="lg" 
-									fontWeight="600" 
-									border="2px solid #D4AF37"
+								<Box key={index}  bg="#F4E5B2" color="#8B7355" 
+									px={6} py={3} borderRadius="full" fontSize="lg" 
+									fontWeight="600" border="2px solid #D4AF37"
 								>
 									{style}
 								</Box>
@@ -173,12 +146,8 @@ function PreviewSelections({
 					)}
 				</Box>
 				{/* Call to Action Card */}
-				<Box 
-					border="2px solid #4299E1" 
-					borderRadius="12px" 
-					p={6} 
-					bg="#EBF8FF"
-					boxShadow="md"
+				<Box border="2px solid #4299E1" borderRadius="12px" 
+					p={6} bg="#EBF8FF" boxShadow="md"
 				>
 					<Flex align="center" justify="center" gap={3} mb={3}>
 						<FaCheckCircle color="#4299E1" size={24} />
@@ -189,13 +158,8 @@ function PreviewSelections({
 				</Box>
 				{/* Error Display */}
 				{saveError && (
-					<Box 
-						bg="red.50" 
-						border="2px solid" 
-						borderColor="red.400" 
-						borderRadius="12px" 
-						p={4}
-						textAlign="center"
+					<Box bg="red.50" border="2px solid" borderColor="red.400" 
+						borderRadius="12px" p={4} textAlign="center"
 					>
 						<Text color="red.600" fontWeight="600">
 							⚠️ {saveError}
@@ -205,17 +169,9 @@ function PreviewSelections({
 				{/* Action Buttons */}
 				<Flex justify="center" mt={4} gap={4}>
 					{onBack && (
-						<Button 
-							onClick={onBack}
-							size="xl" 
-							borderRadius="md" 
-							bg="gray.300"
-							color="black" 
-							px={12} 
-							py={7} 
-							fontSize="xl" 
-							fontWeight="700"
-							leftIcon={<FaArrowLeft />}
+						<Button onClick={onBack} size="xl" borderRadius="md" 
+							bg="gray.300" color="black" px={12} py={7} 
+							fontSize="xl" fontWeight="700" leftIcon={<FaArrowLeft />}
 							_hover={{
 								bg: "gray.400",
 								transform: "translateY(-2px)",
@@ -226,19 +182,11 @@ function PreviewSelections({
 							Back
 						</Button>
 					)}
-					<Button 
-						onClick={handleProceedToGeneration}
+					<Button onClick={handleProceedToGeneration}
 						isDisabled={!selectedStyles || selectedStyles.length === 0}
-						isLoading={isSaving}
-						loadingText="Saving..."
-						size="xl" 
-						borderRadius="md" 
-						bg="#D4AF37"
-						color="white" 
-						px={16} 
-						py={7} 
-						fontSize="xl" 
-						fontWeight="700"
+						isLoading={isSaving} loadingText="Saving..."
+						size="xl" borderRadius="md" bg="#D4AF37"
+						color="white" px={16} py={7} fontSize="xl" fontWeight="700"
 						_hover={{
 							bg: "#C9A961",
 							transform: "translateY(-2px)",
