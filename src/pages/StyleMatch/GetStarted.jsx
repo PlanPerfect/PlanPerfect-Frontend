@@ -83,41 +83,38 @@ function GetStarted() {
 				}
 			});
 
-			ShowToast(null, null, null, {
-				promise: preferencesPromise,
-				success: (data) => ({
-					title: "Welcome to StyleMatch!",
+			try {
+				const data = await preferencesPromise;
+
+				ShowToast("success", "Welcome to StyleMatch!", null, {
 					duration: 3000
-				}),
-				error: (error) => {
-					if (error.message === "NO_PREFERENCES") {
-						// Show info toast with action button
-						setTimeout(() => {
-							ShowToast("info", "Please complete the Existing Homeowner service first to set your style preferences.", null, {
-								action: {
-									label: "Take me there",
-									onClick: () => navigate("/existinghomeowner")
-								},
-								duration: 6000
-							});
-						}, 100);
-						return null; // Return null to suppress the error toast from the promise
-					}
-
-					let errorTitle = "Failed to load preferences";
-					if (error.message?.startsWith("UERROR: ")) {
-						errorTitle = error.message.substring("UERROR: ".length);
-					} else if (error.message?.startsWith("ERROR: ")) {
-						errorTitle = error.message.substring("ERROR: ".length);
-					} else if (error.message) {
-						errorTitle = error.message;
-					}
-
-					return {
-						title: errorTitle
-					};
+				});
+			} catch (error) {
+				if (error.message === "NO_PREFERENCES") {
+					setTimeout(() => {
+						ShowToast("info", "Let us analyse your room style first.", null, {
+							action: {
+								label: "Take me there",
+								onClick: () => navigate("/existinghomeowner")
+							},
+							duration: 6000
+						});
+					}, 100);
+					return;
 				}
-			});
+
+				let errorTitle = "Failed to load preferences";
+
+				if (error.message?.startsWith("UERROR: ")) {
+					errorTitle = error.message.substring("UERROR: ".length);
+				} else if (error.message?.startsWith("ERROR: ")) {
+					errorTitle = error.message.substring("ERROR: ".length);
+				} else if (error.message) {
+					errorTitle = error.message;
+				}
+
+				ShowToast("error", errorTitle);
+			}
 		};
 
 		fetchPreferences();
@@ -166,11 +163,11 @@ function GetStarted() {
 					timeout: 300000
 				});
 
-				console.log(data)
+				console.log(data);
 
 				if (data.detections && data.detections.length > 0) {
 					const items = data.detections.map(item => {
-						const imageUrl = item.url
+						const imageUrl = item.url;
 
 						const capitalizedName = item.class
 							? item.class
@@ -283,7 +280,7 @@ function GetStarted() {
 	const MotionCard = motion.create(Card.Root);
 	const MotionBox = motion.create(Box);
 
-	if ((roomImage !== null) && (roomStyle !== null)) {
+	if (roomImage !== null && roomStyle !== null) {
 		return (
 			<>
 				<Box
@@ -512,7 +509,7 @@ function GetStarted() {
 					zIndex: -1
 				}}
 			/>
-		)
+		);
 	}
 }
 

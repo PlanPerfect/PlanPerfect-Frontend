@@ -11,7 +11,7 @@ function AgentPage() {
 	const [messages, setMessages] = useState([
 		{
 			role: "assistant",
-			content: "I'm LumenFlow - your autonomous AI assistant for interior design. I can analyze spaces, generate visualizations, research products, and create comprehensive design plans. What would you like me to help you with?",
+			content: "Welcome to Le'Orchestra. What would you like me to help you with?",
 			timestamp: new Date(),
 			isThinking: false
 		}
@@ -160,7 +160,7 @@ function AgentPage() {
 									fontWeight="700"
 									letterSpacing="-0.02em"
 								>
-									LumenFlow
+									Le'Orchestra
 								</Heading>
 								<Text fontSize={{ base: "xs", md: "sm" }} color="rgba(255, 255, 255, 0.6)">
 									Autonomous Agentic AI Design Assistant
