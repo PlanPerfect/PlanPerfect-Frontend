@@ -2,7 +2,7 @@ import { useState, useLayoutEffect, useEffect } from 'react'
 import { useLocation, useNavigate } from 'react-router-dom'
 import { Box, VStack, SimpleGrid } from '@chakra-ui/react'
 import { Key, Home } from 'lucide-react'
-import ServicesBackground from "../../assets/ServicesBackground.png"
+import LandingBackground from "../../assets/LandingBackground.png"
 import AnimatedHeading from '@/components/Onboarding/AnimatedHeading'
 import AnimatedCard from '@/components/Onboarding/AnimatedCard'
 import ShowToast from '@/Extensions/ShowToast'
@@ -31,7 +31,7 @@ function Services() {
                 left: 0,
                 right: 0,
                 bottom: 0,
-                backgroundImage: `url(${ServicesBackground})`,
+                backgroundImage: `url(${LandingBackground})`,
                 backgroundSize: 'cover',
                 backgroundPosition: 'center',
                 backgroundRepeat: 'no-repeat',
