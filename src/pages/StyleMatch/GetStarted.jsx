@@ -1,12 +1,10 @@
 import { useState, useRef, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
-import { Card, Flex, Heading, Text, Box, Image, Avatar, Grid, IconButton, Carousel, Icon, Popover, Portal } from "@chakra-ui/react";
+import { Card, Flex, Heading, Text, Box, Image, Avatar, Grid, IconButton, Carousel, Icon, Popover } from "@chakra-ui/react";
 import { LuChevronLeft, LuChevronRight } from "react-icons/lu";
 import { RxRocket } from "react-icons/rx";
 import { motion } from "framer-motion";
 import { useAuth } from "../../contexts/AuthContext";
-import StyleMatchBackground from "../../assets/StyleMatchBackground.png";
-import SampleStyleBackground from "../../assets/SampleStyleBackground.png";
 import AnimatedLogo from "@/components/Homepage/AnimatedLogo";
 import GetStartedButton from "@/components/Homepage/GetStartedButton";
 import FindRecommendationsButton from "@/components/StyleMatch/FindReccomendationsButton";
@@ -290,7 +288,7 @@ function GetStarted() {
 						left: 0,
 						right: 0,
 						bottom: 0,
-						backgroundImage: `url(${StyleMatchBackground})`,
+						backgroundImage: `linear-gradient(rgba(0,0,0,0.5), rgba(0,0,0,0.5)),url('/newHomeOwnerHero.png')`,
 						backgroundSize: "cover",
 						backgroundPosition: "center",
 						backgroundRepeat: "no-repeat",
@@ -502,7 +500,7 @@ function GetStarted() {
 					left: 0,
 					right: 0,
 					bottom: 0,
-					backgroundImage: `url(${StyleMatchBackground})`,
+					backgroundImage: `linear-gradient(rgba(0,0,0,0.5), rgba(0,0,0,0.5)),url('/newHomeOwnerHero.png')`,
 					backgroundSize: "cover",
 					backgroundPosition: "center",
 					backgroundRepeat: "no-repeat",
