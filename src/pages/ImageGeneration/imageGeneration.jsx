@@ -1,9 +1,10 @@
-import { Box, Flex, Heading, Text, Button, Spinner, Image, Container, Textarea, VStack } from "@chakra-ui/react";
-import { useState, useEffect } from "react";
+import { Box, Flex, Heading, Text, Button, Spinner, Image, Container } from "@chakra-ui/react";
+import { useState, useEffect, useRef } from "react";
 import { FaPaintBrush, FaPalette } from "react-icons/fa";
 import { FaWandMagicSparkles } from "react-icons/fa6";
 import { useAuth } from "../../contexts/AuthContext";
 import server from "../../../networking";
+import RegenerateDesignInput from "@/components/existingHomeOwner/RegenerateDesignInput";
 
 function ImageGeneration() {
 	const { user } = useAuth();
@@ -16,12 +17,55 @@ function ImageGeneration() {
 	const [loadError, setLoadError] = useState(null);
 	
 	const [isGenerating, setIsGenerating] = useState(false);
+	// Eagerly read sessionStorage so results view renders immediately on back-navigation,
+	// before the async fetchUserData even completes
 	const [generatedImage, setGeneratedImage] = useState(null);
 	const [generationError, setGenerationError] = useState(null);
+	const [isRestoredImage, setIsRestoredImage] = useState(false);
 	
-	// NEW: States for regeneration with custom input
+	// NEW: State for regeneration UI
 	const [showRegenerateInput, setShowRegenerateInput] = useState(false);
-	const [regeneratePrompt, setRegeneratePrompt] = useState("");
+
+	// Ref for scrolling to images section
+	const imagesSectionRef = useRef(null);
+
+	// Ref for scrolling to regenerate input section
+	const regenerateInputRef = useRef(null);
+
+	// Define available styles (matching styleSelector.jsx for consistency)
+	const availableStyles = [
+		"Boutique",
+		"Classical",
+		"Contemporary",
+		"Country",
+		"Electic",
+		"Industrial",
+		"Japanese",
+		"Luxury",
+		"Minimalist",
+		"Modern",
+		"Persian",
+		"Scandinavian",
+		"Vintage",
+		"Wabi Sabi",
+		"Japandi",
+		"Peranakan",
+		"Boho"
+	];
+
+	// ================================
+	// Eagerly restore generated image from sessionStorage
+	// Runs as soon as user is available, before fetchUserData completes,
+	// so the results view renders immediately on back-navigation
+	// ================================
+	useEffect(() => {
+		if (!user) return;
+		const savedImage = sessionStorage.getItem(`generatedImage_${user.uid}`);
+		if (savedImage) {
+			setIsRestoredImage(true);
+			setGeneratedImage(savedImage);
+		}
+	}, [user]);
 
 	// ================================
 	// Fetch data from database on mount
@@ -82,11 +126,26 @@ function ImageGeneration() {
 	}, [user]);
 
 	// ================================
+	// Auto-scroll to images when generated
+	// ================================
+	useEffect(() => {
+		if (generatedImage && imagesSectionRef.current && !isRestoredImage) {
+			setTimeout(() => {
+				imagesSectionRef.current.scrollIntoView({ 
+					behavior: 'smooth', 
+					block: 'start' 
+				});
+			}, 100);
+		}
+	}, [generatedImage]);
+
+	// ================================
 	// Generate design handler (initial generation)
 	// ================================
 	const handleGenerateDesign = async () => {
 		setIsGenerating(true);
 		setGenerationError(null);
+		setIsRestoredImage(false);
 		
 		try {
 			const formData = new FormData();
@@ -101,6 +160,7 @@ function ImageGeneration() {
 			const { url, file_id, filename } = response.data;
 
 			setGeneratedImage(url);
+			sessionStorage.setItem(`generatedImage_${user.uid}`, url);
 		} catch (error) {
 			console.error('Error generating image:', error);
 			setGenerationError(
@@ -114,22 +174,22 @@ function ImageGeneration() {
 	};
 
 	// ================================
-	// NEW: Regenerate with custom prompt handler
+	// NEW: Regenerate with custom options handler
 	// ================================
-	const handleRegenerateWithPrompt = async () => {
-		if (!regeneratePrompt.trim()) {
-			setGenerationError("Please enter what you'd like to change");
-			return;
-		}
-
+	const handleRegenerateDesign = async ({ prompt, styles }) => {
 		setIsGenerating(true);
 		setGenerationError(null);
+		setIsRestoredImage(false);
 		setShowRegenerateInput(false); // Hide input while generating
 		
 		try {
 			const formData = new FormData();
-			formData.append('styles', selectedStyles.join(', '));
-			formData.append('user_prompt', regeneratePrompt.trim());
+			formData.append('styles', styles.join(', '));
+			
+			// Only add prompt if it exists
+			if (prompt) {
+				formData.append('user_prompt', prompt);
+			}
 
 			const response = await server.post('/image/generate', formData, {
 				headers: {
@@ -140,7 +200,8 @@ function ImageGeneration() {
 			const { url, file_id, filename } = response.data;
 
 			setGeneratedImage(url);
-			setRegeneratePrompt(""); // Clear the prompt after successful generation
+			sessionStorage.setItem(`generatedImage_${user.uid}`, url);
+			setSelectedStyles(styles); // Update the selected styles
 		} catch (error) {
 			console.error('Error regenerating image:', error);
 			setGenerationError(
@@ -155,11 +216,21 @@ function ImageGeneration() {
 	};
 
 	// ================================
-	// NEW: Toggle regenerate input visibility
+	// Toggle regenerate input visibility
 	// ================================
 	const handleShowRegenerateInput = () => {
-		setShowRegenerateInput(!showRegenerateInput);
-		setGenerationError(null); // Clear any previous errors
+		const isOpening = !showRegenerateInput;
+		setShowRegenerateInput(isOpening);
+		setGenerationError(null);
+
+		if (isOpening) {
+			setTimeout(() => {
+				regenerateInputRef.current?.scrollIntoView({ 
+					behavior: 'smooth', 
+					block: 'start' 
+				});
+			}, 100);
+		}
 	};
 
 	// ================================
@@ -525,6 +596,7 @@ function ImageGeneration() {
 
 						{/* Image Comparison Card */}
 						<Box 
+							ref={imagesSectionRef}
 							border="2px solid #D4AF37" 
 							borderRadius="12px" 
 							p={6} 
@@ -626,79 +698,14 @@ function ImageGeneration() {
 
 						{/* NEW: Regenerate Input Section */}
 						{showRegenerateInput && !isGenerating && (
-							<Box 
-								border="2px solid #D4AF37" 
-								borderRadius="12px" 
-								p={6} 
-								bg="#FFFDF7"
-								boxShadow="md"
-							>
-								<VStack spacing={4} align="stretch">
-									<Heading size="md" textAlign="center" color="#D4AF37">
-										🎨 Customize Your Design
-									</Heading>
-									<Text textAlign="center" color="gray.600" fontSize="md">
-										Tell us what you'd like to change or add to the design
-									</Text>
-									
-									<Textarea
-										value={regeneratePrompt}
-										onChange={(e) => setRegeneratePrompt(e.target.value)}
-										placeholder="E.g., Make the walls darker blue, add more plants, change the sofa to gray..."
-										size="lg"
-										minH="120px"
-										borderColor="#D4AF37"
-										focusBorderColor="#C9A961"
-										_hover={{ borderColor: "#C9A961" }}
-										fontSize="md"
-									/>
-									
-									<Flex gap={3} justify="center" flexWrap="wrap">
-										<Button
-											onClick={handleRegenerateWithPrompt}
-											size="lg"
-											bg="linear-gradient(135deg, #D4AF37 0%, #C9A961 100%)"
-											color="white"
-											px={8}
-											py={6}
-											fontSize="md"
-											fontWeight="700"
-											borderRadius="md"
-											leftIcon={<FaWandMagicSparkles />}
-											_hover={{ 
-												bg: "linear-gradient(135deg, #C9A961 0%, #B8984D 100%)",
-												transform: "translateY(-2px)",
-												boxShadow: "lg"
-											}}
-											transition="all 0.2s"
-											isDisabled={!regeneratePrompt.trim()}
-										>
-											Generate with Changes
-										</Button>
-										<Button
-											onClick={() => {
-												setShowRegenerateInput(false);
-												setRegeneratePrompt("");
-											}}
-											size="lg"
-											variant="outline"
-											borderColor="#D4AF37"
-											color="#D4AF37"
-											px={8}
-											py={6}
-											fontSize="md"
-											fontWeight="600"
-											borderRadius="md"
-											_hover={{ 
-												bg: "#FFFDF7",
-												borderColor: "#C9A961",
-												color: "#C9A961"
-											}}
-										>
-											Cancel
-										</Button>
-									</Flex>
-								</VStack>
+							<Box ref={regenerateInputRef}>
+								<RegenerateDesignInput
+									onRegenerate={handleRegenerateDesign}
+									onCancel={() => setShowRegenerateInput(false)}
+									currentStyles={selectedStyles}
+									availableStyles={availableStyles}
+									isLoading={isGenerating}
+								/>
 							</Box>
 						)}
 
@@ -723,49 +730,130 @@ function ImageGeneration() {
 							</Box>
 						)}
 
-						{/* Action Buttons */}
-						{!isGenerating && (
-							<Flex justify="center" gap={4} flexWrap="wrap" mt={4}>
-								<Button 
-									onClick={handleDownloadImage}
-									size="xl" 
-									bg="green.500" 
-									color="white"
-									px={12}
-									py={6}
-									fontSize="lg"
-									fontWeight="700"
-									borderRadius="md"
-									_hover={{ 
-										bg: "green.600",
-										transform: "translateY(-2px)",
-										boxShadow: "lg"
-									}}
-									transition="all 0.2s"
+						{/* Action Buttons - New Flow */}
+						{!isGenerating && !showRegenerateInput && (
+							<Box>
+								{/* Satisfaction Question */}
+								<Box textAlign="center" mb={6}>
+									<Heading size="lg" color="gray.700" mb={2}>
+										How do you feel about this design?
+									</Heading>
+									<Text color="gray.600" fontSize="md">
+										Let us know so we can help you with the next steps
+									</Text>
+								</Box>
+
+								{/* Two Path Options */}
+								<Flex 
+									direction={{ base: "column", md: "row" }} 
+									gap={6} 
+									justify="center" 
+									align="stretch"
 								>
-									📥 Download Image
-								</Button>
-								<Button
-									onClick={handleShowRegenerateInput}
-									size="xl"
-									bg="linear-gradient(135deg, #D4AF37 0%, #C9A961 100%)"
-									color="white"
-									px={12}
-									py={6}
-									fontSize="lg"
-									fontWeight="700"
-									borderRadius="md"
-									leftIcon={<FaWandMagicSparkles />}
-									_hover={{ 
-										bg: "linear-gradient(135deg, #C9A961 0%, #B8984D 100%)",
-										transform: "translateY(-2px)",
-										boxShadow: "lg"
-									}}
-									transition="all 0.2s"
-								>
-									{showRegenerateInput ? "Hide Options" : "Regenerate Design"}
-								</Button>
-							</Flex>
+									{/* Happy Path - Left Side */}
+									<Box 
+										flex="1"
+										maxW={{ base: "100%", md: "400px" }}
+										border="2px solid #10B981"
+										borderRadius="12px"
+										p={6}
+										bg="#F0FDF4"
+										textAlign="center"
+									>
+										<Text fontSize="4xl" mb={3}>😊</Text>
+										<Heading size="md" color="#059669" mb={4}>
+											Love It!
+										</Heading>
+										<Text fontSize="sm" color="gray.600" mb={6}>
+											Download your design and chat with our AI assistant to bring it to life
+										</Text>
+										
+										<Flex direction="column" gap={3}>
+											<Button 
+												onClick={handleDownloadImage}
+												size="lg" 
+												bg="green.500" 
+												color="white"
+												w="100%"
+												py={6}
+												fontSize="md"
+												fontWeight="700"
+												borderRadius="md"
+												leftIcon={<Text fontSize="xl">📥</Text>}
+												_hover={{ 
+													bg: "green.600",
+													transform: "translateY(-2px)",
+													boxShadow: "lg"
+												}}
+												transition="all 0.2s"
+											>
+												Download Image
+											</Button>
+											
+											<Button
+												onClick={() => window.location.href = '/lumen/chat'}
+												size="lg"
+												bg="linear-gradient(135deg, #3B82F6 0%, #2563EB 100%)"
+												color="white"
+												w="100%"
+												py={6}
+												fontSize="md"
+												fontWeight="700"
+												borderRadius="md"
+												leftIcon={<Text fontSize="xl">💬</Text>}
+												_hover={{ 
+													bg: "linear-gradient(135deg, #2563EB 0%, #1D4ED8 100%)",
+													transform: "translateY(-2px)",
+													boxShadow: "lg"
+												}}
+												transition="all 0.2s"
+											>
+												Chat with Lumen AI
+											</Button>
+										</Flex>
+									</Box>
+
+									{/* Unhappy Path - Right Side */}
+									<Box 
+										flex="1"
+										maxW={{ base: "100%", md: "400px" }}
+										border="2px solid #D4AF37"
+										borderRadius="12px"
+										p={6}
+										bg="#FFFDF7"
+										textAlign="center"
+									>
+										<Text fontSize="4xl" mb={3}>🤔</Text>
+										<Heading size="md" color="#D4AF37" mb={4}>
+											Want Changes?
+										</Heading>
+										<Text fontSize="sm" color="gray.600" mb={6}>
+											No problem! Customize the design or try a different style
+										</Text>
+										
+										<Button
+											onClick={handleShowRegenerateInput}
+											size="lg"
+											bg="linear-gradient(135deg, #D4AF37 0%, #C9A961 100%)"
+											color="white"
+											w="100%"
+											py={6}
+											fontSize="md"
+											fontWeight="700"
+											borderRadius="md"
+											leftIcon={<FaWandMagicSparkles />}
+											_hover={{ 
+												bg: "linear-gradient(135deg, #C9A961 0%, #B8984D 100%)",
+												transform: "translateY(-2px)",
+												boxShadow: "lg"
+											}}
+											transition="all 0.2s"
+										>
+											{showRegenerateInput ? "Hide Options" : "Regenerate Design"}
+										</Button>
+									</Box>
+								</Flex>
+							</Box>
 						)}
 					</Flex>
 				</Box>
