@@ -167,8 +167,8 @@ function DesignDocumentPage() {
 			<Flex h="75vh" justify="center" align="center">
 				<Card.Root
 					width="100%"
-                    mt={{base: 4, md: isSuccess ? "25vh" : "5vh"}}
-					height={{ base: "calc(90vh - 12rem)", md: isSuccess ? "90vh" : "75vh" }}
+					mt={{base: 0, md: isSuccess ? "10vh" : 0}}
+					height={{ base: "calc(90vh - 12rem)", md: isSuccess ? "85vh" : "75vh" }}
 					variant="elevated"
 					borderRadius={{ base: 20, md: 35 }}
 					style={glassStyle}

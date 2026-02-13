@@ -180,7 +180,7 @@ function PreferenceBudget({ onPreferenceChange, onBudgetChange }) {
 									onValueChange={(e) => setBudget(e.value[0])}
 									min={0}
 									max={maxBudget}
-									step={10000}
+									step={5000}
 								>
 									<Slider.Control>
 										<Slider.Track bg="gray.200" h="8px">
