@@ -5,7 +5,6 @@ import { LuSparkles, LuSofa, LuShoppingCart, LuHeart, LuChevronLeft, LuChevronRi
 import { motion } from "framer-motion";
 import { useAuth } from "@/Contexts/AuthContext";
 import { useRecommendations } from "@/contexts/RecommendationsContext";
-import StyleMatchBackground from "../../assets/StyleMatchBackground.png";
 import server from "../../../networking";
 import ShowToast from "@/Extensions/ShowToast";
 
@@ -104,16 +103,20 @@ function Recommendations() {
 
 		const fetchPromise = new Promise(async (resolve, reject) => {
 			try {
-				const response = await server.post("/stylematch/recommendations/get-recommendations", {
-					style: style || "Modern",
-					furniture_name: furnitureName,
-					per_page: 5
-				}, {
-					headers: {
-						"Content-Type": "application/json",
-						"X-User-ID": user.uid
+				const response = await server.post(
+					"/stylematch/recommendations/get-recommendations",
+					{
+						style: style || "Modern",
+						furniture_name: furnitureName,
+						per_page: 5
+					},
+					{
+						headers: {
+							"Content-Type": "application/json",
+							"X-User-ID": user.uid
+						}
 					}
-				});
+				);
 
 				if (response.data && response.data.recommendations) {
 					const recs = response.data.recommendations.map((rec, index) => ({
@@ -170,17 +173,21 @@ function Recommendations() {
 	const fetchSingleRecommendation = async furnitureName => {
 		try {
 			const randomPage = Math.floor(Math.random() * 10) + 1;
-			const response = await server.post("/stylematch/recommendations/get-recommendations", {
-				style: style || "Modern",
-				furniture_name: furnitureName,
-				per_page: 1,
-				page: randomPage
-			}, {
-				headers: {
-					"Content-Type": "application/json",
-					"X-User-ID": user.uid
+			const response = await server.post(
+				"/stylematch/recommendations/get-recommendations",
+				{
+					style: style || "Modern",
+					furniture_name: furnitureName,
+					per_page: 1,
+					page: randomPage
+				},
+				{
+					headers: {
+						"Content-Type": "application/json",
+						"X-User-ID": user.uid
+					}
 				}
-			});
+			);
 
 			if (response.data.recommendations && response.data.recommendations.length > 0) {
 				const rec = response.data.recommendations[0];
@@ -361,7 +368,7 @@ function Recommendations() {
 						left: 0,
 						right: 0,
 						bottom: 0,
-						backgroundImage: `url(${StyleMatchBackground})`,
+						backgroundImage: `linear-gradient(rgba(0,0,0,0.5), rgba(0,0,0,0.5)),url('/newHomeOwnerHero.png')`,
 						backgroundSize: "cover",
 						backgroundPosition: "center",
 						backgroundRepeat: "no-repeat",
@@ -422,11 +429,7 @@ function Recommendations() {
 														borderRadius={15}
 														p={3}
 														border="1px solid rgba(255, 255, 255, 0.15)"
-														_hover={{
-															bg: "rgba(255, 255, 255, 0.12)",
-															transform: "translateX(5px)",
-															transition: "all 0.2s"
-														}}
+
 													>
 														<Flex align="center" gap={3}>
 															<Box w={8} h={8} borderRadius="full" bg="rgba(255, 240, 189, 0.2)" display="flex" alignItems="center" justifyContent="center">
@@ -485,9 +488,10 @@ function Recommendations() {
 																animate={{ opacity: 1, scale: 1, y: 0 }}
 																transition={{ duration: 0.4, ease: "easeOut" }}
 															>
-																<Box position="relative" minWidth={"240px"} maxWidth={"240px"} minHeight="170px" maxHeight="170px">
-																	<Image objectFit="cover" width="100%" height="100%" src={furnitures[index].image} alt={furnitures[index].name} />
+																<Box position="relative" flex="0 0 240px" w="240px" h="100%">
+																	<Image src={furnitures[index].image} alt={furnitures[index].name} position="absolute" inset={0} w="100%" h="100%" objectFit="cover" />
 																</Box>
+
 																<Box flex={1} display="flex" flexDirection="column" justifyContent="space-between">
 																	<Card.Body py={3} px={4}>
 																		<Card.Title fontSize="lg" mb={2}>
@@ -517,13 +521,29 @@ function Recommendations() {
 
 											<Carousel.Control justifyContent="center" gap={4}>
 												<Carousel.PrevTrigger asChild>
-													<IconButton size="sm" variant="outline" borderRadius="full">
+													<IconButton
+														size="sm"
+														variant="ghost"
+														borderRadius="full"
+														color="white"
+														_hover={{
+															color: "black"
+														}}
+													>
 														<LuChevronLeft />
 													</IconButton>
 												</Carousel.PrevTrigger>
 												<Carousel.Indicators />
 												<Carousel.NextTrigger asChild>
-													<IconButton size="sm" variant="outline" borderRadius="full">
+													<IconButton
+														size="sm"
+														variant="ghost"
+														borderRadius="full"
+														color="white"
+														_hover={{
+															color: "black"
+														}}
+													>
 														<LuChevronRight />
 													</IconButton>
 												</Carousel.NextTrigger>
@@ -557,9 +577,10 @@ function Recommendations() {
 																		<Badge colorPalette={matchBadge.colorPalette} position="absolute" top={2} right={2} zIndex={10} fontSize="xs" fontWeight="semibold" borderRadius={10}>
 																			{matchBadge.text}
 																		</Badge>
-																		<Box position="relative" minWidth={"220px"} maxWidth="30%" minH={"180px"} maxHeight="180px">
-																			<Image objectFit="cover" minWidth={"164px"} width="100%" minHeight={"171px"} height="100%" src={rec.image} alt={rec.name} />
+																		<Box position="relative" flex="0 0 220px" w="220px" h="100%">
+																			<Image src={rec.image} alt={rec.name} position="absolute" inset={0} w="100%" h="100%" objectFit="cover" />
 																		</Box>
+
 																		<Box flex={1} display="flex" flexDirection="column" justifyContent="space-between">
 																			<Card.Body py={3} px={4}>
 																				<Card.Title fontSize="lg" mb={2}>
@@ -599,13 +620,29 @@ function Recommendations() {
 
 												<Carousel.Control justifyContent="center" gap={4} mt={2}>
 													<Carousel.PrevTrigger asChild>
-														<IconButton size="sm" variant="outline" borderRadius="full">
+														<IconButton
+															size="sm"
+															variant="ghost"
+															borderRadius="full"
+															color="white"
+															_hover={{
+																color: "black"
+															}}
+														>
 															<LuChevronLeft />
 														</IconButton>
 													</Carousel.PrevTrigger>
 													<Carousel.Indicators />
 													<Carousel.NextTrigger asChild>
-														<IconButton size="sm" variant="outline" borderRadius="full">
+														<IconButton
+															size="sm"
+															variant="ghost"
+															borderRadius="full"
+															color="white"
+															_hover={{
+																color: "black"
+															}}
+														>
 															<LuChevronRight />
 														</IconButton>
 													</Carousel.NextTrigger>
@@ -668,7 +705,7 @@ function Recommendations() {
 															Ready to Explore?
 														</Text>
 														<Text color="gray.500" fontSize="sm" textAlign="center" maxW="300px">
-															Select a furniture item above to discover perfectly matched recommendations
+															Choose a furniture item above to discover our recommendations
 														</Text>
 													</VStack>
 												</VStack>
@@ -717,7 +754,7 @@ function Recommendations() {
 						left: 0,
 						right: 0,
 						bottom: 0,
-						backgroundImage: `url(${StyleMatchBackground})`,
+						backgroundImage: `linear-gradient(rgba(0,0,0,0.5), rgba(0,0,0,0.5)),url('/newHomeOwnerHero.png')`,
 						backgroundSize: "cover",
 						backgroundPosition: "center",
 						backgroundRepeat: "no-repeat",

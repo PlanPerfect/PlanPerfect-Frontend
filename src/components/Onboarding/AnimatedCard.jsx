@@ -2,7 +2,7 @@ import { VStack, Flex, Icon, Heading, Text, Card, Box } from '@chakra-ui/react'
 import { Home } from 'lucide-react'
 import { useNavigate } from 'react-router-dom'
 
-function AnimatedCard({ icon, iconColor, title, description, delay, destination, shouldAnimate }) {
+function AnimatedCard({ icon, iconColor, title, description, delay, destination }) {
     icon = icon || Home;
     iconColor = iconColor || "blue.500";
     title = title || "Homeowner";
@@ -12,24 +12,28 @@ function AnimatedCard({ icon, iconColor, title, description, delay, destination,
     const navigate = useNavigate();
 
     return (
-        <Card.Root
-            cursor="pointer"
-            transition="all 0.3s"
-            _hover={{
-                transform: 'translateY(-8px)',
-                boxShadow: '2xl',
-            }}
-            bg="whiteAlpha.900"
-            backdropFilter="blur(10px)"
-            border="2px solid"
-            borderRadius={20}
-            borderColor="transparent"
-            animation={shouldAnimate ? `fadeInUp 0.8s ease-out ${delay}s backwards` : 'none'}
-            _active={{
-                transform: 'translateY(-4px)',
-            }}
-            onClick={destination ? () => navigate(destination) : undefined}
+        <Box
+            opacity={0}
+            style={{ animation: `fadeInUp 0.8s ease-out ${delay}s forwards` }}
         >
+            <Card.Root
+                role="group"
+                cursor="pointer"
+                transition="all 0.3s"
+                _hover={{
+                    transform: 'translateY(-8px)',
+                    boxShadow: '2xl',
+                }}
+                bg="whiteAlpha.900"
+                backdropFilter="blur(10px)"
+                border="2px solid"
+                borderRadius={20}
+                borderColor="transparent"
+                _active={{
+                    transform: 'translateY(-4px)',
+                }}
+                onClick={destination ? () => navigate(destination) : undefined}
+            >
             <Card.Body>
                 <VStack spacing={4} align="center" py={6}>
                     <Flex
@@ -74,6 +78,7 @@ function AnimatedCard({ icon, iconColor, title, description, delay, destination,
                 </VStack>
             </Card.Body>
         </Card.Root>
+        </Box>
     )
 }
 

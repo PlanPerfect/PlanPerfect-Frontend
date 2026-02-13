@@ -1,12 +1,10 @@
 import { useState, useRef, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
-import { Card, Flex, Heading, Text, Box, Image, Avatar, Grid, IconButton, Carousel, Icon, Popover, Portal } from "@chakra-ui/react";
+import { Card, Flex, Heading, Text, Box, Image, Avatar, Grid, IconButton, Carousel, Icon, Popover } from "@chakra-ui/react";
 import { LuChevronLeft, LuChevronRight } from "react-icons/lu";
 import { RxRocket } from "react-icons/rx";
 import { motion } from "framer-motion";
 import { useAuth } from "../../contexts/AuthContext";
-import StyleMatchBackground from "../../assets/StyleMatchBackground.png";
-import SampleStyleBackground from "../../assets/SampleStyleBackground.png";
 import AnimatedLogo from "@/components/Homepage/AnimatedLogo";
 import GetStartedButton from "@/components/Homepage/GetStartedButton";
 import FindRecommendationsButton from "@/components/StyleMatch/FindReccomendationsButton";
@@ -83,41 +81,38 @@ function GetStarted() {
 				}
 			});
 
-			ShowToast(null, null, null, {
-				promise: preferencesPromise,
-				success: (data) => ({
-					title: "Welcome to StyleMatch!",
+			try {
+				const data = await preferencesPromise;
+
+				ShowToast("success", "Welcome to StyleMatch!", null, {
 					duration: 3000
-				}),
-				error: (error) => {
-					if (error.message === "NO_PREFERENCES") {
-						// Show info toast with action button
-						setTimeout(() => {
-							ShowToast("info", "Please complete the Existing Homeowner service first to set your style preferences.", null, {
-								action: {
-									label: "Take me there",
-									onClick: () => navigate("/existinghomeowner")
-								},
-								duration: 6000
-							});
-						}, 100);
-						return null; // Return null to suppress the error toast from the promise
-					}
-
-					let errorTitle = "Failed to load preferences";
-					if (error.message?.startsWith("UERROR: ")) {
-						errorTitle = error.message.substring("UERROR: ".length);
-					} else if (error.message?.startsWith("ERROR: ")) {
-						errorTitle = error.message.substring("ERROR: ".length);
-					} else if (error.message) {
-						errorTitle = error.message;
-					}
-
-					return {
-						title: errorTitle
-					};
+				});
+			} catch (error) {
+				if (error.message === "NO_PREFERENCES") {
+					setTimeout(() => {
+						ShowToast("info", "Let us analyse your room style first.", null, {
+							action: {
+								label: "Take me there",
+								onClick: () => navigate("/existinghomeowner")
+							},
+							duration: 6000
+						});
+					}, 100);
+					return;
 				}
-			});
+
+				let errorTitle = "Failed to load preferences";
+
+				if (error.message?.startsWith("UERROR: ")) {
+					errorTitle = error.message.substring("UERROR: ".length);
+				} else if (error.message?.startsWith("ERROR: ")) {
+					errorTitle = error.message.substring("ERROR: ".length);
+				} else if (error.message) {
+					errorTitle = error.message;
+				}
+
+				ShowToast("error", errorTitle);
+			}
 		};
 
 		fetchPreferences();
@@ -166,11 +161,11 @@ function GetStarted() {
 					timeout: 300000
 				});
 
-				console.log(data)
+				console.log(data);
 
 				if (data.detections && data.detections.length > 0) {
 					const items = data.detections.map(item => {
-						const imageUrl = item.url
+						const imageUrl = item.url;
 
 						const capitalizedName = item.class
 							? item.class
@@ -283,7 +278,7 @@ function GetStarted() {
 	const MotionCard = motion.create(Card.Root);
 	const MotionBox = motion.create(Box);
 
-	if ((roomImage !== null) && (roomStyle !== null)) {
+	if (roomImage !== null && roomStyle !== null) {
 		return (
 			<>
 				<Box
@@ -293,7 +288,7 @@ function GetStarted() {
 						left: 0,
 						right: 0,
 						bottom: 0,
-						backgroundImage: `url(${StyleMatchBackground})`,
+						backgroundImage: `linear-gradient(rgba(0,0,0,0.5), rgba(0,0,0,0.5)),url('/newHomeOwnerHero.png')`,
 						backgroundSize: "cover",
 						backgroundPosition: "center",
 						backgroundRepeat: "no-repeat",
@@ -505,14 +500,14 @@ function GetStarted() {
 					left: 0,
 					right: 0,
 					bottom: 0,
-					backgroundImage: `url(${StyleMatchBackground})`,
+					backgroundImage: `linear-gradient(rgba(0,0,0,0.5), rgba(0,0,0,0.5)),url('/newHomeOwnerHero.png')`,
 					backgroundSize: "cover",
 					backgroundPosition: "center",
 					backgroundRepeat: "no-repeat",
 					zIndex: -1
 				}}
 			/>
-		)
+		);
 	}
 }
 
