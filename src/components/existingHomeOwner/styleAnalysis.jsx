@@ -42,7 +42,6 @@ function StyleAnalysis({ file, onComplete }) {
 				}, 1500);
 			} catch (error) {
 				console.error("Style Analysis Error:", error);
-				console.error("Error response:", error.response?.data);
 				setStatus("error");
 
 				// More detailed error message

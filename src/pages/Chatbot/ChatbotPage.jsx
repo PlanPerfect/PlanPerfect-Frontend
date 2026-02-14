@@ -42,7 +42,6 @@ function ChatbotPage() {
 			const response = await server.get("/chatbot/current-model");
 			setCurrentModel(response.data.model);
 		} catch (err) {
-			console.warn("Failed to fetch current model. Falling back to Llama 3.3 70B.", err);
 			setCurrentModel("Llama 3.3 70B");
 		}
 	};

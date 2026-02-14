@@ -102,7 +102,7 @@ function GenerateDesignDocument({ floorPlanFile, preferences, budget, extraction
 
 			return true;
 		} catch (error) {
-			console.error("Save user input error:", error);
+			console.error("Error saving data:", error);
 			ShowToast("error", "Failed to save your inputs", "Please try again");
 
 			return false;
