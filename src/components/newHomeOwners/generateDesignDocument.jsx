@@ -8,7 +8,7 @@ import ShowToast from '@/Extensions/ShowToast';
 function GenerateDesignDocument({ floorPlanFile, preferences, budget, extractionResults }) {
 	const navigate = useNavigate();
 	const { user } = useAuth();
-	
+
 	const [isSavingChatbot, setIsSavingChatbot] = useState(false);
 	const [isSavingDocument, setIsSavingDocument] = useState(false);
 
@@ -18,55 +18,55 @@ function GenerateDesignDocument({ floorPlanFile, preferences, budget, extraction
 		const bstr = atob(arr[1]);
 		let n = bstr.length;
 		const u8arr = new Uint8Array(n);
-	  
+
 		while (n--) {
 		  u8arr[n] = bstr.charCodeAt(n);
 		}
-	  
+
 		return new File([u8arr], filename, { type: mime });
-	}	  
+	}
 
 	function filterThemes(preferences) {
 		// Nothing passed
 		if (!preferences) {
 			return ["Not Selected"];
 		}
-	
+
 		// Object case: { style: "Scandinavian & Peranakan" }
 		if (typeof preferences === "object" && preferences.style) {
 			return filterThemes(preferences.style);
 		}
-	
+
 		// Array
 		if (Array.isArray(preferences)) {
 			return preferences.length > 0 ? preferences : ["Not Selected"];
 		}
-	
+
 		// String case
 		if (typeof preferences === "string") {
 			if (preferences.toLowerCase() === "not selected") {
 				return ["Not Selected"];
 			}
-	
+
 			const themes = preferences
 				.split("&")
 				.map(t => t.trim())
 				.filter(Boolean);
-	
+
 			return themes.length > 0 ? themes : ["Not Selected"];
 		}
-	
+
 		// Fallback
 		return ["Not Selected"];
 	}
-	
+
 	const saveUserInputToDatabase = async () => {
 		try {
 			const formData = new FormData();
-			
+
 			// Add floor plan file
 			formData.append("floor_plan", floorPlanFile.file);
-			
+
 			// Add segmented floor plan
 			if (extractionResults?.segmentedImage) {
 				const segmentedFile = base64ToFile(
@@ -75,22 +75,22 @@ function GenerateDesignDocument({ floorPlanFile, preferences, budget, extraction
 				);
 				formData.append("segmented_floor_plan", segmentedFile);
 			}
-			
+
 			// Add preferences
 			if (preferences) {
 				formData.append("preferences", JSON.stringify(filterThemes(preferences)));
 			}
-			
+
 			// Add budget
 			if (budget) {
 				formData.append("budget", budget);
 			}
-			
+
 			// Add unit information
 			if (extractionResults?.unitInfo) {
 				formData.append("unit_info", JSON.stringify(extractionResults.unitInfo));
 			}
-			
+
 			// Add user ID
 			formData.append("user_id", user.uid);
 
@@ -100,21 +100,20 @@ function GenerateDesignDocument({ floorPlanFile, preferences, budget, extraction
 				throw new Error(response.data.result);
 			}
 
-			console.log("Save successful:", response.data);
 			return true;
 		} catch (error) {
 			console.error("Save user input error:", error);
 			ShowToast("error", "Failed to save your inputs", "Please try again");
-			
+
 			return false;
 		}
 	};
 
 	const handleNavigateToChatbot = async () => {
 		setIsSavingChatbot(true);
-		
+
 		const saved = await saveUserInputToDatabase();
-		
+
 		if (saved) {
 			navigate("/lumen/chat");
 		} else {
@@ -124,9 +123,9 @@ function GenerateDesignDocument({ floorPlanFile, preferences, budget, extraction
 
 	const handleNavigateToDesignDocument = async () => {
 		setIsSavingDocument(true);
-		
+
 		const saved = await saveUserInputToDatabase();
-		
+
 		if (saved) {
 			navigate("/designDocument");
 		} else {

@@ -54,8 +54,6 @@ function GetStarted() {
 						}
 					});
 
-					console.log("Preferences response:", data);
-
 					if (status === 404 || !data.preferences || Object.keys(data.preferences).length === 0) {
 						reject(new Error("NO_PREFERENCES"));
 						return;
@@ -160,8 +158,6 @@ function GetStarted() {
 					},
 					timeout: 300000
 				});
-
-				console.log(data);
 
 				if (data.detections && data.detections.length > 0) {
 					const items = data.detections.map(item => {
