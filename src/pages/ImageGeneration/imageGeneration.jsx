@@ -94,34 +94,34 @@ function ImageGeneration() {
 						const errorMessage = err.response.data.detail.substring("UERROR: ".length);
 						setLoadError(errorMessage);
 						console.error("Failed to fetch user data: ", errorMessage);
-						ShowToast("error", errorMessage);
+						ShowToast("error", errorMessage, "Check console for more details.");
 					} else if (err.response.data.detail.startsWith("ERROR: ")) {
 						const errorMessage = err.response.data.detail.substring("ERROR: ".length);
 						setLoadError(errorMessage);
 						console.error("Failed to fetch user data: ", errorMessage);
-						ShowToast("error", errorMessage);
+						ShowToast("error", errorMessage, "Check console for more details.");
 					} else {
 						console.error("Failed to fetch user data: ", err.response.data.detail);
-						ShowToast("error", err.response.data.detail);
+						ShowToast("error", "Failed to fetch user data", "Check console for more details.");
 					}
 				} else if (err?.response?.data?.error) {
 					if (err.response.data.error.startsWith("UERROR: ")) {
 						const errorMessage = err.response.data.error.substring("UERROR: ".length);
 						setLoadError(errorMessage);
 						console.error("Failed to fetch user data: ", errorMessage);
-						ShowToast("error", errorMessage);
+						ShowToast("error", errorMessage, "Check console for more details.");
 					} else if (err.response.data.error.startsWith("ERROR: ")) {
 						const errorMessage = err.response.data.error.substring("ERROR: ".length);
 						setLoadError(errorMessage);
 						console.error("Failed to fetch user data: ", errorMessage);
-						ShowToast("error", errorMessage);
+						ShowToast("error", errorMessage, "Check console for more details.");
 					} else {
 						console.error("Failed to fetch user data: ", err.response.data.error);
-						ShowToast("error", err.response.data.error);
+						ShowToast("error", "Failed to fetch user data", "Check console for more details.");
 					}
 				} else {
 					console.error("Failed to fetch user data: ", err?.response);
-					ShowToast("error", "An unexpected error occurred. Check console for more details.");
+					ShowToast("error", "An unexpected error occurred", "Check console for more details.");
 				}
 			} finally {
 				setIsLoading(false);
@@ -169,34 +169,34 @@ function ImageGeneration() {
 					const errorMessage = err.response.data.detail.substring("UERROR: ".length);
 					setGenerationError(errorMessage);
 					console.error("Failed to generate design: ", errorMessage);
-					ShowToast("error", errorMessage);
+					ShowToast("error", errorMessage, "Check console for more details.");
 				} else if (err.response.data.detail.startsWith("ERROR: ")) {
 					const errorMessage = err.response.data.detail.substring("ERROR: ".length);
 					setGenerationError(errorMessage);
 					console.error("Failed to generate design: ", errorMessage);
-					ShowToast("error", errorMessage);
+					ShowToast("error", errorMessage, "Check console for more details.");
 				} else {
 					console.error("Failed to generate design: ", err.response.data.detail);
-					ShowToast("error", err.response.data.detail);
+					ShowToast("error", "Failed to generate design", "Check console for more details.");
 				}
 			} else if (err?.response?.data?.error) {
 				if (err.response.data.error.startsWith("UERROR: ")) {
 					const errorMessage = err.response.data.error.substring("UERROR: ".length);
 					setGenerationError(errorMessage);
 					console.error("Failed to generate design: ", errorMessage);
-					ShowToast("error", errorMessage);
+					ShowToast("error", errorMessage, "Check console for more details.");
 				} else if (err.response.data.error.startsWith("ERROR: ")) {
 					const errorMessage = err.response.data.error.substring("ERROR: ".length);
 					setGenerationError(errorMessage);
 					console.error("Failed to generate design: ", errorMessage);
-					ShowToast("error", errorMessage);
+					ShowToast("error", errorMessage, "Check console for more details.");
 				} else {
 					console.error("Failed to generate design: ", err.response.data.error);
-					ShowToast("error", err.response.data.error);
+					ShowToast("error", "Failed to generate design", "Check console for more details.");
 				}
 			} else {
 				console.error("Failed to generate design: ", err?.response);
-				ShowToast("error", "An unexpected error occurred. Check console for more details.");
+				ShowToast("error", "An unexpected error occurred", "Check console for more details.");
 			}
 		} finally {
 			setIsGenerating(false);
@@ -237,34 +237,34 @@ function ImageGeneration() {
 					const errorMessage = err.response.data.detail.substring("UERROR: ".length);
 					setGenerationError(errorMessage);
 					console.error("Failed to re-generate design: ", errorMessage);
-					ShowToast("error", errorMessage);
+					ShowToast("error", errorMessage, "Check console for more details.");
 				} else if (err.response.data.detail.startsWith("ERROR: ")) {
 					const errorMessage = err.response.data.detail.substring("ERROR: ".length);
 					setGenerationError(errorMessage);
 					console.error("Failed to re-generate design: ", errorMessage);
-					ShowToast("error", errorMessage);
+					ShowToast("error", errorMessage, "Check console for more details.");
 				} else {
 					console.error("Failed to re-generate design: ", err.response.data.detail);
-					ShowToast("error", err.response.data.detail);
+					ShowToast("error", "Failed to re-generate design", "Check console for more details.");
 				}
 			} else if (err?.response?.data?.error) {
 				if (err.response.data.error.startsWith("UERROR: ")) {
 					const errorMessage = err.response.data.error.substring("UERROR: ".length);
 					setGenerationError(errorMessage);
 					console.error("Failed to re-generate design: ", errorMessage);
-					ShowToast("error", errorMessage);
+					ShowToast("error", errorMessage, "Check console for more details.");
 				} else if (err.response.data.error.startsWith("ERROR: ")) {
 					const errorMessage = err.response.data.error.substring("ERROR: ".length);
 					setGenerationError(errorMessage);
 					console.error("Failed to re-generate design: ", errorMessage);
-					ShowToast("error", errorMessage);
+					ShowToast("error", errorMessage, "Check console for more details.");
 				} else {
 					console.error("Failed to re-generate design: ", err.response.data.error);
-					ShowToast("error", err.response.data.error);
+					ShowToast("error", "Failed to re-generate design", "Check console for more details.");
 				}
 			} else {
 				console.error("Failed to re-generate design: ", err?.response);
-				ShowToast("error", "An unexpected error occurred. Check console for more details.");
+				ShowToast("error", "An unexpected error occurred", "Check console for more details.");
 			}
 		} finally {
 			setIsGenerating(false);

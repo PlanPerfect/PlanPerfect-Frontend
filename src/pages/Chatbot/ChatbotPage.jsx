@@ -107,31 +107,31 @@ function ChatbotPage() {
 				if (err.response.data.detail.startsWith("UERROR: ")) {
 					const errorMessage = err.response.data.detail.substring("UERROR: ".length);
 					console.error("Failed to send message: ", errorMessage);
-					ShowToast("error", errorMessage);
+					ShowToast("error", errorMessage, "Check console for more details.");
 				} else if (err.response.data.detail.startsWith("ERROR: ")) {
 					const errorMessage = err.response.data.detail.substring("ERROR: ".length);
 					console.error("Failed to send message: ", errorMessage);
-					ShowToast("error", errorMessage);
+					ShowToast("error", errorMessage, "Check console for more details.");
 				} else {
 					console.error("Failed to send message: ", err.response.data.detail);
-					ShowToast("error", err.response.data.detail);
+					ShowToast("error", "Failed to send message", "Check console for more details.");
 				}
 			} else if (err?.response?.data?.error) {
 				if (err.response.data.error.startsWith("UERROR: ")) {
 					const errorMessage = err.response.data.error.substring("UERROR: ".length);
 					console.error("Failed to send message: ", errorMessage);
-					ShowToast("error", errorMessage);
+					ShowToast("error", errorMessage, "Check console for more details.");
 				} else if (err.response.data.error.startsWith("ERROR: ")) {
 					const errorMessage = err.response.data.error.substring("ERROR: ".length);
 					console.error("Failed to send message: ", errorMessage);
-					ShowToast("error", errorMessage);
+					ShowToast("error", errorMessage, "Check console for more details.");
 				} else {
 					console.error("Failed to send message: ", err.response.data.error);
-					ShowToast("error", err.response.data.error);
+					ShowToast("error", "Failed to send message", "Check console for more details.");
 				}
 			} else {
 				console.error("Failed to send message: ", err?.response);
-				ShowToast("error", "An unexpected error occurred. Check console for more details.");
+				ShowToast("error", "An unexpected error occurred", "Check console for more details.");
 			}
 		} finally {
 			setIsTyping(false);

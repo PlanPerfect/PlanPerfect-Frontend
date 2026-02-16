@@ -1,6 +1,7 @@
 import { useEffect, useState } from "react";
 import { Box, Text, Spinner } from "@chakra-ui/react";
 import { useAuth } from "../../contexts/AuthContext";
+import ShowToast from '@/Extensions/ShowToast';
 import server from "../../../networking";
 
 function StyleAnalysis({ file, onComplete }) {
@@ -43,34 +44,34 @@ function StyleAnalysis({ file, onComplete }) {
 						const errorMessage = err.response.data.detail.substring("UERROR: ".length);
 						setProgress(errorMessage);
 						console.error("Failed to run analysis: ", errorMessage);
-						ShowToast("error", errorMessage);
+						ShowToast("error", errorMessage, "Check console for more details.");
 					} else if (err.response.data.detail.startsWith("ERROR: ")) {
 						const errorMessage = err.response.data.detail.substring("ERROR: ".length);
 						setProgress(errorMessage);
 						console.error("Failed to run analysis: ", errorMessage);
-						ShowToast("error", errorMessage);
+						ShowToast("error", errorMessage, "Check console for more details.");
 					} else {
 						console.error("Failed to run analysis: ", err.response.data.detail);
-						ShowToast("error", err.response.data.detail);
+						ShowToast("error", "Failed to run analysis", "Check console for more details.");
 					}
 				} else if (err?.response?.data?.error) {
 					if (err.response.data.error.startsWith("UERROR: ")) {
 						const errorMessage = err.response.data.error.substring("UERROR: ".length);
 						setProgress(errorMessage);
 						console.error("Failed to run analysis: ", errorMessage);
-						ShowToast("error", errorMessage);
+						ShowToast("error", errorMessage, "Check console for more details.");
 					} else if (err.response.data.error.startsWith("ERROR: ")) {
 						const errorMessage = err.response.data.error.substring("ERROR: ".length);
 						setProgress(errorMessage);
 						console.error("Failed to run analysis: ", errorMessage);
-						ShowToast("error", errorMessage);
+						ShowToast("error", errorMessage, "Check console for more details.");
 					} else {
 						console.error("Failed to run analysis: ", err.response.data.error);
-						ShowToast("error", err.response.data.error);
+						ShowToast("error", "Failed to run analysis", "Check console for more details.");
 					}
 				} else {
 					console.error("Failed to run analysis: ", err?.response);
-					ShowToast("error", "An unexpected error occurred. Check console for more details.");
+					ShowToast("error", "An unexpected error occurred", "Check console for more details.");
 				}
 			}
 		};

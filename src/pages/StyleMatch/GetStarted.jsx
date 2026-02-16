@@ -81,6 +81,7 @@ function GetStarted() {
 			try {
 				await preferencesPromise;
 			} catch (error) {
+				console.error("Error loading preferences:", error);
 				if (error.message === "NO_PREFERENCES") {
 					setTimeout(() => {
 						ShowToast("info", "Let us analyse your room style first.", null, {
@@ -104,7 +105,7 @@ function GetStarted() {
 					errorTitle = error.message;
 				}
 
-				ShowToast("error", errorTitle);
+				ShowToast("error", errorTitle, "Check console for more details.");
 			}
 		};
 
@@ -134,31 +135,31 @@ function GetStarted() {
 					if (err.response.data.detail.startsWith("UERROR: ")) {
 						const errorMessage = err.response.data.detail.substring("UERROR: ".length);
 						console.error("Failed to detect furniture: ", errorMessage);
-						ShowToast("error", errorMessage);
+						ShowToast("error", errorMessage, "Check console for more details.");
 					} else if (err.response.data.detail.startsWith("ERROR: ")) {
 						const errorMessage = err.response.data.detail.substring("ERROR: ".length);
 						console.error("Failed to detect furniture: ", errorMessage);
-						ShowToast("error", errorMessage);
+						ShowToast("error", errorMessage, "Check console for more details.");
 					} else {
 						console.error("Failed to detect furniture: ", err.response.data.detail);
-						ShowToast("error", err.response.data.detail);
+						ShowToast("error", "Failed to detect furniture", "Check console for more details.");
 					}
 				} else if (err?.response?.data?.error) {
 					if (err.response.data.error.startsWith("UERROR: ")) {
 						const errorMessage = err.response.data.error.substring("UERROR: ".length);
 						console.error("Failed to detect furniture: ", errorMessage);
-						ShowToast("error", errorMessage);
+						ShowToast("error", errorMessage, "Check console for more details.");
 					} else if (err.response.data.error.startsWith("ERROR: ")) {
 						const errorMessage = err.response.data.error.substring("ERROR: ".length);
 						console.error("Failed to detect furniture: ", errorMessage);
-						ShowToast("error", errorMessage);
+						ShowToast("error", errorMessage, "Check console for more details.");
 					} else {
 						console.error("Failed to detect furniture: ", err.response.data.error);
-						ShowToast("error", err.response.data.error);
+						ShowToast("error", "Failed to detect furniture", "Check console for more details.");
 					}
 				} else {
 					console.error("Failed to detect furniture: ", err?.response);
-					ShowToast("error", "An unexpected error occurred. Check console for more details.");
+					ShowToast("error", "An unexpected error occurred", "Check console for more details.");
 				}
 			}
 		};
@@ -173,23 +174,6 @@ function GetStarted() {
 	}
 
 	const processImage = async file => {
-		if (!file) {
-			ShowToast("info", "Please upload an image to analyze.");
-			return;
-		}
-
-		const validTypes = ["image/jpeg", "image/jpg", "image/png", "image/webp", "image/avif"];
-		if (!validTypes.includes(file.type)) {
-			ShowToast("error", "Please upload a JPEG, PNG, WEBP, or AVIF image.");
-			return;
-		}
-
-		const maxSize = 50 * 1024 * 1024;
-		if (file.size > maxSize) {
-			ShowToast("error", "File Too Large. Please upload an image smaller than 50MB.");
-			return;
-		}
-
 		setFurnitureItems([]);
 		setDetectionSuccess(false);
 
@@ -258,7 +242,7 @@ function GetStarted() {
 				title: "Analysing your room..."
 			},
 			success: items => ({
-				title: `Successfully detected ${items.length} furniture item(s)!`,
+				title: items.length > 1 ? `${items.length} furniture items detected!` : "1 furniture item detected!",
 				duration: 4500
 			}),
 			error: error => {

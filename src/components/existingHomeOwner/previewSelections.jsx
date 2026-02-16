@@ -3,6 +3,7 @@ import { FaCheckCircle, FaPalette, FaHome, FaDollarSign, FaPaintBrush, FaArrowLe
 import { useNavigate } from "react-router-dom";
 import { useState } from "react";
 import { useAuth } from "../../contexts/AuthContext";
+import ShowToast from '@/Extensions/ShowToast';
 import server from "../../../networking";
 /**
  * PreviewSelections Component
@@ -43,34 +44,34 @@ function PreviewSelections({ preferences, analysisResults, selectedStyles, uploa
 					const errorMessage = err.response.data.detail.substring("UERROR: ".length);
 					setSaveError(errorMessage);
 					console.error("Failed to save preferences: ", errorMessage);
-					ShowToast("error", errorMessage);
+					ShowToast("error", errorMessage, "Check console for more details.");
 				} else if (err.response.data.detail.startsWith("ERROR: ")) {
 					const errorMessage = err.response.data.detail.substring("ERROR: ".length);
 					setSaveError(errorMessage);
 					console.error("Failed to save preferences: ", errorMessage);
-					ShowToast("error", errorMessage);
+					ShowToast("error", errorMessage, "Check console for more details.");
 				} else {
 					console.error("Failed to save preferences: ", err.response.data.detail);
-					ShowToast("error", err.response.data.detail);
+					ShowToast("error", "Failed to save preferences", "Check console for more details.");
 				}
 			} else if (err?.response?.data?.error) {
 				if (err.response.data.error.startsWith("UERROR: ")) {
 					const errorMessage = err.response.data.error.substring("UERROR: ".length);
 					setSaveError(errorMessage);
 					console.error("Failed to save preferences: ", errorMessage);
-					ShowToast("error", errorMessage);
+					ShowToast("error", errorMessage, "Check console for more details.");
 				} else if (err.response.data.error.startsWith("ERROR: ")) {
 					const errorMessage = err.response.data.error.substring("ERROR: ".length);
 					setSaveError(errorMessage);
 					console.error("Failed to save preferences: ", errorMessage);
-					ShowToast("error", errorMessage);
+					ShowToast("error", errorMessage, "Check console for more details.");
 				} else {
 					console.error("Failed to save preferences: ", err.response.data.error);
-					ShowToast("error", err.response.data.error);
+					ShowToast("error", "Failed to save preferences", "Check console for more details.");
 				}
 			} else {
 				console.error("Failed to save preferences: ", err?.response);
-				ShowToast("error", "An unexpected error occurred. Check console for more details.");
+				ShowToast("error", "An unexpected error occurred", "Check console for more details.");
 			}
 		} finally {
 			setIsSaving(false);

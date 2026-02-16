@@ -101,14 +101,35 @@ function AgentPage() {
 			setMessages(prev => [...prev, assistantMessage]);
 			setThinkingSteps([]);
 		} catch (err) {
-			if (err.response?.data?.error?.startsWith("UERROR: ")) {
-				const errorMessage = err.response.data.error.substring("UERROR: ".length);
-				ShowToast("error", errorMessage);
-			} else if (err.response?.data?.error?.startsWith("ERROR: ")) {
-				const errorMessage = err.response.data.error.substring("ERROR: ".length);
-				ShowToast("error", errorMessage);
+			if (err?.response?.data?.detail) {
+				if (err.response.data.detail.startsWith("UERROR: ")) {
+					const errorMessage = err.response.data.detail.substring("UERROR: ".length);
+					console.error("Failed to send message: ", errorMessage);
+					ShowToast("error", errorMessage, "Check console for more details.");
+				} else if (err.response.data.detail.startsWith("ERROR: ")) {
+					const errorMessage = err.response.data.detail.substring("ERROR: ".length);
+					console.error("Failed to send message: ", errorMessage);
+					ShowToast("error", errorMessage, "Check console for more details.");
+				} else {
+					console.error("Failed to send message: ", err.response.data.detail);
+					ShowToast("error", "Failed to send message", "Check console for more details.");
+				}
+			} else if (err?.response?.data?.error) {
+				if (err.response.data.error.startsWith("UERROR: ")) {
+					const errorMessage = err.response.data.error.substring("UERROR: ".length);
+					console.error("Failed to send message: ", errorMessage);
+					ShowToast("error", errorMessage, "Check console for more details.");
+				} else if (err.response.data.error.startsWith("ERROR: ")) {
+					const errorMessage = err.response.data.error.substring("ERROR: ".length);
+					console.error("Failed to send message: ", errorMessage);
+					ShowToast("error", errorMessage, "Check console for more details.");
+				} else {
+					console.error("Failed to send message: ", err.response.data.error);
+					ShowToast("error", "Failed to send message", "Check console for more details.");
+				}
 			} else {
-				ShowToast("error", "An unexpected error occurred. Check console for more details.");
+				console.error("Failed to send message: ", err?.response);
+				ShowToast("error", "An unexpected error occurred", "Check console for more details.");
 			}
 			setThinkingSteps([]);
 		} finally {
@@ -145,21 +166,11 @@ function AgentPage() {
 				<Box mb={4} w="100%" ml={3}>
 					<Flex align="center" justify="space-between" mx="auto" w="100%">
 						<Flex align="center" gap={3}>
-							<Box
-								bg="linear-gradient(135deg, rgba(212, 175, 55, 0.3), rgba(255, 215, 0, 0.3))"
-								p={3}
-								borderRadius="xl"
-								style={glassStyle}
-							>
+							<Box bg="linear-gradient(135deg, rgba(212, 175, 55, 0.3), rgba(255, 215, 0, 0.3))" p={3} borderRadius="xl" style={glassStyle}>
 								<Sparkles size={24} color="#FFD700" />
 							</Box>
 							<VStack align="start" gap={0}>
-								<Heading
-									size={{ base: "lg", md: "xl" }}
-									color="white"
-									fontWeight="700"
-									letterSpacing="-0.02em"
-								>
+								<Heading size={{ base: "lg", md: "xl" }} color="white" fontWeight="700" letterSpacing="-0.02em">
 									Le'Orchestra
 								</Heading>
 								<Text fontSize={{ base: "xs", md: "sm" }} color="rgba(255, 255, 255, 0.6)">
@@ -171,16 +182,7 @@ function AgentPage() {
 				</Box>
 
 				{/* Main Chat Area */}
-				<Box
-					flex="1"
-					borderRadius={{ base: 20, md: 28 }}
-					style={glassStyle}
-					overflow="hidden"
-					display="flex"
-					flexDirection="column"
-					w="100%"
-					mx="auto"
-				>
+				<Box flex="1" borderRadius={{ base: 20, md: 28 }} style={glassStyle} overflow="hidden" display="flex" flexDirection="column" w="100%" mx="auto">
 					<Box
 						flex="1"
 						overflowY="auto"
@@ -223,31 +225,12 @@ function AgentPage() {
 									) : (
 										<VStack align="stretch" gap={3} w="100%">
 											<Flex align="start" gap={3} w="100%">
-												<Box
-													bg="rgba(255, 215, 0, 0.15)"
-													p={2}
-													borderRadius="lg"
-													flexShrink={0}
-													mt={1}
-												>
+												<Box bg="rgba(255, 215, 0, 0.15)" p={2} borderRadius="lg" flexShrink={0} mt={1}>
 													<Sparkles size={20} color="#FFD700" />
 												</Box>
 												<Box flex="1" maxW="100%">
-													<Box
-														bg="rgba(255, 255, 255, 0.08)"
-														backdropFilter="blur(10px)"
-														border="1px solid rgba(255, 255, 255, 0.12)"
-														borderRadius="2xl"
-														p={{ base: 4, md: 5 }}
-													>
-														<Text
-															color="rgba(255, 255, 255, 0.95)"
-															fontSize={{ base: "sm", md: "md" }}
-															lineHeight="1.8"
-															fontWeight="400"
-															whiteSpace="pre-wrap"
-															textAlign="left"
-														>
+													<Box bg="rgba(255, 255, 255, 0.08)" backdropFilter="blur(10px)" border="1px solid rgba(255, 255, 255, 0.12)" borderRadius="2xl" p={{ base: 4, md: 5 }}>
+														<Text color="rgba(255, 255, 255, 0.95)" fontSize={{ base: "sm", md: "md" }} lineHeight="1.8" fontWeight="400" whiteSpace="pre-wrap" textAlign="left">
 															{message.content}
 														</Text>
 													</Box>
@@ -262,39 +245,16 @@ function AgentPage() {
 							{isProcessing && thinkingSteps.length > 0 && (
 								<Box animation="fadeInUp 0.4s ease-out" w="100%">
 									<Flex align="start" gap={3} w="100%">
-										<Box
-											bg="rgba(255, 215, 0, 0.15)"
-											p={2}
-											borderRadius="lg"
-											flexShrink={0}
-											mt={1}
-										>
+										<Box bg="rgba(255, 215, 0, 0.15)" p={2} borderRadius="lg" flexShrink={0} mt={1}>
 											<Sparkles size={20} color="#FFD700" />
 										</Box>
 										<Box flex="1" maxW="100%">
-											<Box
-												bg="rgba(255, 255, 255, 0.08)"
-												backdropFilter="blur(10px)"
-												border="1px solid rgba(255, 255, 255, 0.12)"
-												borderRadius="2xl"
-												p={{ base: 4, md: 5 }}
-											>
+											<Box bg="rgba(255, 255, 255, 0.08)" backdropFilter="blur(10px)" border="1px solid rgba(255, 255, 255, 0.12)" borderRadius="2xl" p={{ base: 4, md: 5 }}>
 												<Flex align="center" justify="space-between" mb={4}>
-													<Text
-														color="rgba(255, 255, 255, 0.7)"
-														fontSize="sm"
-														fontWeight="600"
-														letterSpacing="0.02em"
-													>
+													<Text color="rgba(255, 255, 255, 0.7)" fontSize="sm" fontWeight="600" letterSpacing="0.02em">
 														THINKING
 													</Text>
-													<Box
-														as="button"
-														onClick={() => setShowThinking(!showThinking)}
-														color="rgba(255, 255, 255, 0.5)"
-														transition="all 0.2s"
-														_hover={{ color: "rgba(255, 255, 255, 0.8)" }}
-													>
+													<Box as="button" onClick={() => setShowThinking(!showThinking)} color="rgba(255, 255, 255, 0.5)" transition="all 0.2s" _hover={{ color: "rgba(255, 255, 255, 0.8)" }}>
 														<ChevronDown
 															size={18}
 															style={{
@@ -313,44 +273,18 @@ function AgentPage() {
 																	w="20px"
 																	h="20px"
 																	borderRadius="full"
-																	border={
-																		step.status === "complete"
-																			? "2px solid #00FF9D"
-																			: step.status === "active"
-																				? "2px solid #FFD700"
-																				: "2px solid rgba(255, 255, 255, 0.2)"
-																	}
-																	bg={
-																		step.status === "complete"
-																			? "rgba(0, 255, 157, 0.2)"
-																			: step.status === "active"
-																				? "rgba(255, 215, 0, 0.2)"
-																				: "transparent"
-																	}
+																	border={step.status === "complete" ? "2px solid #00FF9D" : step.status === "active" ? "2px solid #FFD700" : "2px solid rgba(255, 255, 255, 0.2)"}
+																	bg={step.status === "complete" ? "rgba(0, 255, 157, 0.2)" : step.status === "active" ? "rgba(255, 215, 0, 0.2)" : "transparent"}
 																	display="flex"
 																	alignItems="center"
 																	justifyContent="center"
 																	flexShrink={0}
 																>
-																	{step.status === "active" && (
-																		<Loader2
-																			size={12}
-																			color="#FFD700"
-																			style={{ animation: "spin 1s linear infinite" }}
-																		/>
-																	)}
-																	{step.status === "complete" && (
-																		<Box w="8px" h="8px" borderRadius="full" bg="#00FF9D" />
-																	)}
+																	{step.status === "active" && <Loader2 size={12} color="#FFD700" style={{ animation: "spin 1s linear infinite" }} />}
+																	{step.status === "complete" && <Box w="8px" h="8px" borderRadius="full" bg="#00FF9D" />}
 																</Box>
 																<Text
-																	color={
-																		step.status === "complete"
-																			? "rgba(255, 255, 255, 0.9)"
-																			: step.status === "active"
-																				? "rgba(255, 255, 255, 0.8)"
-																				: "rgba(255, 255, 255, 0.4)"
-																	}
+																	color={step.status === "complete" ? "rgba(255, 255, 255, 0.9)" : step.status === "active" ? "rgba(255, 255, 255, 0.8)" : "rgba(255, 255, 255, 0.4)"}
 																	fontSize="sm"
 																	fontWeight={step.status === "active" ? "500" : "400"}
 																>
@@ -371,12 +305,7 @@ function AgentPage() {
 					</Box>
 
 					{/* Input Area */}
-					<Box
-						borderTop="1px solid rgba(255, 255, 255, 0.1)"
-						p={{ base: 4, md: 5, lg: 6 }}
-						bg="rgba(0, 0, 0, 0.2)"
-						w="100%"
-					>
+					<Box borderTop="1px solid rgba(255, 255, 255, 0.1)" p={{ base: 4, md: 5, lg: 6 }} bg="rgba(0, 0, 0, 0.2)" w="100%">
 						<Box w="100%">
 							<Flex gap={3} align="stretch" w="100%">
 								<Box
@@ -456,11 +385,7 @@ function AgentPage() {
 											: {}
 									}
 								>
-									{isProcessing ? (
-										<Loader2 size={20} color="white" style={{ animation: "spin 1s linear infinite" }} />
-									) : (
-										<Send size={20} color="white" />
-									)}
+									{isProcessing ? <Loader2 size={20} color="white" style={{ animation: "spin 1s linear infinite" }} /> : <Send size={20} color="white" />}
 								</Box>
 							</Flex>
 						</Box>

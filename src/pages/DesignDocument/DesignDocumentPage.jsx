@@ -64,7 +64,7 @@ function DesignDocumentPage() {
 			const url = window.URL.createObjectURL(blob);
 			setGeneratedPdfUrl(url);
 
-			ShowToast("success", "Design document generated successfully!");
+			ShowToast("success", "Success!", "Design document generated successfully!");
 		} catch (err) {
 			console.error("Error generating document:", err);
 
@@ -91,7 +91,7 @@ function DesignDocumentPage() {
 			}
 
 			setError(errorMessage);
-			ShowToast("error", errorMessage);
+			ShowToast("error", errorMessage, "Check console for more details.");
 		} finally {
 			setIsGenerating(false);
 		}
@@ -117,7 +117,7 @@ function DesignDocumentPage() {
 		link.click();
 		document.body.removeChild(link);
 
-		ShowToast("success", "PDF downloaded successfully!");
+		ShowToast("success", "Success!", "PDF downloaded successfully!");
 	};
 
 	const handleRegenerate = () => {
