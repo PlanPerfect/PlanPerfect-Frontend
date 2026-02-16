@@ -1,4 +1,4 @@
-import { useState, useRef, useEffect } from "react";
+import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { Card, Flex, Heading, Text, Box, Image, Avatar, Grid, IconButton, Carousel, Icon, Popover } from "@chakra-ui/react";
 import { LuChevronLeft, LuChevronRight } from "react-icons/lu";
@@ -6,7 +6,6 @@ import { RxRocket } from "react-icons/rx";
 import { motion } from "framer-motion";
 import { useAuth } from "../../contexts/AuthContext";
 import AnimatedLogo from "@/components/Homepage/AnimatedLogo";
-import GetStartedButton from "@/components/Homepage/GetStartedButton";
 import FindRecommendationsButton from "@/components/StyleMatch/FindReccomendationsButton";
 import ShowToast from "@/Extensions/ShowToast";
 import server from "../../../networking";
@@ -18,7 +17,6 @@ function GetStarted() {
 	const [roomImage, setRoomImage] = useState(null);
 	const [detectionSuccess, setDetectionSuccess] = useState(false);
 	const [roomStyle, setRoomStyle] = useState(null);
-	const fileInputRef = useRef(null);
 	const navigate = useNavigate();
 
 	const glassStyle = {
@@ -69,7 +67,8 @@ function GetStarted() {
 						reject(new Error("NO_PREFERENCES"));
 					}
 				} catch (err) {
-					const backendError = err.response?.data?.error;
+					const backendError = err?.response?.data?.detail || err?.response?.data?.error;
+
 					if (backendError) {
 						reject(new Error(backendError));
 					} else {
@@ -80,11 +79,7 @@ function GetStarted() {
 			});
 
 			try {
-				const data = await preferencesPromise;
-
-				ShowToast("success", "Welcome to StyleMatch!", null, {
-					duration: 3000
-				});
+				await preferencesPromise;
 			} catch (error) {
 				if (error.message === "NO_PREFERENCES") {
 					setTimeout(() => {
@@ -115,6 +110,61 @@ function GetStarted() {
 
 		fetchPreferences();
 	}, [user, loading, navigate]);
+
+	// Auto-detect furniture when roomImage is available
+	useEffect(() => {
+		const autoDetectFurniture = async () => {
+			if (!roomImage || isLoading || detectionSuccess) return;
+
+			setIsLoading(true);
+
+			try {
+				// Fetch the image from the URL
+				const response = await fetch(roomImage);
+				const blob = await response.blob();
+
+				// Create a File object from the blob
+				const file = new File([blob], "room-image.png", { type: blob.type || "image/png" });
+
+				// Process the image
+				await processImage(file);
+			} catch (err) {
+				setIsLoading(false);
+				if (err?.response?.data?.detail) {
+					if (err.response.data.detail.startsWith("UERROR: ")) {
+						const errorMessage = err.response.data.detail.substring("UERROR: ".length);
+						console.error("Failed to detect furniture: ", errorMessage);
+						ShowToast("error", errorMessage);
+					} else if (err.response.data.detail.startsWith("ERROR: ")) {
+						const errorMessage = err.response.data.detail.substring("ERROR: ".length);
+						console.error("Failed to detect furniture: ", errorMessage);
+						ShowToast("error", errorMessage);
+					} else {
+						console.error("Failed to detect furniture: ", err.response.data.detail);
+						ShowToast("error", err.response.data.detail);
+					}
+				} else if (err?.response?.data?.error) {
+					if (err.response.data.error.startsWith("UERROR: ")) {
+						const errorMessage = err.response.data.error.substring("UERROR: ".length);
+						console.error("Failed to detect furniture: ", errorMessage);
+						ShowToast("error", errorMessage);
+					} else if (err.response.data.error.startsWith("ERROR: ")) {
+						const errorMessage = err.response.data.error.substring("ERROR: ".length);
+						console.error("Failed to detect furniture: ", errorMessage);
+						ShowToast("error", errorMessage);
+					} else {
+						console.error("Failed to detect furniture: ", err.response.data.error);
+						ShowToast("error", err.response.data.error);
+					}
+				} else {
+					console.error("Failed to detect furniture: ", err?.response);
+					ShowToast("error", "An unexpected error occurred. Check console for more details.");
+				}
+			}
+		};
+
+		autoDetectFurniture();
+	}, [roomImage, user?.uid]);
 
 	const itemsPerPage = 6;
 	const chunkedItems = [];
@@ -189,7 +239,8 @@ function GetStarted() {
 				setFurnitureItems([]);
 				setDetectionSuccess(false);
 
-				const backendError = err.response?.data?.error || err.response?.data?.detail;
+				const backendError = err?.response?.data?.detail || err?.response?.data?.error;
+
 				if (backendError) {
 					reject(new Error(backendError));
 				} else {
@@ -204,14 +255,14 @@ function GetStarted() {
 		ShowToast(null, null, null, {
 			promise: detectionPromise,
 			loading: {
-				title: "Processing..."
+				title: "Analysing your room..."
 			},
 			success: items => ({
-				title: `Successfully detected ${items.length} furniture item(s).`,
+				title: `Successfully detected ${items.length} furniture item(s)!`,
 				duration: 4500
 			}),
 			error: error => {
-				let errorTitle = "Furniture Detection Failed";
+				let errorTitle = "Failed to detect furniture";
 
 				if (error.message === "NO_FURNITURE_DETECTED") {
 					errorTitle = "No Furniture Detected";
@@ -224,42 +275,11 @@ function GetStarted() {
 				}
 
 				return {
-					title: errorTitle
+					title: errorTitle,
+					description: "Check console for more details.",
 				};
 			}
 		});
-	};
-
-	const handleFileUpload = event => {
-		const file = event.target.files?.[0];
-		if (file) {
-			processImage(file);
-		}
-	};
-
-	const handleUploadClick = async () => {
-		if (!roomImage) {
-			ShowToast("error", "No room image available", "Please upload an image first");
-			return;
-		}
-
-		setIsLoading(true);
-
-		try {
-			// Fetch the image from the URL
-			const response = await fetch(roomImage);
-			const blob = await response.blob();
-
-			// Create a File object from the blob
-			const file = new File([blob], "room-image.png", { type: blob.type || "image/png" });
-
-			// Process the image
-			await processImage(file);
-		} catch (error) {
-			console.error("Failed to fetch room image:", error);
-			setIsLoading(false);
-			ShowToast("error", "Failed to load room image", "Please try again");
-		}
 	};
 
 	const handleFindRecommendations = () => {
@@ -292,8 +312,6 @@ function GetStarted() {
 					}}
 				/>
 
-				<input ref={fileInputRef} type="file" accept="image/jpeg,image/jpg,image/png,image/webp,image/avif" style={{ display: "none" }} onChange={handleFileUpload} />
-
 				<Flex height="75vh" gap={4}>
 					<Card.Root width="25%" variant="elevated" borderRadius={35} style={glassStyle}>
 						<Card.Body display="flex" flexDirection="column" justifyContent="center" alignItems="center" padding={8} gap={4}>
@@ -313,15 +331,9 @@ function GetStarted() {
 							</Text>
 
 							<Box mt={4} display="flex" justifyContent="center" width="100%">
-								{!detectionSuccess ? (
-									<Box onClick={!isLoading ? handleUploadClick : undefined} width="90%" opacity={isLoading ? 0.5 : 1}>
-										<GetStartedButton width="100%" destination={null} auth={false} delay="0.5s" loading={isLoading} />
-									</Box>
-								) : (
-									<Box width="90%">
-										<FindRecommendationsButton width="100%" delay="0.5s" onClick={handleFindRecommendations} />
-									</Box>
-								)}
+								<Box width="90%" opacity={detectionSuccess ? 1 : 0.5} pointerEvents={detectionSuccess ? "auto" : "none"}>
+									<FindRecommendationsButton width="100%" delay="0.5s" onClick={handleFindRecommendations} />
+								</Box>
 							</Box>
 						</Card.Body>
 					</Card.Root>
@@ -339,7 +351,7 @@ function GetStarted() {
 
 						<Card.Root height="55%" variant="elevated" borderRadius={35} style={glassStyle}>
 							<Card.Body padding={4}>
-								{isLoading ? (
+								{isLoading || furnitureItems.length === 0 ? (
 									<Flex justify="center" align="center" height="100%" direction="column" gap={4}>
 										<motion.div variants={rocketVariants} animate="analyzing">
 											<Icon as={RxRocket} w={10} h={10} color="white" />
@@ -349,15 +361,6 @@ function GetStarted() {
 										</Text>
 										<Text color="white" fontSize="sm">
 											Hold tight! This may take up to 5 minutes
-										</Text>
-									</Flex>
-								) : furnitureItems.length === 0 ? (
-									<Flex justify="center" align="center" height="100%" direction="column" gap={3}>
-										<Text color="white" fontSize="xl">
-											No furniture detected yet
-										</Text>
-										<Text color="white" fontSize="md">
-											Click "Get Started" to upload your room image
 										</Text>
 									</Flex>
 								) : (
