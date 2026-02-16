@@ -101,9 +101,37 @@ function GenerateDesignDocument({ floorPlanFile, preferences, budget, extraction
 			}
 
 			return true;
-		} catch (error) {
-			console.error("Error saving data:", error);
-			ShowToast("error", "Failed to save your inputs", "Please try again");
+		} catch (err) {
+			if (err?.response?.data?.detail) {
+				if (err.response.data.detail.startsWith("UERROR: ")) {
+					const errorMessage = err.response.data.detail.substring("UERROR: ".length);
+					console.error("Failed to save user input: ", errorMessage);
+					ShowToast("error", errorMessage);
+				} else if (err.response.data.detail.startsWith("ERROR: ")) {
+					const errorMessage = err.response.data.detail.substring("ERROR: ".length);
+					console.error("Failed to save user input: ", errorMessage);
+					ShowToast("error", errorMessage);
+				} else {
+					console.error("Failed to save user input: ", err.response.data.detail);
+					ShowToast("error", err.response.data.detail);
+				}
+			} else if (err?.response?.data?.error) {
+				if (err.response.data.error.startsWith("UERROR: ")) {
+					const errorMessage = err.response.data.error.substring("UERROR: ".length);
+					console.error("Failed to save user input: ", errorMessage);
+					ShowToast("error", errorMessage);
+				} else if (err.response.data.error.startsWith("ERROR: ")) {
+					const errorMessage = err.response.data.error.substring("ERROR: ".length);
+					console.error("Failed to save user input: ", errorMessage);
+					ShowToast("error", errorMessage);
+				} else {
+					console.error("Failed to save user input: ", err.response.data.error);
+					ShowToast("error", err.response.data.error);
+				}
+			} else {
+				console.error("Failed to save user input: ", err?.response);
+				ShowToast("error", "An unexpected error occurred. Check console for more details.");
+			}
 
 			return false;
 		}
