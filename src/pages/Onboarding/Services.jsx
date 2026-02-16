@@ -2,7 +2,7 @@ import { useState, useLayoutEffect, useEffect } from 'react'
 import { useLocation, useNavigate } from 'react-router-dom'
 import { Box, VStack, SimpleGrid } from '@chakra-ui/react'
 import { Key, Home } from 'lucide-react'
-import ServicesBackground from "../../assets/ServicesBackground.png"
+import LandingBackground from "../../assets/LandingBackground.png"
 import AnimatedHeading from '@/components/Onboarding/AnimatedHeading'
 import AnimatedCard from '@/components/Onboarding/AnimatedCard'
 import ShowToast from '@/Extensions/ShowToast'
@@ -18,7 +18,7 @@ function Services() {
 
     useEffect(() => {
         if (location.state?.loginSuccess) {
-            ShowToast("success", "Successfully logged in!")
+            ShowToast("success", "Welcome to PlanPerfect!", "Logged in successfully.");
             navigate(location.pathname, { replace: true, state: {} })
         }
     }, [location.state, navigate, location.pathname])
@@ -31,7 +31,7 @@ function Services() {
                 left: 0,
                 right: 0,
                 bottom: 0,
-                backgroundImage: `url(${ServicesBackground})`,
+                backgroundImage: `url(${LandingBackground})`,
                 backgroundSize: 'cover',
                 backgroundPosition: 'center',
                 backgroundRepeat: 'no-repeat',
@@ -47,7 +47,7 @@ function Services() {
                 paddingTop={{ base: 4, md: 8 }}
                 gap={8}
             >
-                <AnimatedHeading shouldAnimate={isInitialMount} />
+                <AnimatedHeading />
 
                 <SimpleGrid
                     columns={{ base: 1, md: 2 }}
@@ -60,9 +60,8 @@ function Services() {
                         iconColor={"blue.500"}
                         title={"New Homeowner"}
                         description={"Let us help you design your perfect home with our AI-powered tools"}
-                        delay={0.5}
+                        delay={1.0}
                         destination={"/newhomeowner"}
-                        shouldAnimate={isInitialMount}
                     />
 
                     <AnimatedCard
@@ -70,12 +69,37 @@ function Services() {
                         iconColor={"green.500"}
                         title={"Existing Homeowner"}
                         description={"Explore intelligent design solutions that breathe new life into your home"}
-                        delay={1.0}
+                        delay={1.5}
                         destination={"/existinghomeowner"}
-                        shouldAnimate={isInitialMount}
                     />
                 </SimpleGrid>
             </VStack>
+
+            <style>
+				{`
+                    @keyframes fadeInDown {
+                        from {
+                            opacity: 0;
+                            transform: translateY(-20px);
+                        }
+                        to {
+                            opacity: 1;
+                            transform: translateY(0);
+                        }
+                    }
+
+                    @keyframes fadeInUp {
+                        from {
+                            opacity: 0;
+                            transform: translateY(20px);
+                        }
+                        to {
+                            opacity: 1;
+                            transform: translateY(0);
+                        }
+                    }
+                `}
+			</style>
         </>
     )
 }

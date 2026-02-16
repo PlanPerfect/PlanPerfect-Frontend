@@ -5,7 +5,6 @@ import { LuSparkles, LuSofa, LuShoppingCart, LuHeart, LuChevronLeft, LuChevronRi
 import { motion } from "framer-motion";
 import { useAuth } from "@/Contexts/AuthContext";
 import { useRecommendations } from "@/contexts/RecommendationsContext";
-import StyleMatchBackground from "../../assets/StyleMatchBackground.png";
 import server from "../../../networking";
 import ShowToast from "@/Extensions/ShowToast";
 
@@ -60,7 +59,7 @@ function Recommendations() {
 		if (isInitialMount) return;
 
 		if (!furnitures || furnitures.length === 0 || !style) {
-			ShowToast("info", "Please upload an image for processing before using this search feature.", "", {
+			ShowToast("info", "Please let us analyse your room before using this search feature.", "", {
 				persistent: true,
 				action: {
 					label: "Go Back",
@@ -82,7 +81,36 @@ function Recommendations() {
 				setSavedRecommendations(response.data.recommendations);
 			}
 		} catch (err) {
-			console.error("Failed to fetch saved recommendations:", err);
+			if (err?.response?.data?.detail) {
+				if (err.response.data.detail.startsWith("UERROR: ")) {
+					const errorMessage = err.response.data.detail.substring("UERROR: ".length);
+					console.error("Failed to fetch saved recommendations: ", errorMessage);
+					ShowToast("error", errorMessage, "Check console for more details.");
+				} else if (err.response.data.detail.startsWith("ERROR: ")) {
+					const errorMessage = err.response.data.detail.substring("ERROR: ".length);
+					console.error("Failed to fetch saved recommendations: ", errorMessage);
+					ShowToast("error", errorMessage, "Check console for more details.");
+				} else {
+					console.error("Failed to fetch saved recommendations: ", err.response.data.detail);
+					ShowToast("error", "Failed to fetch saved recommendations", "Check console for more details.");
+				}
+			} else if (err?.response?.data?.error) {
+				if (err.response.data.error.startsWith("UERROR: ")) {
+					const errorMessage = err.response.data.error.substring("UERROR: ".length);
+					console.error("Failed to fetch saved recommendations: ", errorMessage);
+					ShowToast("error", errorMessage, "Check console for more details.");
+				} else if (err.response.data.error.startsWith("ERROR: ")) {
+					const errorMessage = err.response.data.error.substring("ERROR: ".length);
+					console.error("Failed to fetch saved recommendations: ", errorMessage);
+					ShowToast("error", errorMessage, "Check console for more details.");
+				} else {
+					console.error("Failed to fetch saved recommendations: ", err.response.data.error);
+					ShowToast("error", "Failed to fetch saved recommendations", "Check console for more details.");
+				}
+			} else {
+				console.error("Failed to fetch saved recommendations: ", err?.response);
+				ShowToast("error", "An unexpected error occurred", "Check console for more details.");
+			}
 		}
 	};
 
@@ -104,16 +132,20 @@ function Recommendations() {
 
 		const fetchPromise = new Promise(async (resolve, reject) => {
 			try {
-				const response = await server.post("/stylematch/recommendations/get-recommendations", {
-					style: style || "Modern",
-					furniture_name: furnitureName,
-					per_page: 5
-				}, {
-					headers: {
-						"Content-Type": "application/json",
-						"X-User-ID": user.uid
+				const response = await server.post(
+					"/stylematch/recommendations/get-recommendations",
+					{
+						style: style || "Modern",
+						furniture_name: furnitureName,
+						per_page: 5
+					},
+					{
+						headers: {
+							"Content-Type": "application/json",
+							"X-User-ID": user.uid
+						}
 					}
-				});
+				);
 
 				if (response.data && response.data.recommendations) {
 					const recs = response.data.recommendations.map((rec, index) => ({
@@ -161,7 +193,8 @@ function Recommendations() {
 				}
 
 				return {
-					title: errorTitle
+					title: errorTitle,
+					description: "Check console for more details."
 				};
 			}
 		});
@@ -170,17 +203,21 @@ function Recommendations() {
 	const fetchSingleRecommendation = async furnitureName => {
 		try {
 			const randomPage = Math.floor(Math.random() * 10) + 1;
-			const response = await server.post("/stylematch/recommendations/get-recommendations", {
-				style: style || "Modern",
-				furniture_name: furnitureName,
-				per_page: 1,
-				page: randomPage
-			}, {
-				headers: {
-					"Content-Type": "application/json",
-					"X-User-ID": user.uid
+			const response = await server.post(
+				"/stylematch/recommendations/get-recommendations",
+				{
+					style: style || "Modern",
+					furniture_name: furnitureName,
+					per_page: 1,
+					page: randomPage
+				},
+				{
+					headers: {
+						"Content-Type": "application/json",
+						"X-User-ID": user.uid
+					}
 				}
-			});
+			);
 
 			if (response.data.recommendations && response.data.recommendations.length > 0) {
 				const rec = response.data.recommendations[0];
@@ -191,12 +228,12 @@ function Recommendations() {
 			}
 			return null;
 		} catch (err) {
-			console.error("Error fetching single recommendation:", err);
+			console.error("Error fetching recommendation:", err);
 
 			const backendError = err.response?.data?.error || err.response?.data?.detail;
 
 			if (backendError) {
-				let errorMessage = "Too many requests. Please try again later";
+				let errorMessage = "Failed to fetch recommendation";
 
 				if (backendError.startsWith("UERROR: ")) {
 					errorMessage = backendError.substring("UERROR: ".length);
@@ -206,7 +243,7 @@ function Recommendations() {
 					errorMessage = backendError;
 				}
 
-				ShowToast("error", errorMessage);
+				ShowToast("error", errorMessage, "Check console for more details.");
 			}
 
 			return null;
@@ -227,10 +264,10 @@ function Recommendations() {
 
 			if (newRec) {
 				setRecommendations([...updatedRecs, newRec]);
-				ShowToast("success", "Recommendation replaced");
+				ShowToast("success", "Success!", "Recommendation replaced.");
 			} else {
 				setRecommendations(updatedRecs);
-				ShowToast("info", "Recommendation removed");
+				ShowToast("info", "Success!", "Recommendation removed.");
 			}
 
 			if (index < updatedRecs.length) {
@@ -266,23 +303,26 @@ function Recommendations() {
 
 			if (response.status === 200) {
 				setSavedRecommendations(prev => [...prev, { id: rec.id, ...rec }]);
-				ShowToast("success", "Recommendation saved!");
+				ShowToast("success", "Success!", "Recommendation saved.");
 			}
 		} catch (err) {
-			const backendError = err.response?.data?.error;
+			console.error("Error saving recommendation:", err);
+			const backendError = err.response?.data?.error || err.response?.data?.detail;
 
 			if (err.response?.status === 409) {
-				ShowToast("info", "This recommendation is already saved");
+				ShowToast("info", "This recommendation has already been saved!", "You can find it in your saved recommendations.");
 			} else {
 				let errorMessage = "Failed to save recommendation";
 
 				if (backendError?.startsWith("UERROR: ")) {
 					errorMessage = backendError.substring("UERROR: ".length);
+				} else if (backendError?.startsWith("ERROR: ")) {
+					errorMessage = backendError.substring("ERROR: ".length);
 				} else if (backendError) {
 					errorMessage = backendError;
 				}
 
-				ShowToast("error", errorMessage);
+				ShowToast("error", errorMessage, "Check console for more details.");
 			}
 		} finally {
 			setSavingRecId(null);
@@ -304,21 +344,24 @@ function Recommendations() {
 			if (response.status === 200) {
 				setSavedRecommendations(prev => prev.filter(saved => saved.id !== recId));
 				if (!skipToast) {
-					ShowToast("success", "Recommendation unsaved!");
+					ShowToast("success", "Success!", "Recommendation unsaved.");
 				}
 			}
 		} catch (err) {
-			const backendError = err.response?.data?.error;
+			console.error("Failed to remove recommendation", err);
+			const backendError = err.response?.data?.error || err.response?.data?.detail;
 			let errorMessage = "Failed to remove recommendation";
 
 			if (backendError?.startsWith("UERROR: ")) {
 				errorMessage = backendError.substring("UERROR: ".length);
+			} else if (backendError?.startsWith("ERROR: ")) {
+				errorMessage = backendError.substring("ERROR: ".length);
 			} else if (backendError) {
 				errorMessage = backendError;
 			}
 
 			if (!skipToast) {
-				ShowToast("error", errorMessage);
+				ShowToast("error", errorMessage, "Check console for more details.");
 			}
 		} finally {
 			setSavingRecId(null);
@@ -361,7 +404,7 @@ function Recommendations() {
 						left: 0,
 						right: 0,
 						bottom: 0,
-						backgroundImage: `url(${StyleMatchBackground})`,
+						backgroundImage: `linear-gradient(rgba(0,0,0,0.5), rgba(0,0,0,0.5)),url('/newHomeOwnerHero.png')`,
 						backgroundSize: "cover",
 						backgroundPosition: "center",
 						backgroundRepeat: "no-repeat",
@@ -422,11 +465,6 @@ function Recommendations() {
 														borderRadius={15}
 														p={3}
 														border="1px solid rgba(255, 255, 255, 0.15)"
-														_hover={{
-															bg: "rgba(255, 255, 255, 0.12)",
-															transform: "translateX(5px)",
-															transition: "all 0.2s"
-														}}
 													>
 														<Flex align="center" gap={3}>
 															<Box w={8} h={8} borderRadius="full" bg="rgba(255, 240, 189, 0.2)" display="flex" alignItems="center" justifyContent="center">
@@ -485,9 +523,10 @@ function Recommendations() {
 																animate={{ opacity: 1, scale: 1, y: 0 }}
 																transition={{ duration: 0.4, ease: "easeOut" }}
 															>
-																<Box position="relative" minWidth={"240px"} maxWidth={"240px"} minHeight="170px" maxHeight="170px">
-																	<Image objectFit="cover" width="100%" height="100%" src={furnitures[index].image} alt={furnitures[index].name} />
+																<Box position="relative" flex="0 0 240px" w="240px" h="100%">
+																	<Image src={furnitures[index].image} alt={furnitures[index].name} position="absolute" inset={0} w="100%" h="100%" objectFit="cover" />
 																</Box>
+
 																<Box flex={1} display="flex" flexDirection="column" justifyContent="space-between">
 																	<Card.Body py={3} px={4}>
 																		<Card.Title fontSize="lg" mb={2}>
@@ -517,13 +556,29 @@ function Recommendations() {
 
 											<Carousel.Control justifyContent="center" gap={4}>
 												<Carousel.PrevTrigger asChild>
-													<IconButton size="sm" variant="outline" borderRadius="full">
+													<IconButton
+														size="sm"
+														variant="ghost"
+														borderRadius="full"
+														color="white"
+														_hover={{
+															color: "black"
+														}}
+													>
 														<LuChevronLeft />
 													</IconButton>
 												</Carousel.PrevTrigger>
 												<Carousel.Indicators />
 												<Carousel.NextTrigger asChild>
-													<IconButton size="sm" variant="outline" borderRadius="full">
+													<IconButton
+														size="sm"
+														variant="ghost"
+														borderRadius="full"
+														color="white"
+														_hover={{
+															color: "black"
+														}}
+													>
 														<LuChevronRight />
 													</IconButton>
 												</Carousel.NextTrigger>
@@ -557,9 +612,10 @@ function Recommendations() {
 																		<Badge colorPalette={matchBadge.colorPalette} position="absolute" top={2} right={2} zIndex={10} fontSize="xs" fontWeight="semibold" borderRadius={10}>
 																			{matchBadge.text}
 																		</Badge>
-																		<Box position="relative" minWidth={"220px"} maxWidth="30%" minH={"180px"} maxHeight="180px">
-																			<Image objectFit="cover" minWidth={"164px"} width="100%" minHeight={"171px"} height="100%" src={rec.image} alt={rec.name} />
+																		<Box position="relative" flex="0 0 220px" w="220px" h="100%">
+																			<Image src={rec.image} alt={rec.name} position="absolute" inset={0} w="100%" h="100%" objectFit="cover" />
 																		</Box>
+
 																		<Box flex={1} display="flex" flexDirection="column" justifyContent="space-between">
 																			<Card.Body py={3} px={4}>
 																				<Card.Title fontSize="lg" mb={2}>
@@ -599,13 +655,29 @@ function Recommendations() {
 
 												<Carousel.Control justifyContent="center" gap={4} mt={2}>
 													<Carousel.PrevTrigger asChild>
-														<IconButton size="sm" variant="outline" borderRadius="full">
+														<IconButton
+															size="sm"
+															variant="ghost"
+															borderRadius="full"
+															color="white"
+															_hover={{
+																color: "black"
+															}}
+														>
 															<LuChevronLeft />
 														</IconButton>
 													</Carousel.PrevTrigger>
 													<Carousel.Indicators />
 													<Carousel.NextTrigger asChild>
-														<IconButton size="sm" variant="outline" borderRadius="full">
+														<IconButton
+															size="sm"
+															variant="ghost"
+															borderRadius="full"
+															color="white"
+															_hover={{
+																color: "black"
+															}}
+														>
 															<LuChevronRight />
 														</IconButton>
 													</Carousel.NextTrigger>
@@ -668,7 +740,7 @@ function Recommendations() {
 															Ready to Explore?
 														</Text>
 														<Text color="gray.500" fontSize="sm" textAlign="center" maxW="300px">
-															Select a furniture item above to discover perfectly matched recommendations
+															Choose a furniture item above to discover our recommendations
 														</Text>
 													</VStack>
 												</VStack>
@@ -717,7 +789,7 @@ function Recommendations() {
 						left: 0,
 						right: 0,
 						bottom: 0,
-						backgroundImage: `url(${StyleMatchBackground})`,
+						backgroundImage: `linear-gradient(rgba(0,0,0,0.5), rgba(0,0,0,0.5)),url('/newHomeOwnerHero.png')`,
 						backgroundSize: "cover",
 						backgroundPosition: "center",
 						backgroundRepeat: "no-repeat",

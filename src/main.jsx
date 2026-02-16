@@ -41,6 +41,7 @@ createRoot(document.getElementById('root')).render(
 					</Route>
 
 					<Route path={"lumen"}>
+						<Route index element={<NotFound />} />
 						<Route path={"chat"} element={<ChatbotPage />} />
 						<Route path={"agent"} element={<LumenAgent />} />
 					</Route>
@@ -48,7 +49,7 @@ createRoot(document.getElementById('root')).render(
 					<Route path={"designDocument"}>
 						<Route index element={<DesignDocumentPage />} />
 					</Route>
-					
+
 					<Route path={"imageGeneration"}>
 						<Route index element={<ImageGeneration />} />
 					</Route>
