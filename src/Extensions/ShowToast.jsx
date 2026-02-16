@@ -22,7 +22,7 @@ export default function ShowToast(type, title, description, options = {}) {
         type: type !== null ? type : "info",
         title: title !== null ? title : "",
         description: description !== null ? description : "",
-        duration: options.persistent ? Infinity : (options.duration || 4500),
+        duration: options.persistent ? Infinity : (options.duration || 5000),
         action: options.action || undefined,
     });
 }

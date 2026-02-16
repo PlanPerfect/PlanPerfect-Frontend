@@ -1,6 +1,7 @@
 import { useEffect, useState } from "react";
 import { Box, Text, Spinner } from "@chakra-ui/react";
 import { useAuth } from "../../contexts/AuthContext";
+import ShowToast from '@/Extensions/ShowToast';
 import server from "../../../networking";
 
 function StyleAnalysis({ file, onComplete }) {
@@ -19,16 +20,12 @@ function StyleAnalysis({ file, onComplete }) {
 				const formData = new FormData();
 				formData.append("file", file.file);
 
-                const response = await server.post(
-               		"/existingHomeOwners/styleClassification/styleAnalysis",
-                	formData,
-					{
-						headers: {
-							"Content-Type": "multipart/form-data",
-							"X-User-ID": user.uid,
-						},
+				const response = await server.post("/existingHomeOwners/styleClassification/styleAnalysis", formData, {
+					headers: {
+						"Content-Type": "multipart/form-data",
+						"X-User-ID": user.uid
 					}
-                );
+				});
 
 				const result = response.data.result;
 
@@ -40,22 +37,42 @@ function StyleAnalysis({ file, onComplete }) {
 						onComplete(result);
 					}
 				}, 1500);
-			} catch (error) {
-				console.error("Style Analysis Error:", error);
-				console.error("Error response:", error.response?.data);
+			} catch (err) {
 				setStatus("error");
-
-				// More detailed error message
-				let errorMessage = "Analysis failed";
-				if (error.response?.data?.result) {
-					errorMessage = error.response.data.result;
-				} else if (error.response?.data?.detail) {
-					errorMessage = JSON.stringify(error.response.data.detail);
-				} else if (error.message) {
-					errorMessage = error.message;
+				if (err?.response?.data?.detail) {
+					if (err.response.data.detail.startsWith("UERROR: ")) {
+						const errorMessage = err.response.data.detail.substring("UERROR: ".length);
+						setProgress(errorMessage);
+						console.error("Failed to run analysis: ", errorMessage);
+						ShowToast("error", errorMessage, "Check console for more details.");
+					} else if (err.response.data.detail.startsWith("ERROR: ")) {
+						const errorMessage = err.response.data.detail.substring("ERROR: ".length);
+						setProgress(errorMessage);
+						console.error("Failed to run analysis: ", errorMessage);
+						ShowToast("error", errorMessage, "Check console for more details.");
+					} else {
+						console.error("Failed to run analysis: ", err.response.data.detail);
+						ShowToast("error", "Failed to run analysis", "Check console for more details.");
+					}
+				} else if (err?.response?.data?.error) {
+					if (err.response.data.error.startsWith("UERROR: ")) {
+						const errorMessage = err.response.data.error.substring("UERROR: ".length);
+						setProgress(errorMessage);
+						console.error("Failed to run analysis: ", errorMessage);
+						ShowToast("error", errorMessage, "Check console for more details.");
+					} else if (err.response.data.error.startsWith("ERROR: ")) {
+						const errorMessage = err.response.data.error.substring("ERROR: ".length);
+						setProgress(errorMessage);
+						console.error("Failed to run analysis: ", errorMessage);
+						ShowToast("error", errorMessage, "Check console for more details.");
+					} else {
+						console.error("Failed to run analysis: ", err.response.data.error);
+						ShowToast("error", "Failed to run analysis", "Check console for more details.");
+					}
+				} else {
+					console.error("Failed to run analysis: ", err?.response);
+					ShowToast("error", "An unexpected error occurred", "Check console for more details.");
 				}
-
-				setProgress(errorMessage);
 			}
 		};
 
@@ -74,16 +91,14 @@ function StyleAnalysis({ file, onComplete }) {
 						{progress}
 					</Text>
 					<Text fontSize="sm" color="gray.500" mt={2}>
-						Our AI will detect your interior design style and
-						identify furniture in your room
+						Our AI will detect your interior design style and identify furniture in your room
 					</Text>
 				</>
 			)}
 
 			{status === "completed" && (
 				<>
-					<Box w="48px" h="48px" borderRadius="full" bg="green.500" display="flex" alignItems="center" justifyContent="center"
-						mx="auto" mb={4}>
+					<Box w="48px" h="48px" borderRadius="full" bg="green.500" display="flex" alignItems="center" justifyContent="center" mx="auto" mb={4}>
 						<Text color="white" fontSize="2xl">
 							✓
 						</Text>
@@ -99,9 +114,7 @@ function StyleAnalysis({ file, onComplete }) {
 
 			{status === "error" && (
 				<>
-					<Box w="48px" h="48px" borderRadius="full" bg="red.500" display="flex" alignItems="center" justifyContent="center"
-						mx="auto" mb={4}
-					>
+					<Box w="48px" h="48px" borderRadius="full" bg="red.500" display="flex" alignItems="center" justifyContent="center" mx="auto" mb={4}>
 						<Text color="white" fontSize="2xl">
 							✕
 						</Text>

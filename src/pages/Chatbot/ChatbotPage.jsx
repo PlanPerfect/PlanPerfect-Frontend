@@ -42,20 +42,19 @@ function ChatbotPage() {
 			const response = await server.get("/chatbot/current-model");
 			setCurrentModel(response.data.model);
 		} catch (err) {
-			console.warn("Failed to fetch current model. Falling back to Llama 3.3 70B.", err);
 			setCurrentModel("Llama 3.3 70B");
 		}
 	};
 
-	const formatModelName = (modelString) => {
-		const modelName = modelString.split('/')[1] || modelString;
+	const formatModelName = modelString => {
+		const modelName = modelString.split("/")[1] || modelString;
 
-		if (modelName.includes('llama')) {
+		if (modelName.includes("llama")) {
 			const match = modelName.match(/llama-(\d+\.\d+)-(\d+b)/i);
 			if (match) {
 				return `Llama ${match[1]} ${match[2].toUpperCase()}`;
 			}
-		} else if (modelName.includes('gemini')) {
+		} else if (modelName.includes("gemini")) {
 			const match = modelName.match(/gemini-(\d+\.\d+)-(\w+)/i);
 			if (match) {
 				return `Gemini ${match[1]} ${match[2].charAt(0).toUpperCase() + match[2].slice(1)}`;
@@ -104,17 +103,35 @@ function ChatbotPage() {
 				setCurrentModel(response.data.model);
 			}
 		} catch (err) {
-			if (err.response?.data?.error?.startsWith("UERROR: ")) {
-				const errorMessage = err.response.data.error.substring("UERROR: ".length);
-				console.warn("Failed to send message: ", errorMessage);
-				ShowToast("error", errorMessage);
-			} else if (err.response?.data?.error?.startsWith("ERROR: ")) {
-				const errorMessage = err.response.data.error.substring("ERROR: ".length);
-				console.error("Failed to send message: ", errorMessage);
-				ShowToast("error", errorMessage);
+			if (err?.response?.data?.detail) {
+				if (err.response.data.detail.startsWith("UERROR: ")) {
+					const errorMessage = err.response.data.detail.substring("UERROR: ".length);
+					console.error("Failed to send message: ", errorMessage);
+					ShowToast("error", errorMessage, "Check console for more details.");
+				} else if (err.response.data.detail.startsWith("ERROR: ")) {
+					const errorMessage = err.response.data.detail.substring("ERROR: ".length);
+					console.error("Failed to send message: ", errorMessage);
+					ShowToast("error", errorMessage, "Check console for more details.");
+				} else {
+					console.error("Failed to send message: ", err.response.data.detail);
+					ShowToast("error", "Failed to send message", "Check console for more details.");
+				}
+			} else if (err?.response?.data?.error) {
+				if (err.response.data.error.startsWith("UERROR: ")) {
+					const errorMessage = err.response.data.error.substring("UERROR: ".length);
+					console.error("Failed to send message: ", errorMessage);
+					ShowToast("error", errorMessage, "Check console for more details.");
+				} else if (err.response.data.error.startsWith("ERROR: ")) {
+					const errorMessage = err.response.data.error.substring("ERROR: ".length);
+					console.error("Failed to send message: ", errorMessage);
+					ShowToast("error", errorMessage, "Check console for more details.");
+				} else {
+					console.error("Failed to send message: ", err.response.data.error);
+					ShowToast("error", "Failed to send message", "Check console for more details.");
+				}
 			} else {
-				console.error("Failed to send message: ", err.response?.data?.error || err.response?.data?.detail);
-				ShowToast("error", "An unexpected error occurred. Check console for more details.");
+				console.error("Failed to send message: ", err?.response);
+				ShowToast("error", "An unexpected error occurred", "Check console for more details.");
 			}
 		} finally {
 			setIsTyping(false);
@@ -161,11 +178,7 @@ function ChatbotPage() {
 									<Heading size={{ base: "md", md: "lg" }} color="white" textShadow="0 2px 4px rgba(0,0,0,0.2)">
 										Lumen AI
 									</Heading>
-									<Text
-										fontSize={{ base: "xs", md: "sm" }}
-										color="rgba(255, 255, 255, 0.7)"
-										transition="all 0.3s ease"
-									>
+									<Text fontSize={{ base: "xs", md: "sm" }} color="rgba(255, 255, 255, 0.7)" transition="all 0.3s ease">
 										Powered by {formatModelName(currentModel)}
 									</Text>
 								</VStack>
@@ -236,13 +249,7 @@ function ChatbotPage() {
 								return (
 									<Flex key={idx} justify={message.role === "user" ? "flex-end" : "flex-start"} animation={shouldAnimate ? "fadeInUp 0.4s ease-out" : "none"}>
 										<Flex maxW={{ base: "85%", md: "70%" }} gap={3} direction={message.role === "user" ? "row-reverse" : "row"}>
-											<Box
-												bg={message.role === "user" ? "#D4AF37" : message.isError ? "rgba(255, 100, 100, 0.3)" : "rgba(255, 240, 189, 0.3)"}
-												p={2}
-												borderRadius="full"
-												h="fit-content"
-												flexShrink={0}
-											>
+											<Box bg={message.role === "user" ? "#D4AF37" : message.isError ? "rgba(255, 100, 100, 0.3)" : "rgba(255, 240, 189, 0.3)"} p={2} borderRadius="full" h="fit-content" flexShrink={0}>
 												{message.role === "user" ? <User size={20} color="white" /> : message.isError ? <AlertCircle size={20} color="#ff6b6b" /> : <Bot size={20} color="#fff0bd" />}
 											</Box>
 
