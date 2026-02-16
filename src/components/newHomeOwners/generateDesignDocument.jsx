@@ -1,5 +1,4 @@
-import { Box, Button, Flex, Heading, Text, VStack } from "@chakra-ui/react";
-import { IoSparkles } from "react-icons/io5";
+import { Box, Button, Flex, Heading, Spinner, Text, VStack } from "@chakra-ui/react";
 import { useNavigate } from "react-router-dom";
 import { useState } from "react";
 import { useAuth } from "../../contexts/AuthContext";
@@ -9,8 +8,9 @@ import ShowToast from '@/Extensions/ShowToast';
 function GenerateDesignDocument({ floorPlanFile, preferences, budget, extractionResults }) {
 	const navigate = useNavigate();
 	const { user } = useAuth();
-	
-	const [isSaving, setIsSaving] = useState(false);
+
+	const [isSavingChatbot, setIsSavingChatbot] = useState(false);
+	const [isSavingDocument, setIsSavingDocument] = useState(false);
 
 	function base64ToFile(base64, filename) {
 		const arr = base64.split(",");
@@ -18,57 +18,55 @@ function GenerateDesignDocument({ floorPlanFile, preferences, budget, extraction
 		const bstr = atob(arr[1]);
 		let n = bstr.length;
 		const u8arr = new Uint8Array(n);
-	  
+
 		while (n--) {
 		  u8arr[n] = bstr.charCodeAt(n);
 		}
-	  
+
 		return new File([u8arr], filename, { type: mime });
-	}	  
+	}
 
 	function filterThemes(preferences) {
 		// Nothing passed
 		if (!preferences) {
 			return ["Not Selected"];
 		}
-	
+
 		// Object case: { style: "Scandinavian & Peranakan" }
 		if (typeof preferences === "object" && preferences.style) {
 			return filterThemes(preferences.style);
 		}
-	
+
 		// Array
 		if (Array.isArray(preferences)) {
 			return preferences.length > 0 ? preferences : ["Not Selected"];
 		}
-	
+
 		// String case
 		if (typeof preferences === "string") {
 			if (preferences.toLowerCase() === "not selected") {
 				return ["Not Selected"];
 			}
-	
+
 			const themes = preferences
 				.split("&")
 				.map(t => t.trim())
 				.filter(Boolean);
-	
+
 			return themes.length > 0 ? themes : ["Not Selected"];
 		}
-	
+
 		// Fallback
 		return ["Not Selected"];
 	}
-	
+
 	const saveUserInputToDatabase = async () => {
 		try {
-			setIsSaving(true);
-
 			const formData = new FormData();
-			
+
 			// Add floor plan file
 			formData.append("floor_plan", floorPlanFile.file);
-			
+
 			// Add segmented floor plan
 			if (extractionResults?.segmentedImage) {
 				const segmentedFile = base64ToFile(
@@ -77,22 +75,22 @@ function GenerateDesignDocument({ floorPlanFile, preferences, budget, extraction
 				);
 				formData.append("segmented_floor_plan", segmentedFile);
 			}
-			
+
 			// Add preferences
 			if (preferences) {
 				formData.append("preferences", JSON.stringify(filterThemes(preferences)));
 			}
-			
+
 			// Add budget
 			if (budget) {
 				formData.append("budget", budget);
 			}
-			
+
 			// Add unit information
 			if (extractionResults?.unitInfo) {
 				formData.append("unit_info", JSON.stringify(extractionResults.unitInfo));
 			}
-			
+
 			// Add user ID
 			formData.append("user_id", user.uid);
 
@@ -102,36 +100,69 @@ function GenerateDesignDocument({ floorPlanFile, preferences, budget, extraction
 				throw new Error(response.data.result);
 			}
 
-			console.log("Save successful:", response.data);
-			setIsSaving(false);
 			return true;
-		} catch (error) {
-			console.error("Save user input error:", error);
-			setIsSaving(false);
-			
-			ShowToast("error", "Failed to save your inputs", "Please try again");
-			
+		} catch (err) {
+			if (err?.response?.data?.detail) {
+				if (err.response.data.detail.startsWith("UERROR: ")) {
+					const errorMessage = err.response.data.detail.substring("UERROR: ".length);
+					console.error("Failed to save user input: ", errorMessage);
+					ShowToast("error", errorMessage, "Check console for more details.");
+				} else if (err.response.data.detail.startsWith("ERROR: ")) {
+					const errorMessage = err.response.data.detail.substring("ERROR: ".length);
+					console.error("Failed to save user input: ", errorMessage);
+					ShowToast("error", errorMessage, "Check console for more details.");
+				} else {
+					console.error("Failed to save user input: ", err.response.data.detail);
+					ShowToast("error", "Failed to save user input", "Check console for more details.");
+				}
+			} else if (err?.response?.data?.error) {
+				if (err.response.data.error.startsWith("UERROR: ")) {
+					const errorMessage = err.response.data.error.substring("UERROR: ".length);
+					console.error("Failed to save user input: ", errorMessage);
+					ShowToast("error", errorMessage, "Check console for more details.");
+				} else if (err.response.data.error.startsWith("ERROR: ")) {
+					const errorMessage = err.response.data.error.substring("ERROR: ".length);
+					console.error("Failed to save user input: ", errorMessage);
+					ShowToast("error", errorMessage, "Check console for more details.");
+				} else {
+					console.error("Failed to save user input: ", err.response.data.error);
+					ShowToast("error", "Failed to save user input", "Check console for more details.");
+				}
+			} else {
+				console.error("Failed to save user input: ", err?.response);
+				ShowToast("error", "An unexpected error occurred", "Check console for more details.");
+			}
+
 			return false;
 		}
 	};
 
 	const handleNavigateToChatbot = async () => {
+		setIsSavingChatbot(true);
+
 		const saved = await saveUserInputToDatabase();
-		
+
 		if (saved) {
 			navigate("/lumen/chat");
+		} else {
+			setIsSavingChatbot(false);
 		}
 	};
 
 	const handleNavigateToDesignDocument = async () => {
+		setIsSavingDocument(true);
+
 		const saved = await saveUserInputToDatabase();
 
-		console.log("Save user input result before navigating to design document:", saved);
-		
 		if (saved) {
 			navigate("/designDocument");
+		} else {
+			setIsSavingDocument(false);
 		}
 	};
+
+	// Check if any save operation is in progress
+	const isAnySaving = isSavingChatbot || isSavingDocument;
 
 	return (
 		<Box w="100%" pt={10}>
@@ -237,16 +268,22 @@ function GenerateDesignDocument({ floorPlanFile, preferences, budget, extraction
 					size="xl"
 					bg="#D4AF37"
 					color="white"
-					_hover={{ bg: "#C9A961" }}
+					_hover={{ bg: isAnySaving ? "#D4AF37" : "#C9A961" }}
 					w="100%"
 					h="60px"
 					fontSize="lg"
-					leftIcon={<IoSparkles />}
 					onClick={handleNavigateToChatbot}
-					isLoading={isSaving}
-					loadingText="Saving your inputs..."
+					disabled={isAnySaving}
+					cursor={isAnySaving ? "not-allowed" : "pointer"}
 				>
-					Chat with our chatbot to get a more cohesive report
+					{isSavingChatbot ? (
+						<Flex align="center" gap={2}>
+							<Spinner size="sm" />
+							<Text>Saving your inputs...</Text>
+						</Flex>
+					) : (
+						<Text>Chat with our chatbot to get a more cohesive report</Text>
+					)}
 				</Button>
 
 				{/* Skip & Generate Button - SECONDARY */}
@@ -256,17 +293,22 @@ function GenerateDesignDocument({ floorPlanFile, preferences, budget, extraction
 					borderColor="#D4AF37"
 					color="#D4AF37"
 					bg="transparent"
-					_hover={{ bg: "yellow.50" }}
+					_hover={{ bg: isAnySaving ? "transparent" : "yellow.50" }}
 					onClick={handleNavigateToDesignDocument}
-					disabled={!floorPlanFile}
-					isLoading={isSaving}
-					loadingText="Saving your inputs..."
-					leftIcon={<IoSparkles />}
+					disabled={!floorPlanFile || isAnySaving}
+					cursor={!floorPlanFile || isAnySaving ? "not-allowed" : "pointer"}
 					w="100%"
 					h="60px"
 					fontSize="lg"
 				>
-					Skip and generate design document now
+					{isSavingDocument ? (
+						<Flex align="center" gap={2}>
+							<Spinner size="sm" />
+							<Text>Saving your inputs...</Text>
+						</Flex>
+					) : (
+						<Text>Skip and generate design document now</Text>
+					)}
 				</Button>
 
 				<Text fontSize="xs" color="gray.500" textAlign="center">

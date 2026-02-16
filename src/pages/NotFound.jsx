@@ -8,7 +8,7 @@ function NotFound() {
     const navigate = useNavigate();
 
     useEffect(() => {
-        ShowToast("info", "Sorry, but we couldn't find the page you're looking for.", "", {
+        ShowToast("info", "404 Page Not Found", "Sorry, but we couldn't find the page you're looking for.", {
             persistent: true,
             action: {
                 label: "Go to Home",

@@ -18,7 +18,7 @@ function Services() {
 
     useEffect(() => {
         if (location.state?.loginSuccess) {
-            ShowToast("success", "Successfully logged in!")
+            ShowToast("success", "Welcome to PlanPerfect!", "Logged in successfully.");
             navigate(location.pathname, { replace: true, state: {} })
         }
     }, [location.state, navigate, location.pathname])

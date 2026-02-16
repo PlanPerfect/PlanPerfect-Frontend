@@ -1,5 +1,6 @@
 import { useState, useEffect } from "react";
 import { Box, Text, Spinner, Button } from "@chakra-ui/react";
+import ShowToast from '@/Extensions/ShowToast';
 import server from "../../../networking";
 
 function AIExtraction({ file, onComplete, startExtraction }) {
@@ -29,10 +30,7 @@ function AIExtraction({ file, onComplete, startExtraction }) {
 			const segmentationFormData = new FormData();
 			segmentationFormData.append("file", file.file);
 
-			const segmentationResponse = await server.post(
-				"/newHomeOwners/extraction/roomSegmentation",
-				segmentationFormData
-			);
+			const segmentationResponse = await server.post("/newHomeOwners/extraction/roomSegmentation", segmentationFormData);
 
 			if (!segmentationResponse.data.success) {
 				console.error("Room segmentation failed:", segmentationResponse?.data);
@@ -47,10 +45,7 @@ function AIExtraction({ file, onComplete, startExtraction }) {
 			const extractionFormData = new FormData();
 			extractionFormData.append("file", file.file);
 
-			const extractionResponse = await server.post(
-				"/newHomeOwners/extraction/unitInformationExtraction",
-				extractionFormData
-			);
+			const extractionResponse = await server.post("/newHomeOwners/extraction/unitInformationExtraction", extractionFormData);
 
 			if (!extractionResponse.data.success) {
 				console.error("Unit information extraction failed:", extractionResponse?.data);
@@ -61,7 +56,7 @@ function AIExtraction({ file, onComplete, startExtraction }) {
 			// Combine results
 			const combinedResults = {
 				segmentedImage: segmentedImage,
-				unitInfo: unitInfo,
+				unitInfo: unitInfo
 			};
 
 			setIsExtracting(false);
@@ -74,14 +69,42 @@ function AIExtraction({ file, onComplete, startExtraction }) {
 					onComplete(combinedResults);
 				}
 			}, 1500);
-		} catch (error) {
-			console.error("AI Extraction Error Response:", error);
-			
+		} catch (err) {
 			setIsPreparing(false);
 			setIsSegmenting(false);
 			setIsExtracting(false);
 			setIsProcessing(false);
 			setHasError(true);
+			if (err?.response?.data?.detail) {
+				if (err.response.data.detail.startsWith("UERROR: ")) {
+					const errorMessage = err.response.data.detail.substring("UERROR: ".length);
+					console.error("Failed to extract information: ", errorMessage);
+					ShowToast("error", errorMessage, "Check console for more details.");
+				} else if (err.response.data.detail.startsWith("ERROR: ")) {
+					const errorMessage = err.response.data.detail.substring("ERROR: ".length);
+					console.error("Failed to extract information: ", errorMessage);
+					ShowToast("error", errorMessage, "Check console for more details.");
+				} else {
+					console.error("Failed to extract information: ", err.response.data.detail);
+					ShowToast("error", "Failed to extract information", "Check console for more details.");
+				}
+			} else if (err?.response?.data?.error) {
+				if (err.response.data.error.startsWith("UERROR: ")) {
+					const errorMessage = err.response.data.error.substring("UERROR: ".length);
+					console.error("Failed to extract information: ", errorMessage);
+					ShowToast("error", errorMessage, "Check console for more details.");
+				} else if (err.response.data.error.startsWith("ERROR: ")) {
+					const errorMessage = err.response.data.error.substring("ERROR: ".length);
+					console.error("Failed to extract information: ", errorMessage);
+					ShowToast("error", errorMessage, "Check console for more details.");
+				} else {
+					console.error("Failed to extract information: ", err.response.data.error);
+					ShowToast("error", "Failed to extract information", "Check console for more details.");
+				}
+			} else {
+				console.error("Failed to extract information: ", err?.response);
+				ShowToast("error", "An unexpected error occurred", "Check console for more details.");
+			}
 		}
 	};
 
@@ -111,8 +134,7 @@ function AIExtraction({ file, onComplete, startExtraction }) {
 						{getProgressMessage()}
 					</Text>
 					<Text fontSize="sm" color="gray.500" mt={2}>
-						Our AI will extract the unit information and segment out
-						the rooms in the floor plan
+						Our AI will extract the unit information and segment out the rooms in the floor plan
 					</Text>
 				</>
 			)}
@@ -120,17 +142,7 @@ function AIExtraction({ file, onComplete, startExtraction }) {
 			{/* Extraction complete */}
 			{hasCompleted && (
 				<>
-					<Box
-						w="48px"
-						h="48px"
-						borderRadius="full"
-						bg="green.500"
-						display="flex"
-						alignItems="center"
-						justifyContent="center"
-						mx="auto"
-						mb={4}
-					>
+					<Box w="48px" h="48px" borderRadius="full" bg="green.500" display="flex" alignItems="center" justifyContent="center" mx="auto" mb={4}>
 						<Text color="white" fontSize="2xl">
 							✓
 						</Text>
@@ -147,17 +159,7 @@ function AIExtraction({ file, onComplete, startExtraction }) {
 			{/* Extraction error */}
 			{hasError && (
 				<>
-					<Box
-						w="48px"
-						h="48px"
-						borderRadius="full"
-						bg="red.500"
-						display="flex"
-						alignItems="center"
-						justifyContent="center"
-						mx="auto"
-						mb={4}
-					>
+					<Box w="48px" h="48px" borderRadius="full" bg="red.500" display="flex" alignItems="center" justifyContent="center" mx="auto" mb={4}>
 						<Text color="white" fontSize="2xl">
 							✕
 						</Text>
@@ -168,14 +170,7 @@ function AIExtraction({ file, onComplete, startExtraction }) {
 					<Text fontSize="sm" color="gray.500" mt={2} mb={4}>
 						An error occurred during extraction
 					</Text>
-					<Button
-						onClick={handleRetry}
-						bg="#D4AF37"
-						color="white"
-						size="md"
-						px={6}
-						_hover={{ bg: "#C19B2F" }}
-					>
+					<Button onClick={handleRetry} bg="#D4AF37" color="white" size="md" px={6} _hover={{ bg: "#C19B2F" }}>
 						Try Again
 					</Button>
 				</>

@@ -13,7 +13,7 @@ function Homepage() {
 
 	useEffect(() => {
 		if (location.state?.authRedirect) {
-			ShowToast("warning", "Please login first.");
+			ShowToast("warning", "You're signed out", "Please login first.");
 			navigate(location.pathname, { replace: true, state: {} });
 		}
 	}, [location.state, navigate, location.pathname]);

@@ -59,7 +59,7 @@ function Recommendations() {
 		if (isInitialMount) return;
 
 		if (!furnitures || furnitures.length === 0 || !style) {
-			ShowToast("info", "Please upload an image for processing before using this search feature.", "", {
+			ShowToast("info", "Please let us analyse your room before using this search feature.", "", {
 				persistent: true,
 				action: {
 					label: "Go Back",
@@ -81,7 +81,36 @@ function Recommendations() {
 				setSavedRecommendations(response.data.recommendations);
 			}
 		} catch (err) {
-			console.error("Failed to fetch saved recommendations:", err);
+			if (err?.response?.data?.detail) {
+				if (err.response.data.detail.startsWith("UERROR: ")) {
+					const errorMessage = err.response.data.detail.substring("UERROR: ".length);
+					console.error("Failed to fetch saved recommendations: ", errorMessage);
+					ShowToast("error", errorMessage, "Check console for more details.");
+				} else if (err.response.data.detail.startsWith("ERROR: ")) {
+					const errorMessage = err.response.data.detail.substring("ERROR: ".length);
+					console.error("Failed to fetch saved recommendations: ", errorMessage);
+					ShowToast("error", errorMessage, "Check console for more details.");
+				} else {
+					console.error("Failed to fetch saved recommendations: ", err.response.data.detail);
+					ShowToast("error", "Failed to fetch saved recommendations", "Check console for more details.");
+				}
+			} else if (err?.response?.data?.error) {
+				if (err.response.data.error.startsWith("UERROR: ")) {
+					const errorMessage = err.response.data.error.substring("UERROR: ".length);
+					console.error("Failed to fetch saved recommendations: ", errorMessage);
+					ShowToast("error", errorMessage, "Check console for more details.");
+				} else if (err.response.data.error.startsWith("ERROR: ")) {
+					const errorMessage = err.response.data.error.substring("ERROR: ".length);
+					console.error("Failed to fetch saved recommendations: ", errorMessage);
+					ShowToast("error", errorMessage, "Check console for more details.");
+				} else {
+					console.error("Failed to fetch saved recommendations: ", err.response.data.error);
+					ShowToast("error", "Failed to fetch saved recommendations", "Check console for more details.");
+				}
+			} else {
+				console.error("Failed to fetch saved recommendations: ", err?.response);
+				ShowToast("error", "An unexpected error occurred", "Check console for more details.");
+			}
 		}
 	};
 
@@ -164,7 +193,8 @@ function Recommendations() {
 				}
 
 				return {
-					title: errorTitle
+					title: errorTitle,
+					description: "Check console for more details."
 				};
 			}
 		});
@@ -198,12 +228,12 @@ function Recommendations() {
 			}
 			return null;
 		} catch (err) {
-			console.error("Error fetching single recommendation:", err);
+			console.error("Error fetching recommendation:", err);
 
 			const backendError = err.response?.data?.error || err.response?.data?.detail;
 
 			if (backendError) {
-				let errorMessage = "Too many requests. Please try again later";
+				let errorMessage = "Failed to fetch recommendation";
 
 				if (backendError.startsWith("UERROR: ")) {
 					errorMessage = backendError.substring("UERROR: ".length);
@@ -213,7 +243,7 @@ function Recommendations() {
 					errorMessage = backendError;
 				}
 
-				ShowToast("error", errorMessage);
+				ShowToast("error", errorMessage, "Check console for more details.");
 			}
 
 			return null;
@@ -234,10 +264,10 @@ function Recommendations() {
 
 			if (newRec) {
 				setRecommendations([...updatedRecs, newRec]);
-				ShowToast("success", "Recommendation replaced");
+				ShowToast("success", "Success!", "Recommendation replaced.");
 			} else {
 				setRecommendations(updatedRecs);
-				ShowToast("info", "Recommendation removed");
+				ShowToast("info", "Success!", "Recommendation removed.");
 			}
 
 			if (index < updatedRecs.length) {
@@ -273,23 +303,26 @@ function Recommendations() {
 
 			if (response.status === 200) {
 				setSavedRecommendations(prev => [...prev, { id: rec.id, ...rec }]);
-				ShowToast("success", "Recommendation saved!");
+				ShowToast("success", "Success!", "Recommendation saved.");
 			}
 		} catch (err) {
-			const backendError = err.response?.data?.error;
+			console.error("Error saving recommendation:", err);
+			const backendError = err.response?.data?.error || err.response?.data?.detail;
 
 			if (err.response?.status === 409) {
-				ShowToast("info", "This recommendation is already saved");
+				ShowToast("info", "This recommendation has already been saved!", "You can find it in your saved recommendations.");
 			} else {
 				let errorMessage = "Failed to save recommendation";
 
 				if (backendError?.startsWith("UERROR: ")) {
 					errorMessage = backendError.substring("UERROR: ".length);
+				} else if (backendError?.startsWith("ERROR: ")) {
+					errorMessage = backendError.substring("ERROR: ".length);
 				} else if (backendError) {
 					errorMessage = backendError;
 				}
 
-				ShowToast("error", errorMessage);
+				ShowToast("error", errorMessage, "Check console for more details.");
 			}
 		} finally {
 			setSavingRecId(null);
@@ -311,21 +344,24 @@ function Recommendations() {
 			if (response.status === 200) {
 				setSavedRecommendations(prev => prev.filter(saved => saved.id !== recId));
 				if (!skipToast) {
-					ShowToast("success", "Recommendation unsaved!");
+					ShowToast("success", "Success!", "Recommendation unsaved.");
 				}
 			}
 		} catch (err) {
-			const backendError = err.response?.data?.error;
+			console.error("Failed to remove recommendation", err);
+			const backendError = err.response?.data?.error || err.response?.data?.detail;
 			let errorMessage = "Failed to remove recommendation";
 
 			if (backendError?.startsWith("UERROR: ")) {
 				errorMessage = backendError.substring("UERROR: ".length);
+			} else if (backendError?.startsWith("ERROR: ")) {
+				errorMessage = backendError.substring("ERROR: ".length);
 			} else if (backendError) {
 				errorMessage = backendError;
 			}
 
 			if (!skipToast) {
-				ShowToast("error", errorMessage);
+				ShowToast("error", errorMessage, "Check console for more details.");
 			}
 		} finally {
 			setSavingRecId(null);
@@ -429,7 +465,6 @@ function Recommendations() {
 														borderRadius={15}
 														p={3}
 														border="1px solid rgba(255, 255, 255, 0.15)"
-
 													>
 														<Flex align="center" gap={3}>
 															<Box w={8} h={8} borderRadius="full" bg="rgba(255, 240, 189, 0.2)" display="flex" alignItems="center" justifyContent="center">

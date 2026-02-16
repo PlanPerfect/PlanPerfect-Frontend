@@ -1,14 +1,12 @@
 import { useState, useEffect } from "react";
 import { Box, Card, Flex, Heading, Text, VStack, Button, Spinner } from "@chakra-ui/react";
 import { FileText, Download, RefreshCw, CheckCircle, AlertCircle } from "lucide-react";
-import { useNavigate } from "react-router-dom";
 import LandingBackground from "../../assets/LandingBackground.png";
 import server from "../../../networking";
 import ShowToast from "@/Extensions/ShowToast";
 import { useAuth } from "../../contexts/AuthContext";
 
 function DesignDocumentPage() {
-	const navigate = useNavigate();
 	const { user } = useAuth();
 
 	const [isGenerating, setIsGenerating] = useState(true);
@@ -24,38 +22,20 @@ function DesignDocumentPage() {
 	};
 
 	useEffect(() => {
-		// Check if required data exists
-		if (!user) {
-			ShowToast("error", "Missing floor plan data. Redirecting...");
-			navigate("/onboarding");
-			return;
-		}
-
-		// Auto-generate on mount
 		generateDocument();
 	}, []);
 
-	const savePdfToCloud = async (pdfBlob) => {
+	const savePdfToCloud = async pdfBlob => {
 		const formData = new FormData();
 
-		const timestamp = new Date()
-			.toISOString()
-			.replace(/[-:]/g, "")
-			.slice(0, 15);
+		const timestamp = new Date().toISOString().replace(/[-:]/g, "").slice(0, 15);
 
-		const pdfFile = new File(
-			[pdfBlob],
-			`design_document_${timestamp}.pdf`,
-			{ type: "application/pdf" }
-		);
+		const pdfFile = new File([pdfBlob], `design_document_${timestamp}.pdf`, { type: "application/pdf" });
 
 		formData.append("pdf_file", pdfFile);
 		formData.append("user_id", user.uid);
 
-		const res = await server.post(
-			`/newHomeOwners/documentLlm/savePdf/${user.uid}`,
-			formData,
-		);
+		const res = await server.post(`/newHomeOwners/documentLlm/savePdf/${user.uid}`, formData);
 
 		return res.data.result.pdf_url;
 	};
@@ -70,7 +50,7 @@ function DesignDocumentPage() {
 				`/newHomeOwners/documentLlm/generateDesignDocument/${user.uid}`,
 				{},
 				{
-					responseType: 'blob' // For PDF download
+					responseType: "blob" // For PDF download
 				}
 			);
 
@@ -84,35 +64,34 @@ function DesignDocumentPage() {
 			const url = window.URL.createObjectURL(blob);
 			setGeneratedPdfUrl(url);
 
-			ShowToast("success", "Design document generated successfully!");
+			ShowToast("success", "Success!", "Design document generated successfully!");
 		} catch (err) {
 			console.error("Error generating document:", err);
 
 			let errorMessage = "Failed to generate design document";
 
-			if (err.response) {
-				if (err.response.data) {
-					try {
-						const errorData =
-							typeof err.response.data === "string"
-								? JSON.parse(err.response.data)
-								: err.response.data;
-						errorMessage =
-							errorData.detail ||
-							errorData.message ||
-							errorMessage;
-					} catch (parseError) {
-						errorMessage = err.response.statusText || errorMessage;
-					}
+			if (err?.response?.data?.detail) {
+				if (err.response.data.detail.startsWith("UERROR: ")) {
+					errorMessage = err.response.data.detail.substring("UERROR: ".length);
+				} else if (err.response.data.detail.startsWith("ERROR: ")) {
+					errorMessage = err.response.data.detail.substring("ERROR: ".length);
+				} else {
+					errorMessage = err.response.data.detail;
 				}
-			} else if (err.request) {
-				errorMessage = "No response from server. Please check your connection.";
+			} else if (err?.response?.data?.error) {
+				if (err.response.data.error.startsWith("UERROR: ")) {
+					errorMessage = err.response.data.error.substring("UERROR: ".length);
+				} else if (err.response.data.error.startsWith("ERROR: ")) {
+					errorMessage = err.response.data.error.substring("ERROR: ".length);
+				} else {
+					errorMessage = err.response.data.error;
+				}
 			} else {
-				errorMessage = err.message || errorMessage;
+				errorMessage = "An unexpected error occurred. Check console for more details.";
 			}
 
 			setError(errorMessage);
-			ShowToast("error", errorMessage);
+			ShowToast("error", errorMessage, "Check console for more details.");
 		} finally {
 			setIsGenerating(false);
 		}
@@ -138,14 +117,14 @@ function DesignDocumentPage() {
 		link.click();
 		document.body.removeChild(link);
 
-		ShowToast("success", "PDF downloaded successfully!");
+		ShowToast("success", "Success!", "PDF downloaded successfully!");
 	};
 
 	const handleRegenerate = () => {
 		generateDocument();
 	};
 
-    const isSuccess = !isGenerating && !error && generatedPdfUrl;
+	const isSuccess = !isGenerating && !error && generatedPdfUrl;
 
 	return (
 		<>
@@ -165,46 +144,19 @@ function DesignDocumentPage() {
 			/>
 
 			<Flex h="75vh" justify="center" align="center">
-				<Card.Root
-					width="100%"
-                    mt={{base: 4, md: isSuccess ? "25vh" : "5vh"}}
-					height={{ base: "calc(90vh - 12rem)", md: isSuccess ? "90vh" : "75vh" }}
-					variant="elevated"
-					borderRadius={{ base: 20, md: 35 }}
-					style={glassStyle}
-					overflow="hidden"
-				>
+				<Card.Root width="100%" mt={{ base: 0, md: isSuccess ? "10vh" : 0 }} height={{ base: "calc(90vh - 12rem)", md: isSuccess ? "85vh" : "75vh" }} variant="elevated" borderRadius={{ base: 20, md: 35 }} style={glassStyle} overflow="hidden">
 					{/* Header */}
-					<Box
-						borderBottom="1px solid rgba(255, 255, 255, 0.2)"
-						p={{ base: 4, md: 6 }}
-						bg="rgba(255, 255, 255, 0.05)"
-					>
+					<Box borderBottom="1px solid rgba(255, 255, 255, 0.2)" p={{ base: 4, md: 6 }} bg="rgba(255, 255, 255, 0.05)">
 						<Flex align="center" gap={3}>
-							<Box
-								bg="rgba(255, 240, 189, 0.2)"
-								p={2}
-								borderRadius="full"
-							>
+							<Box bg="rgba(255, 240, 189, 0.2)" p={2} borderRadius="full">
 								<FileText size={24} color="#fff0bd" />
 							</Box>
 							<VStack align="start" gap={0}>
-								<Heading
-									size={{ base: "md", md: "lg" }}
-									color="white"
-									textShadow="0 2px 4px rgba(0,0,0,0.2)"
-								>
+								<Heading size={{ base: "md", md: "lg" }} color="white" textShadow="0 2px 4px rgba(0,0,0,0.2)">
 									Design Document Generator
 								</Heading>
-								<Text
-									fontSize={{ base: "xs", md: "sm" }}
-									color="rgba(255, 255, 255, 0.7)"
-								>
-									{isGenerating
-										? "Generating your personalized design document..."
-										: error
-										? "Generation failed"
-										: "Your document is ready"}
+								<Text fontSize={{ base: "xs", md: "sm" }} color="rgba(255, 255, 255, 0.7)">
+									{isGenerating ? "Generating your personalized design document..." : error ? "Generation failed" : "Your document is ready"}
 								</Text>
 							</VStack>
 						</Flex>
@@ -237,18 +189,10 @@ function DesignDocumentPage() {
 							{isGenerating && (
 								<VStack gap={4} animation="fadeInUp 0.4s ease-out">
 									<Spinner size="xl" color="#fff0bd" thickness="4px" />
-									<Heading
-										size="lg"
-										color="white"
-										textAlign="center"
-									>
+									<Heading size="lg" color="white" textAlign="center">
 										Generating Your Design Document
 									</Heading>
-									<Text
-										color="rgba(255, 255, 255, 0.7)"
-										textAlign="center"
-										maxW="500px"
-									>
+									<Text color="rgba(255, 255, 255, 0.7)" textAlign="center" maxW="500px">
 										Our AI is analyzing your floor plan and preferences to create a comprehensive interior design proposal. This may take a moment...
 									</Text>
 								</VStack>
@@ -258,28 +202,13 @@ function DesignDocumentPage() {
 							{!isGenerating && error && (
 								<VStack gap={4} animation="fadeInUp 0.4s ease-out">
 									<AlertCircle size={48} color="#ff6b6b" />
-									<Heading
-										size="lg"
-										color="white"
-										textAlign="center"
-									>
+									<Heading size="lg" color="white" textAlign="center">
 										Generation Failed
 									</Heading>
-									<Text
-										color="rgba(255, 255, 255, 0.7)"
-										textAlign="center"
-										maxW="500px"
-									>
+									<Text color="rgba(255, 255, 255, 0.7)" textAlign="center" maxW="500px">
 										{error}
 									</Text>
-									<Button
-										size="lg"
-										bg="#D4AF37"
-										color="white"
-										_hover={{ bg: "#C9A961" }}
-										onClick={handleRegenerate}
-										leftIcon={<RefreshCw size={20} />}
-									>
+									<Button size="lg" bg="#D4AF37" color="white" _hover={{ bg: "#C9A961" }} onClick={handleRegenerate} leftIcon={<RefreshCw size={20} />}>
 										Try Again
 									</Button>
 								</VStack>
@@ -289,39 +218,19 @@ function DesignDocumentPage() {
 							{!isGenerating && !error && generatedPdfUrl && (
 								<VStack gap={6} align="stretch" h="100%" animation="fadeInUp 0.4s ease-out">
 									<VStack gap={3} animation="successFade 3s ease-out forwards">
-										<Box
-											bg="rgba(76, 175, 80, 0.2)"
-											p={4}
-											borderRadius="full"
-										>
+										<Box bg="rgba(76, 175, 80, 0.2)" p={4} borderRadius="full">
 											<CheckCircle size={40} color="#4caf50" />
 										</Box>
-										<Heading
-											size="md"
-											color="white"
-											textAlign="center"
-										>
+										<Heading size="md" color="white" textAlign="center">
 											Document Generated Successfully!
 										</Heading>
-										<Text
-											color="rgba(255, 255, 255, 0.7)"
-											textAlign="center"
-											fontSize="sm"
-										>
+										<Text color="rgba(255, 255, 255, 0.7)" textAlign="center" fontSize="sm">
 											Preview your design document below
 										</Text>
 									</VStack>
 
 									{/* PDF Preview */}
-									<Box
-										flex="1"
-                                        mt={-3}
-										bg="rgba(255, 255, 255, 0.05)"
-										borderRadius="lg"
-										border="1px solid rgba(255, 255, 255, 0.2)"
-										overflow="hidden"
-										minH="400px"
-									>
+									<Box flex="1" mt={-3} bg="rgba(255, 255, 255, 0.05)" borderRadius="lg" border="1px solid rgba(255, 255, 255, 0.2)" overflow="hidden" minH="400px">
 										<iframe
 											src={generatedPdfUrl}
 											style={{
@@ -351,15 +260,7 @@ function DesignDocumentPage() {
 										>
 											Regenerate
 										</Button>
-										<Button
-											flex="1"
-											size="lg"
-											bg="#D4AF37"
-											color="white"
-											_hover={{ bg: "#C9A961" }}
-											onClick={handleDownload}
-											leftIcon={<Download size={20} />}
-										>
+										<Button flex="1" size="lg" bg="#D4AF37" color="white" _hover={{ bg: "#C9A961" }} onClick={handleDownload} leftIcon={<Download size={20} />}>
 											Download PDF
 										</Button>
 									</Flex>
