@@ -81,7 +81,36 @@ function Recommendations() {
 				setSavedRecommendations(response.data.recommendations);
 			}
 		} catch (err) {
-			console.error("Failed to fetch saved recommendations:", err);
+			if (err?.response?.data?.detail) {
+				if (err.response.data.detail.startsWith("UERROR: ")) {
+					const errorMessage = err.response.data.detail.substring("UERROR: ".length);
+					console.error("Failed to fetch saved recommendations: ", errorMessage);
+					ShowToast("error", errorMessage);
+				} else if (err.response.data.detail.startsWith("ERROR: ")) {
+					const errorMessage = err.response.data.detail.substring("ERROR: ".length);
+					console.error("Failed to fetch saved recommendations: ", errorMessage);
+					ShowToast("error", errorMessage);
+				} else {
+					console.error("Failed to fetch saved recommendations: ", err.response.data.detail);
+					ShowToast("error", err.response.data.detail);
+				}
+			} else if (err?.response?.data?.error) {
+				if (err.response.data.error.startsWith("UERROR: ")) {
+					const errorMessage = err.response.data.error.substring("UERROR: ".length);
+					console.error("Failed to fetch saved recommendations: ", errorMessage);
+					ShowToast("error", errorMessage);
+				} else if (err.response.data.error.startsWith("ERROR: ")) {
+					const errorMessage = err.response.data.error.substring("ERROR: ".length);
+					console.error("Failed to fetch saved recommendations: ", errorMessage);
+					ShowToast("error", errorMessage);
+				} else {
+					console.error("Failed to fetch saved recommendations: ", err.response.data.error);
+					ShowToast("error", err.response.data.error);
+				}
+			} else {
+				console.error("Failed to fetch saved recommendations: ", err?.response);
+				ShowToast("error", "An unexpected error occurred. Check console for more details.");
+			}
 		}
 	};
 
@@ -164,7 +193,8 @@ function Recommendations() {
 				}
 
 				return {
-					title: errorTitle
+					title: errorTitle,
+					description: "Check console for more details."
 				};
 			}
 		});
@@ -198,12 +228,12 @@ function Recommendations() {
 			}
 			return null;
 		} catch (err) {
-			console.error("Error fetching single recommendation:", err);
+			console.error("Error fetching recommendation:", err);
 
 			const backendError = err.response?.data?.error || err.response?.data?.detail;
 
 			if (backendError) {
-				let errorMessage = "Too many requests. Please try again later";
+				let errorMessage = "Failed to fetch recommendation";
 
 				if (backendError.startsWith("UERROR: ")) {
 					errorMessage = backendError.substring("UERROR: ".length);
@@ -213,7 +243,7 @@ function Recommendations() {
 					errorMessage = backendError;
 				}
 
-				ShowToast("error", errorMessage);
+				ShowToast("error", errorMessage, "Check console for more details.");
 			}
 
 			return null;
@@ -276,7 +306,8 @@ function Recommendations() {
 				ShowToast("success", "Recommendation saved!");
 			}
 		} catch (err) {
-			const backendError = err.response?.data?.error;
+			console.error("Error saving recommendation:", err);
+			const backendError = err.response?.data?.error || err.response?.data?.detail;
 
 			if (err.response?.status === 409) {
 				ShowToast("info", "This recommendation is already saved");
@@ -285,6 +316,8 @@ function Recommendations() {
 
 				if (backendError?.startsWith("UERROR: ")) {
 					errorMessage = backendError.substring("UERROR: ".length);
+				} else if (backendError?.startsWith("ERROR: ")) {
+					errorMessage = backendError.substring("ERROR: ".length);
 				} else if (backendError) {
 					errorMessage = backendError;
 				}
@@ -315,11 +348,14 @@ function Recommendations() {
 				}
 			}
 		} catch (err) {
-			const backendError = err.response?.data?.error;
+			console.error("Failed to remove recommendation", err);
+			const backendError = err.response?.data?.error || err.response?.data?.detail;
 			let errorMessage = "Failed to remove recommendation";
 
 			if (backendError?.startsWith("UERROR: ")) {
 				errorMessage = backendError.substring("UERROR: ".length);
+			} else if (backendError?.startsWith("ERROR: ")) {
+				errorMessage = backendError.substring("ERROR: ".length);
 			} else if (backendError) {
 				errorMessage = backendError;
 			}
@@ -429,7 +465,6 @@ function Recommendations() {
 														borderRadius={15}
 														p={3}
 														border="1px solid rgba(255, 255, 255, 0.15)"
-
 													>
 														<Flex align="center" gap={3}>
 															<Box w={8} h={8} borderRadius="full" bg="rgba(255, 240, 189, 0.2)" display="flex" alignItems="center" justifyContent="center">
