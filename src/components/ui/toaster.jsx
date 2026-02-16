@@ -13,6 +13,7 @@ export const toaster = createToaster({
   placement: 'bottom-end',
   pauseOnPageIdle: true,
   max: 3,
+  offsets: { left: "20px", top: "20px", right: "30px", bottom: "20px" },
 })
 
 const getToastStyles = (type) => {
