@@ -103,7 +103,6 @@ function ChatbotPage() {
 				setCurrentModel(response.data.model);
 			}
 		} catch (err) {
-			console.log("Error: ", err);
 			if (err?.response?.data?.detail) {
 				if (err.response.data.detail.startsWith("UERROR: ")) {
 					const errorMessage = err.response.data.detail.substring("UERROR: ".length);
