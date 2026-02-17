@@ -1,6 +1,6 @@
 import { useState, useRef, useEffect } from "react";
 import { Box, Flex, Heading, Text, Textarea, VStack, HStack, IconButton, Image } from "@chakra-ui/react";
-import { Send, Sparkles, Loader2, ChevronDown, Paperclip, X } from "lucide-react";
+import { Send, Sparkles, Loader2, Paperclip, X } from "lucide-react";
 import { useAuth } from "@/contexts/AuthContext";
 import { ref, onValue, off } from "firebase/database";
 import { database } from "@/firebase";
@@ -175,7 +175,6 @@ function AgentPage() {
 	const [inputValue, setInputValue] = useState("");
 	const [isProcessing, setIsProcessing] = useState(false);
 	const [currentStep, setCurrentStep] = useState("Thinking...");
-	const [showThinking, setShowThinking] = useState(true);
 	// Change 10: Only accept PNG / JPG / JPEG
 	const [uploadedFiles, setUploadedFiles] = useState([]);
 	const [outputs, setOutputs] = useState(null);
@@ -751,12 +750,12 @@ function AgentPage() {
 													borderRadius="2xl"
 													p={{ base: 4, md: 5 }}
 												>
-													<Flex
-														align="center"
-														justify="space-between"
-														mb={liveSteps.length > 0 ? 4 : 2}
-													>
-														<Flex align="center" gap={2}>
+														<Flex
+															align="center"
+															justify="flex-start"
+															mb={liveSteps.length > 0 ? 4 : 2}
+														>
+															<Flex align="center" gap={2}>
 															<Text
 																color="rgba(255, 255, 255, 0.7)"
 																fontSize="sm"
@@ -777,32 +776,13 @@ function AgentPage() {
 																	<Text color="#FFD700" fontSize="xs" fontWeight="600">
 																		PROCESSING
 																	</Text>
-																</Flex>
-															)}
+																	</Flex>
+																)}
+															</Flex>
 														</Flex>
-														{liveSteps.length > 0 && (
-															<Box
-																as="button"
-																onClick={() => setShowThinking(!showThinking)}
-																color="rgba(255, 255, 255, 0.5)"
-																transition="all 0.2s"
-																_hover={{ color: "rgba(255, 255, 255, 0.8)" }}
-															>
-																<ChevronDown
-																	size={18}
-																	style={{
-																		transform: showThinking
-																			? "rotate(180deg)"
-																			: "rotate(0deg)",
-																		transition: "transform 0.3s ease"
-																	}}
-																/>
-															</Box>
-														)}
-													</Flex>
 
-													{/* Change 9: Smooth step-by-step animation with staggered ease-in */}
-													{showThinking && liveSteps.length > 0 && (
+														{/* Change 9: Smooth step-by-step animation with staggered ease-in */}
+														{liveSteps.length > 0 && (
 														<VStack gap={3} align="stretch">
 															{liveSteps.map((step, i) => {
 																const isLastStep = i === liveSteps.length - 1;
@@ -820,9 +800,9 @@ function AgentPage() {
 																			animation: `stepFadeIn 0.35s ease-out ${i * 0.06}s both`
 																		}}
 																	>
-																		<Box
-																			w="20px"
-																			h="20px"
+																			<Box
+																				w="20px"
+																				h="20px"
 																			borderRadius="full"
 																			border={
 																				isActive
@@ -838,25 +818,44 @@ function AgentPage() {
 																			alignItems="center"
 																			justifyContent="center"
 																			flexShrink={0}
-																			transition="all 0.3s ease"
-																		>
-																			{isActive ? (
-																				<Loader2
-																					size={12}
-																					color="#FFD700"
-																					style={{
-																						animation:
-																							"spin 1s linear infinite"
-																					}}
-																				/>
-																			) : (
-																				<Box
-																					w="8px"
-																					h="8px"
-																					borderRadius="full"
-																					bg="#00FF9D"
-																				/>
-																			)}
+																				transition="all 0.3s ease"
+																			>
+																				{isActive ? (
+																					<Flex
+																						w="100%"
+																						h="100%"
+																						align="center"
+																						justify="center"
+																						lineHeight="1"
+																					>
+																						<Loader2
+																							size={10}
+																							color="#FFD700"
+																							style={{
+																								animation:
+																									"spin 1s linear infinite",
+																								display: "block",
+																								transformOrigin: "center center"
+																							}}
+																						/>
+																					</Flex>
+																				) : (
+																						<Flex
+																							w="100%"
+																							h="100%"
+																							align="center"
+																							justify="center"
+																							lineHeight="1"
+																						>
+																							<Box
+																								w="8px"
+																								h="8px"
+																								borderRadius="full"
+																								bg="#00FF9D"
+																								display="block"
+																							/>
+																						</Flex>
+																				)}
 																		</Box>
 																		<Text
 																			color={
