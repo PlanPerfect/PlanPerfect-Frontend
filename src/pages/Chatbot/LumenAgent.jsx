@@ -8,12 +8,8 @@ import LandingBackground from "../../assets/LandingBackground.png";
 import ShowToast from "@/Extensions/ShowToast";
 import server from "../../../networking";
 
-// ── Inline Markdown renderer ──────────────────────────────────────────────────
-// Supports **bold**, *italic*, `code`, # headers, and - / 1. lists.
-
 const renderInline = (text) => {
 	if (!text) return text;
-	// Split on bold (**...**), italic (*...*), and inline code (`...`)
 	const regex = /(\*\*[^*\n]+?\*\*|\*[^*\n]+?\*|`[^`\n]+?`)/g;
 	const segments = text.split(regex);
 	return segments.map((seg, i) => {
@@ -50,10 +46,6 @@ const renderInline = (text) => {
 const renderMessageContent = (content) => {
 	if (!content) return null;
 	const elements = [];
-	// Normalize common LLM list formatting glitches:
-	// - "Intro text: 1. item" => split the list onto a new line
-	// - keep bullet lists after ":" consistent too
-	// - split inline " - item" segments into separate list lines
 	const normalizedContent = content
 		.replace(/\r\n/g, "\n")
 		.replace(/([:;])\s+(\d+\.\s+)/g, "$1\n$2")
@@ -65,7 +57,6 @@ const renderMessageContent = (content) => {
 		const key = `line-${i}`;
 		let trimmed = lines[i].trim();
 
-		// Handle "2." followed by content on the next non-empty line.
 		if (/^\d+\.$/.test(trimmed)) {
 			let nextLineIndex = i + 1;
 			while (nextLineIndex < lines.length && lines[nextLineIndex].trim() === "") {
@@ -80,7 +71,6 @@ const renderMessageContent = (content) => {
 				}
 			}
 		}
-		// Handle standalone bullet markers (e.g. "•" on one line, content on the next line).
 		if (/^[•*-]$/.test(trimmed)) {
 			let nextLineIndex = i + 1;
 			while (nextLineIndex < lines.length && lines[nextLineIndex].trim() === "") {
@@ -151,7 +141,6 @@ const renderMessageContent = (content) => {
 	return <Box textAlign="left">{elements}</Box>;
 };
 
-// ── Helper: title-case a furniture name ───────────────────────────────────────
 const titleCase = (str) =>
 	(str || "")
 		.split(" ")
@@ -178,8 +167,6 @@ const OUTPUT_BRANCH_TO_CATEGORY = {
 	"Outputs/Recommendations": "Recommendations"
 };
 
-// ── Component ─────────────────────────────────────────────────────────────────
-
 function AgentPage() {
 	const { user } = useAuth();
 	const [messages, setMessages] = useState([
@@ -193,11 +180,9 @@ function AgentPage() {
 	const [inputValue, setInputValue] = useState("");
 	const [isProcessing, setIsProcessing] = useState(false);
 	const [currentStep, setCurrentStep] = useState("Thinking...");
-	// Change 10: Only accept PNG / JPG / JPEG
 	const [uploadedFiles, setUploadedFiles] = useState([]);
 	const [outputs, setOutputs] = useState(null);
 	const [outputCategoryRecency, setOutputCategoryRecency] = useState({});
-	// Change 16 & 17: showOutputs is set by data; no close/minimize buttons
 	const [showOutputs, setShowOutputs] = useState(false);
 	const messagesEndRef = useRef(null);
 	const textareaRef = useRef(null);
@@ -217,7 +202,6 @@ function AgentPage() {
 		messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
 	}, [messages, currentStep]);
 
-	// Firebase: current_step
 	useEffect(() => {
 		if (!user?.uid) return;
 
@@ -254,7 +238,6 @@ function AgentPage() {
 		return () => off(currentStepRef);
 	}, [user?.uid]);
 
-	// Firebase: Agent status
 	useEffect(() => {
 		if (!user?.uid) return;
 
@@ -268,7 +251,6 @@ function AgentPage() {
 		return () => off(statusRef);
 	}, [user?.uid]);
 
-	// Firebase: Outputs — auto-shows panel when data arrives
 	useEffect(() => {
 		if (!user?.uid) return;
 
@@ -285,7 +267,6 @@ function AgentPage() {
 		return () => off(outputsRef);
 	}, [user?.uid]);
 
-	// Keep output categories ordered by the most recently added output branch.
 	useEffect(() => {
 		if (!user?.uid) return;
 
@@ -315,7 +296,6 @@ function AgentPage() {
 		return () => off(stepsRef);
 	}, [user?.uid]);
 
-	// Show / hide agent status block
 	useEffect(() => {
 		if (isProcessing) {
 			setShowAgentStatus(true);
@@ -337,7 +317,6 @@ function AgentPage() {
 		adjustTextareaHeight();
 	}, [inputValue]);
 
-	// Change 10: Validate file type on selection — only PNG / JPG / JPEG
 	const handleFileSelect = (e) => {
 		const ALLOWED = ["image/png", "image/jpeg", "image/jpg"];
 		const files = Array.from(e.target.files).filter((f) => {
@@ -346,7 +325,6 @@ function AgentPage() {
 			return false;
 		});
 		setUploadedFiles((prev) => [...prev, ...files]);
-		// Reset input so the same file can be re-selected after removal
 		e.target.value = "";
 	};
 
@@ -354,7 +332,6 @@ function AgentPage() {
 		setUploadedFiles((prev) => prev.filter((_, i) => i !== index));
 	};
 
-	// Change 1: canSend requires a non-empty text prompt — files alone are not enough
 	const canSend = inputValue.trim().length > 0 && !isProcessing;
 
 	const handleSend = async () => {
@@ -415,7 +392,6 @@ function AgentPage() {
 		}
 	};
 
-	// ── Outputs panel renderer ─────────────────────────────────────────────────
 	const renderOutputs = () => {
 		if (!outputs) return null;
 		const sortedCategories = [...OUTPUT_CATEGORIES].sort((a, b) => {
@@ -425,7 +401,6 @@ function AgentPage() {
 			return bRank - aRank;
 		});
 
-		// Change 7: White fallback text.  Change 11: Centered images.
 		const OutputImage = ({ src, alt, maxH = "300px" }) => (
 			<Flex justify="center" align="center" w="100%">
 				<Image
@@ -454,7 +429,6 @@ function AgentPage() {
 
 						return (
 							<Box key={category.key}>
-							{/* Change 4: Header — title only, no icon */}
 							<Flex align="center" gap={2} mb={3}>
 								<Heading size="sm" color="white">
 									{category.label}
@@ -473,7 +447,6 @@ function AgentPage() {
 										p={3}
 										border="1px solid rgba(255, 255, 255, 0.1)"
 									>
-										{/* Plain URL string → render as image */}
 										{typeof item === "string" && item.startsWith("http") ? (
 											<OutputImage src={item} alt={`${category.label} ${idx + 1}`} />
 										) : typeof item === "string" ? (
@@ -482,7 +455,6 @@ function AgentPage() {
 											</Text>
 										) : typeof item === "object" && item !== null ? (
 											<VStack align="stretch" gap={2}>
-												{/* Change 3: Web Search — left-aligned */}
 													{item.query && (
 														<>
 															<Text
@@ -510,7 +482,6 @@ function AgentPage() {
 														</>
 													)}
 
-												{/* Classified Style */}
 												{item.style && (
 													<>
 														{item.image_url && (
@@ -526,8 +497,6 @@ function AgentPage() {
 													</>
 												)}
 
-												{/* Detected Furniture */}
-												{/* Change 6: Capitalized names, no bullet dot */}
 												{item.furniture && Array.isArray(item.furniture) && (
 													<>
 														{item.image_url && (
@@ -570,7 +539,6 @@ function AgentPage() {
 													</>
 												)}
 
-												{/* Color Palettes */}
 												{item.colors && Array.isArray(item.colors) && (
 													<>
 														{item.image_url && (
@@ -600,7 +568,6 @@ function AgentPage() {
 													</>
 												)}
 
-												{/* Fallback: generic image URL on object */}
 												{item.url && !item.furniture && !item.colors && !item.style && !item.query && (
 													<OutputImage src={item.url} alt={`${category.label} ${idx + 1}`} />
 												)}
@@ -616,7 +583,6 @@ function AgentPage() {
 		);
 	};
 
-	// ── Render ─────────────────────────────────────────────────────────────────
 	return (
 		<>
 			<Box
@@ -635,7 +601,6 @@ function AgentPage() {
 			/>
 
 			<Flex h="82vh" direction="column" w="100%" py={{ base: 4, md: 6 }} mt={-6}>
-				{/* Header */}
 				<Box mb={4} w="100%" ml={3}>
 					<Flex align="center" justify="space-between" mx="auto" w="100%">
 						<Flex align="center" gap={3}>
@@ -664,7 +629,6 @@ function AgentPage() {
 					</Flex>
 				</Box>
 
-				{/* Main Content Area */}
 				<Flex gap={4} flex="1" overflow="hidden" w="100%">
 					{/* Chat Area */}
 					<Box
@@ -747,7 +711,6 @@ function AgentPage() {
 									</Box>
 								))}
 
-								{/* Agent Status / Thinking Process */}
 								{showAgentStatus && (
 									<Box animation="fadeInUp 0.4s ease-out" w="100%">
 										<Flex align="start" gap={3} w="100%">
@@ -780,7 +743,7 @@ function AgentPage() {
 																fontWeight="600"
 																letterSpacing="0.02em"
 															>
-																AGENT STATUS
+																AGENT ORCHESTRATION
 															</Text>
 															{isProcessing && currentStep !== "Done!" && (
 																<Flex align="center" gap={2}>
@@ -799,7 +762,6 @@ function AgentPage() {
 															</Flex>
 														</Flex>
 
-														{/* Change 9: Smooth step-by-step animation with staggered ease-in */}
 														{liveSteps.length > 0 && (
 														<VStack gap={3} align="stretch">
 															{liveSteps.map((step, i) => {
@@ -915,14 +877,12 @@ function AgentPage() {
 							</VStack>
 						</Box>
 
-						{/* Input Area */}
 						<Box
 							borderTop="1px solid rgba(255, 255, 255, 0.1)"
 							p={{ base: 4, md: 5, lg: 6 }}
 							bg="rgba(0, 0, 0, 0.2)"
 							w="100%"
 						>
-							{/* File preview */}
 							{uploadedFiles.length > 0 && (
 								<Box mb={3}>
 										<Flex gap={2} flexWrap="wrap">
@@ -980,7 +940,6 @@ function AgentPage() {
 											boxShadow: "0 0 0 3px rgba(255, 215, 0, 0.1)"
 										}}
 									>
-										{/* Change 10: Accept only png / jpg / jpeg */}
 										<input
 											ref={fileInputRef}
 											type="file"
@@ -1028,7 +987,6 @@ function AgentPage() {
 										/>
 									</Box>
 
-									{/* Send button — Change 1: only active when text is present */}
 									<Box
 										as="button"
 										onClick={handleSend}
@@ -1072,7 +1030,6 @@ function AgentPage() {
 						</Box>
 					</Box>
 
-					{/* Change 16 & 17: Outputs Panel — no close or minimize buttons */}
 					{showOutputs && (
 						<Box
 							w="400px"
@@ -1084,7 +1041,6 @@ function AgentPage() {
 							animation="slideInRight 0.3s ease-out"
 							flexShrink={0}
 						>
-							{/* Panel header — title only */}
 							<Flex
 								align="center"
 								p={4}
@@ -1092,7 +1048,7 @@ function AgentPage() {
 								bg="rgba(0, 0, 0, 0.2)"
 							>
 								<Heading size="sm" color="white">
-									Agent Outputs
+									Agent Ensemble
 								</Heading>
 							</Flex>
 
