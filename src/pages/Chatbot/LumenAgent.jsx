@@ -53,9 +53,12 @@ const renderMessageContent = (content) => {
 	// Normalize common LLM list formatting glitches:
 	// - "Intro text: 1. item" => split the list onto a new line
 	// - keep bullet lists after ":" consistent too
+	// - split inline " - item" segments into separate list lines
 	const normalizedContent = content
+		.replace(/\r\n/g, "\n")
 		.replace(/([:;])\s+(\d+\.\s+)/g, "$1\n$2")
-		.replace(/([:;])\s+([-*]\s+)/g, "$1\n$2");
+		.replace(/([:;])\s+([•*-]\s+)/g, "$1\n$2")
+		.replace(/\s-\s(?=[A-Z0-9])/g, "\n- ");
 	const lines = normalizedContent.split("\n");
 
 	for (let i = 0; i < lines.length; i += 1) {
@@ -71,7 +74,22 @@ const renderMessageContent = (content) => {
 
 			if (nextLineIndex < lines.length) {
 				const nextText = lines[nextLineIndex].trim();
-				if (nextText && !/^(\d+\.|[-*]\s|#{1,3}\s)/.test(nextText)) {
+					if (nextText && !/^(\d+\.|[-*•]\s|#{1,3}\s)/.test(nextText)) {
+					trimmed = `${trimmed} ${nextText}`;
+					i = nextLineIndex;
+				}
+			}
+		}
+		// Handle standalone bullet markers (e.g. "•" on one line, content on the next line).
+		if (/^[•*-]$/.test(trimmed)) {
+			let nextLineIndex = i + 1;
+			while (nextLineIndex < lines.length && lines[nextLineIndex].trim() === "") {
+				nextLineIndex += 1;
+			}
+
+			if (nextLineIndex < lines.length) {
+				const nextText = lines[nextLineIndex].trim();
+				if (nextText && !/^(\d+\.|[-*•]\s|#{1,3}\s)/.test(nextText)) {
 					trimmed = `${trimmed} ${nextText}`;
 					i = nextLineIndex;
 				}
@@ -96,14 +114,14 @@ const renderMessageContent = (content) => {
 					{renderInline(trimmed.slice(2))}
 				</Text>
 			);
-		} else if (/^[-*]\s+/.test(trimmed)) {
+		} else if (/^([-*]|•)\s+/.test(trimmed)) {
 			elements.push(
 				<Flex key={key} gap={2} align="flex-start" pl={2} mb={0.5}>
 					<Text color="rgba(255,215,0,0.8)" flexShrink={0} lineHeight="1.8">
 						•
 					</Text>
 					<Text color="rgba(255,255,255,0.95)" lineHeight="1.8">
-						{renderInline(trimmed.replace(/^[-*]\s+/, ""))}
+						{renderInline(trimmed.replace(/^([-*]|•)\s+/, ""))}
 					</Text>
 				</Flex>
 			);
