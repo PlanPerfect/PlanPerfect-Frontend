@@ -129,6 +129,7 @@ function Recommendations() {
 	const fetchRecommendations = async furnitureName => {
 		setLoadingRecs(true);
 		setSelectedFurniture(furnitureName);
+		setCurrentCarouselIndex(0);
 
 		const fetchPromise = new Promise(async (resolve, reject) => {
 			try {
@@ -590,7 +591,15 @@ function Recommendations() {
 
 									<Box flex="0 0 45%" minHeight="0">
 										{recommendations.length > 0 ? (
-											<Carousel.Root slideCount={recommendations.length} index={currentCarouselIndex} onIndexChange={e => setCurrentCarouselIndex(e.index)} display="flex" flexDirection="column" height="100%">
+											<Carousel.Root
+												key={selectedFurniture || "recommendations-carousel"}
+												slideCount={recommendations.length}
+												index={currentCarouselIndex}
+												onIndexChange={e => setCurrentCarouselIndex(e.index)}
+												display="flex"
+												flexDirection="column"
+												height="100%"
+											>
 												<Box flex={1}>
 													<Carousel.ItemGroup height="100%">
 														{recommendations.map((rec, index) => {
