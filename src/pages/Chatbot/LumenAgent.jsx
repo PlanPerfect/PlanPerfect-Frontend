@@ -1,4 +1,4 @@
-import { useState, useRef, useEffect } from "react";
+import { useState, useRef, useEffect, useCallback, useMemo } from "react";
 import {
 	Box,
 	Flex,
@@ -8,12 +8,13 @@ import {
 	VStack,
 	HStack,
 	IconButton,
+	Button,
 	Image,
 	Dialog,
 	Portal,
 	CloseButton
 } from "@chakra-ui/react";
-import { Send, Sparkles, Loader2, Paperclip, X } from "lucide-react";
+import { Send, Sparkles, Loader2, Paperclip, X, Download } from "lucide-react";
 import { useAuth } from "@/contexts/AuthContext";
 import { useNavigate } from "react-router-dom";
 import { ref, onValue, off } from "firebase/database";
@@ -188,6 +189,134 @@ const createInitialAgentMessage = () => ({
 	isThinking: false
 });
 
+function ImageDownloadButton({ onDownload, label }) {
+	const [isDownloading, setIsDownloading] = useState(false);
+
+	const handleClick = async (e) => {
+		e.preventDefault();
+		e.stopPropagation();
+		if (isDownloading) return;
+		setIsDownloading(true);
+		try {
+			await onDownload();
+		} finally {
+			setIsDownloading(false);
+		}
+	};
+
+	return (
+		<Button
+			mt={2}
+			w="100%"
+			size="xs"
+			disabled={isDownloading}
+			onPointerDown={(e) => e.preventDefault()}
+			onMouseDown={(e) => e.preventDefault()}
+			onClick={handleClick}
+			aria-label={`Download ${label}`}
+			borderRadius="md"
+			bg="rgba(255, 255, 255, 0.14)"
+			border="1px solid rgba(255, 255, 255, 0.28)"
+			backdropFilter="blur(10px) saturate(160%)"
+			WebkitBackdropFilter="blur(10px) saturate(160%)"
+			opacity={isDownloading ? 0.75 : 1}
+			cursor={isDownloading ? "not-allowed" : "pointer"}
+			color="white"
+			fontSize="xs"
+			fontWeight="600"
+			_hover={isDownloading ? {} : { bg: "rgba(255, 255, 255, 0.22)" }}
+		>
+			{
+				<Flex align="center" gap={2}>
+					<Download size={13} color="white" />
+					<Text as="span" color="white" fontSize="xs">
+						Download Image
+					</Text>
+				</Flex>
+			}
+		</Button>
+	);
+}
+
+function ThumbnailDownloadButton({ onDownload, label }) {
+	const [isDownloading, setIsDownloading] = useState(false);
+
+	const handleClick = async (e) => {
+		e.preventDefault();
+		e.stopPropagation();
+		if (isDownloading) return;
+		setIsDownloading(true);
+		try {
+			await onDownload();
+		} finally {
+			setIsDownloading(false);
+		}
+	};
+
+	return (
+		<IconButton
+			size="xs"
+			variant="ghost"
+			colorPalette="whiteAlpha"
+			disabled={isDownloading}
+			onPointerDown={(e) => e.preventDefault()}
+			onMouseDown={(e) => e.preventDefault()}
+			onClick={handleClick}
+			aria-label={`Download ${label}`}
+			position="absolute"
+			bottom="1px"
+			right="1px"
+			minW="20px"
+			h="20px"
+			p={0}
+			borderRadius="full"
+			bg="rgba(255, 255, 255, 0.14)"
+			border="1px solid rgba(255, 255, 255, 0.28)"
+			backdropFilter="blur(8px) saturate(160%)"
+			WebkitBackdropFilter="blur(8px) saturate(160%)"
+			opacity={isDownloading ? 0.75 : 1}
+			cursor={isDownloading ? "not-allowed" : "pointer"}
+			_hover={isDownloading ? {} : { bg: "rgba(255, 255, 255, 0.22)" }}
+		>
+			<Download size={10} color="white" />
+		</IconButton>
+	);
+}
+
+function OutputImageCard({ src, alt, maxH = "300px", onDownload }) {
+	return (
+		<Flex justify="center" align="center" w="100%">
+			<Box
+				display="inline-flex"
+				flexDirection="column"
+				alignItems="stretch"
+				w="fit-content"
+				maxW="100%"
+			>
+				<Image
+					src={src}
+					alt={alt}
+					color="white"
+					borderRadius="md"
+					w="100%"
+					h="auto"
+					maxH={maxH}
+					maxW="100%"
+					objectFit="contain"
+					crossOrigin="anonymous"
+					style={{ color: "white" }}
+					fallback={
+						<Text color="white" fontSize="sm" textAlign="center" py={2}>
+							Image unavailable
+						</Text>
+					}
+				/>
+				<ImageDownloadButton onDownload={() => onDownload(src, alt)} label={alt} />
+			</Box>
+		</Flex>
+	);
+}
+
 function AgentPage() {
 	const { user } = useAuth();
 	const navigate = useNavigate();
@@ -202,6 +331,7 @@ function AgentPage() {
 	const messagesEndRef = useRef(null);
 	const textareaRef = useRef(null);
 	const fileInputRef = useRef(null);
+	const outputsScrollRef = useRef(null);
 	const [liveSteps, setLiveSteps] = useState([]);
 	const [showAgentStatus, setShowAgentStatus] = useState(false);
 	const [isClearingSession, setIsClearingSession] = useState(false);
@@ -427,6 +557,65 @@ function AgentPage() {
 		navigate("/lumen/chat");
 	};
 
+	const getDownloadFileName = useCallback((label, imageUrl) => {
+		const safeBase =
+			String(label || "image")
+				.toLowerCase()
+				.replace(/[^a-z0-9]+/g, "-")
+				.replace(/^-+|-+$/g, "") || "image";
+		let extension = ".png";
+
+		try {
+			const { pathname } = new URL(imageUrl);
+			const extMatch = pathname.match(/\.(png|jpe?g|webp|gif|bmp|svg)$/i);
+			if (extMatch) extension = extMatch[0].toLowerCase();
+		} catch (_) {
+			// Keep default extension when URL parsing fails.
+		}
+
+		return `${safeBase}${extension}`;
+	}, []);
+
+	const restoreOutputsScrollPosition = useCallback((scrollTop) => {
+		if (!Number.isFinite(scrollTop)) return;
+		requestAnimationFrame(() => {
+			requestAnimationFrame(() => {
+				if (outputsScrollRef.current) {
+					outputsScrollRef.current.scrollTop = scrollTop;
+				}
+			});
+		});
+	}, []);
+
+	const triggerDownload = useCallback((href, fileName) => {
+		const link = document.createElement("a");
+		link.href = href;
+		link.download = fileName;
+		link.rel = "noopener noreferrer";
+		link.target = "_blank";
+		link.click();
+	}, []);
+
+	const handleDownloadImage = useCallback(async (imageUrl, label = "image") => {
+		if (!imageUrl) return;
+		const fileName = getDownloadFileName(label, imageUrl);
+		const startScrollTop = outputsScrollRef.current?.scrollTop;
+		restoreOutputsScrollPosition(startScrollTop);
+
+		try {
+			const response = await fetch(imageUrl, { mode: "cors" });
+			if (!response.ok) throw new Error(`Image fetch failed: ${response.status}`);
+			const blob = await response.blob();
+			const blobUrl = window.URL.createObjectURL(blob);
+			triggerDownload(blobUrl, fileName);
+			setTimeout(() => window.URL.revokeObjectURL(blobUrl), 1000);
+		} catch (_) {
+			triggerDownload(imageUrl, fileName);
+		} finally {
+			restoreOutputsScrollPosition(startScrollTop);
+		}
+	}, [getDownloadFileName, restoreOutputsScrollPosition, triggerDownload]);
+
 	const handleOpenClearDialog = () => {
 		if (isProcessing || isClearingSession || !user?.uid) return;
 		setIsClearDialogOpen(true);
@@ -474,7 +663,7 @@ function AgentPage() {
 		}
 	};
 
-	const renderOutputs = () => {
+	const renderOutputs = useCallback(() => {
 		if (!outputs) return null;
 		const sortedCategories = [...OUTPUT_CATEGORIES].sort((a, b) => {
 			const aRank = Number.isFinite(outputCategoryRecency[a.key]) ? outputCategoryRecency[a.key] : Number.NEGATIVE_INFINITY;
@@ -483,33 +672,15 @@ function AgentPage() {
 			return bRank - aRank;
 		});
 
-			const OutputImage = ({ src, alt, maxH = "300px" }) => (
-				<Flex justify="center" align="center" w="100%">
-					<Image
-						src={src}
-						alt={alt}
-						color="white"
-						borderRadius="md"
-						maxH={maxH}
-						maxW="100%"
-						objectFit="contain"
-						crossOrigin="anonymous"
-						style={{ color: "white" }}
-						fallback={
-							<Text color="white" fontSize="sm" textAlign="center" py={2}>
-								Image unavailable
-							</Text>
-						}
-				/>
-			</Flex>
-		);
-
 			return (
 				<VStack align="stretch" gap={4} w="100%">
 					{sortedCategories.map((category) => {
 						const items = outputs[category.key];
 						if (!items || !Array.isArray(items) || items.length === 0) return null;
 						const orderedItems = [...items].reverse();
+						const outputCardPadding = 3;
+						const categoryImageMaxH =
+							category.key === "Generated Floor Plans" ? "560px" : "300px";
 
 						return (
 							<Box key={category.key}>
@@ -528,11 +699,16 @@ function AgentPage() {
 										key={idx}
 										bg="rgba(255, 255, 255, 0.05)"
 										borderRadius="lg"
-										p={3}
+										p={outputCardPadding}
 										border="1px solid rgba(255, 255, 255, 0.1)"
 									>
 										{typeof item === "string" && item.startsWith("http") ? (
-											<OutputImage src={item} alt={`${category.label} ${idx + 1}`} />
+											<OutputImageCard
+												src={item}
+												alt={`${category.label} ${idx + 1}`}
+												maxH={categoryImageMaxH}
+												onDownload={handleDownloadImage}
+											/>
 										) : typeof item === "string" ? (
 											<Text color="rgba(255, 255, 255, 0.8)" fontSize="sm">
 												{item}
@@ -569,10 +745,11 @@ function AgentPage() {
 												{item.style && (
 													<>
 														{item.image_url && (
-															<OutputImage
+															<OutputImageCard
 																src={item.image_url}
 																alt="Style classification"
 																maxH="200px"
+																onDownload={handleDownloadImage}
 															/>
 														)}
 														<Text color="rgba(255, 255, 255, 0.8)" fontSize="sm" fontWeight="600">
@@ -584,10 +761,11 @@ function AgentPage() {
 												{item.furniture && Array.isArray(item.furniture) && (
 													<>
 														{item.image_url && (
-															<OutputImage
+															<OutputImageCard
 																src={item.image_url}
 																alt="Furniture detection"
 																maxH="200px"
+																onDownload={handleDownloadImage}
 															/>
 														)}
 														<VStack align="stretch" gap={2}>
@@ -595,23 +773,31 @@ function AgentPage() {
 																<Flex key={i} gap={3} align="center">
 																	{furn.url && (
 																		<Flex justify="center" flexShrink={0}>
-																			<Image
-																				src={furn.url}
-																				alt={furn.name}
-																				w="44px"
-																				h="44px"
-																				objectFit="cover"
-																				borderRadius="md"
-																				crossOrigin="anonymous"
-																				fallback={
-																					<Box
-																						w="44px"
-																						h="44px"
-																						bg="rgba(255,255,255,0.1)"
-																						borderRadius="md"
-																					/>
-																				}
-																			/>
+																			<Box position="relative" w="44px" h="44px">
+																				<Image
+																					src={furn.url}
+																					alt={furn.name}
+																					w="44px"
+																					h="44px"
+																					objectFit="cover"
+																					borderRadius="md"
+																					crossOrigin="anonymous"
+																					fallback={
+																						<Box
+																							w="44px"
+																							h="44px"
+																							bg="rgba(255,255,255,0.1)"
+																							borderRadius="md"
+																						/>
+																					}
+																				/>
+																				<ThumbnailDownloadButton
+																					onDownload={() =>
+																						handleDownloadImage(furn.url, furn.name || "furniture")
+																					}
+																					label={furn.name || "furniture image"}
+																				/>
+																			</Box>
 																		</Flex>
 																	)}
 																	<Text color="rgba(255, 255, 255, 0.9)" fontSize="sm">
@@ -626,10 +812,11 @@ function AgentPage() {
 												{item.colors && Array.isArray(item.colors) && (
 													<>
 														{item.image_url && (
-															<OutputImage
+															<OutputImageCard
 																src={item.image_url}
 																alt="Color palette source"
 																maxH="200px"
+																onDownload={handleDownloadImage}
 															/>
 														)}
 															<Flex gap={2} flexWrap="wrap" justify="center" w="100%">
@@ -653,7 +840,12 @@ function AgentPage() {
 												)}
 
 												{item.url && !item.furniture && !item.colors && !item.style && !item.query && (
-													<OutputImage src={item.url} alt={`${category.label} ${idx + 1}`} />
+													<OutputImageCard
+														src={item.url}
+														alt={`${category.label} ${idx + 1}`}
+														maxH={categoryImageMaxH}
+														onDownload={handleDownloadImage}
+													/>
 												)}
 											</VStack>
 										) : null}
@@ -665,7 +857,8 @@ function AgentPage() {
 				})}
 			</VStack>
 		);
-	};
+	}, [outputs, outputCategoryRecency, handleDownloadImage]);
+	const renderedOutputs = useMemo(() => renderOutputs(), [renderOutputs]);
 
 	return (
 		<>
@@ -1213,6 +1406,7 @@ function AgentPage() {
 							</Flex>
 
 							<Box
+								ref={outputsScrollRef}
 								flex="1"
 								overflowY="auto"
 								p={4}
@@ -1230,7 +1424,7 @@ function AgentPage() {
 									}
 								}}
 							>
-								{renderOutputs()}
+								{renderedOutputs}
 							</Box>
 						</Box>
 					)}
