@@ -1,6 +1,7 @@
 import { useState, useEffect } from "react";
+import { useNavigate } from "react-router-dom";
 import { Box, Card, Flex, Heading, Text, VStack, Button, Spinner } from "@chakra-ui/react";
-import { FileText, Download, RefreshCw, CheckCircle, AlertCircle } from "lucide-react";
+import { FileText, Download, RefreshCw, CheckCircle, AlertCircle, ClipboardList } from "lucide-react";
 import LandingBackground from "../../assets/LandingBackground.png";
 import server from "../../../networking";
 import ShowToast from "@/Extensions/ShowToast";
@@ -8,10 +9,12 @@ import { useAuth } from "../../contexts/AuthContext";
 
 function DesignDocumentPage() {
 	const { user } = useAuth();
+	const navigate = useNavigate();
 
 	const [isGenerating, setIsGenerating] = useState(true);
 	const [error, setError] = useState(null);
 	const [generatedPdfUrl, setGeneratedPdfUrl] = useState(null);
+	const [noFlow, setNoFlow] = useState(false);
 
 	const glassStyle = {
 		background: "rgba(255, 255, 255, 0.1)",
@@ -22,6 +25,20 @@ function DesignDocumentPage() {
 	};
 
 	useEffect(() => {
+		// Check if user has completed onboarding before generating
+		if (!user?.flow) {
+			setNoFlow(true);
+			setIsGenerating(false);
+			ShowToast("info", "Onboarding Incomplete", "Let us analyse your style first",{
+				action: {
+					label: "Take me there",
+					onClick: () => navigate("/existinghomeowner")
+				},
+				duration: 6000
+			});
+			return;
+		}
+
 		generateDocument();
 	}, []);
 
@@ -50,17 +67,14 @@ function DesignDocumentPage() {
 				`/newHomeOwners/documentLlm/generateDesignDocument/${user.uid}`,
 				{},
 				{
-					responseType: "blob" // For PDF download
+					responseType: "blob"
 				}
 			);
 
-			// Get PDF blob
 			const blob = response.data;
 
-			// Save PDF to cloud storage
 			await savePdfToCloud(blob);
 
-			// Create preview URL
 			const url = window.URL.createObjectURL(blob);
 			setGeneratedPdfUrl(url);
 
@@ -104,9 +118,9 @@ function DesignDocumentPage() {
 
 		const timestamp = now
 			.toISOString()
-			.replace(/[-:]/g, "") // remove - and :
-			.replace("T", "_") // replace T with _
-			.split(".")[0]; // remove milliseconds
+			.replace(/[-:]/g, "")
+			.replace("T", "_")
+			.split(".")[0];
 
 		const filename = `segmented_floor_plan_${timestamp}.pdf`;
 
@@ -156,7 +170,13 @@ function DesignDocumentPage() {
 									Design Document Generator
 								</Heading>
 								<Text fontSize={{ base: "xs", md: "sm" }} color="rgba(255, 255, 255, 0.7)">
-									{isGenerating ? "Generating your personalized design document..." : error ? "Generation failed" : "Your document is ready"}
+									{isGenerating
+										? "Generating your personalized design document..."
+										: noFlow
+										? "Onboarding required"
+										: error
+										? "Generation failed"
+										: "Your document is ready"}
 								</Text>
 							</VStack>
 						</Flex>
@@ -168,20 +188,10 @@ function DesignDocumentPage() {
 						overflowY="auto"
 						flex="1"
 						css={{
-							"&::-webkit-scrollbar": {
-								width: "8px"
-							},
-							"&::-webkit-scrollbar-track": {
-								background: "rgba(255, 255, 255, 0.1)",
-								borderRadius: "10px"
-							},
-							"&::-webkit-scrollbar-thumb": {
-								background: "rgba(255, 255, 255, 0.3)",
-								borderRadius: "10px"
-							},
-							"&::-webkit-scrollbar-thumb:hover": {
-								background: "rgba(255, 255, 255, 0.4)"
-							}
+							"&::-webkit-scrollbar": { width: "8px" },
+							"&::-webkit-scrollbar-track": { background: "rgba(255, 255, 255, 0.1)", borderRadius: "10px" },
+							"&::-webkit-scrollbar-thumb": { background: "rgba(255, 255, 255, 0.3)", borderRadius: "10px" },
+							"&::-webkit-scrollbar-thumb:hover": { background: "rgba(255, 255, 255, 0.4)" }
 						}}
 					>
 						<VStack gap={6} align="stretch" h="100%" justify="center">
@@ -198,8 +208,33 @@ function DesignDocumentPage() {
 								</VStack>
 							)}
 
+							{/* No Flow / Onboarding Incomplete State */}
+							{!isGenerating && noFlow && (
+								<VStack gap={5} animation="fadeInUp 0.4s ease-out">
+									<Box bg="rgba(255, 193, 7, 0.15)" p={4} borderRadius="full">
+										<ClipboardList size={48} color="#ffc107" />
+									</Box>
+									<Heading size="lg" color="white" textAlign="center">
+										Onboarding Incomplete
+									</Heading>
+									<Text color="rgba(255, 255, 255, 0.7)" textAlign="center" maxW="480px">
+										You need to complete at least one onboarding flow <br></br> <strong style={{ color: "white" }}>New Home Owner</strong> or <strong style={{ color: "white" }}>Existing Home Owner</strong> <br></br> before generating your design document.
+									</Text>
+									<Button
+										size="lg"
+										bg="#D4AF37"
+										color="white"
+										_hover={{ bg: "#C9A961" }}
+										onClick={() => navigate("/onboarding")}
+										leftIcon={<ClipboardList size={20} />}
+									>
+										Go to Onboarding
+									</Button>
+								</VStack>
+							)}
+
 							{/* Error State */}
-							{!isGenerating && error && (
+							{!isGenerating && !noFlow && error && (
 								<VStack gap={4} animation="fadeInUp 0.4s ease-out">
 									<AlertCircle size={48} color="#ff6b6b" />
 									<Heading size="lg" color="white" textAlign="center">
@@ -215,7 +250,7 @@ function DesignDocumentPage() {
 							)}
 
 							{/* Success State with PDF Preview */}
-							{!isGenerating && !error && generatedPdfUrl && (
+							{isSuccess && (
 								<VStack gap={6} align="stretch" h="100%" animation="fadeInUp 0.4s ease-out">
 									<VStack gap={3} animation="successFade 3s ease-out forwards">
 										<Box bg="rgba(76, 175, 80, 0.2)" p={4} borderRadius="full">
@@ -274,43 +309,17 @@ function DesignDocumentPage() {
 			<style>
 				{`
 					@keyframes fadeInUp {
-						from {
-							opacity: 0;
-							transform: translateY(20px);
-						}
-						to {
-							opacity: 1;
-							transform: translateY(0);
-						}
+						from { opacity: 0; transform: translateY(20px); }
+						to { opacity: 1; transform: translateY(0); }
 					}
-
 					@keyframes pulse {
-						0%, 100% {
-							opacity: 1;
-						}
-						50% {
-							opacity: 0.5;
-						}
+						0%, 100% { opacity: 1; }
+						50% { opacity: 0.5; }
 					}
-
 					@keyframes successFade {
-						0% {
-							opacity: 1;
-							transform: translateY(0);
-							max-height: 200px;
-						}
-						70% {
-							opacity: 1;
-							transform: translateY(0);
-							max-height: 200px;
-						}
-						100% {
-							opacity: 0;
-							transform: translateY(-20px);
-							max-height: 0;
-							margin: 0;
-							padding: 0;
-						}
+						0% { opacity: 1; transform: translateY(0); max-height: 200px; }
+						70% { opacity: 1; transform: translateY(0); max-height: 200px; }
+						100% { opacity: 0; transform: translateY(-20px); max-height: 0; margin: 0; padding: 0; }
 					}
 				`}
 			</style>
