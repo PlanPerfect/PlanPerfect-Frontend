@@ -1,7 +1,21 @@
 import { useState, useRef, useEffect } from "react";
-import { Box, Flex, Heading, Text, Textarea, VStack, HStack, IconButton, Image } from "@chakra-ui/react";
+import {
+	Box,
+	Flex,
+	Heading,
+	Text,
+	Textarea,
+	VStack,
+	HStack,
+	IconButton,
+	Image,
+	Dialog,
+	Portal,
+	CloseButton
+} from "@chakra-ui/react";
 import { Send, Sparkles, Loader2, Paperclip, X } from "lucide-react";
 import { useAuth } from "@/contexts/AuthContext";
+import { useNavigate } from "react-router-dom";
 import { ref, onValue, off } from "firebase/database";
 import { database } from "@/firebase";
 import LandingBackground from "../../assets/LandingBackground.png";
@@ -167,16 +181,17 @@ const OUTPUT_BRANCH_TO_CATEGORY = {
 	"Outputs/Recommendations": "Recommendations"
 };
 
+const createInitialAgentMessage = () => ({
+	role: "assistant",
+	content: "Welcome to Le'Orchestra. What would you like me to help you with?",
+	timestamp: new Date(),
+	isThinking: false
+});
+
 function AgentPage() {
 	const { user } = useAuth();
-	const [messages, setMessages] = useState([
-		{
-			role: "assistant",
-			content: "Welcome to Le'Orchestra. What would you like me to help you with?",
-			timestamp: new Date(),
-			isThinking: false
-		}
-	]);
+	const navigate = useNavigate();
+	const [messages, setMessages] = useState([createInitialAgentMessage()]);
 	const [inputValue, setInputValue] = useState("");
 	const [isProcessing, setIsProcessing] = useState(false);
 	const [currentStep, setCurrentStep] = useState("Thinking...");
@@ -189,6 +204,8 @@ function AgentPage() {
 	const fileInputRef = useRef(null);
 	const [liveSteps, setLiveSteps] = useState([]);
 	const [showAgentStatus, setShowAgentStatus] = useState(false);
+	const [isClearingSession, setIsClearingSession] = useState(false);
+	const [isClearDialogOpen, setIsClearDialogOpen] = useState(false);
 
 	const glassPanelStyle = {
 		position: "relative",
@@ -345,7 +362,7 @@ function AgentPage() {
 		setUploadedFiles((prev) => prev.filter((_, i) => i !== index));
 	};
 
-	const canSend = inputValue.trim().length > 0 && !isProcessing;
+	const canSend = inputValue.trim().length > 0 && !isProcessing && !isClearingSession;
 
 	const handleSend = async () => {
 		if (!canSend) return;
@@ -402,6 +419,58 @@ function AgentPage() {
 		if (e.key === "Enter" && !e.shiftKey) {
 			e.preventDefault();
 			handleSend();
+		}
+	};
+
+	const handleSwitchToChatMode = () => {
+		if (isProcessing || isClearingSession) return;
+		navigate("/lumen/chat");
+	};
+
+	const handleOpenClearDialog = () => {
+		if (isProcessing || isClearingSession || !user?.uid) return;
+		setIsClearDialogOpen(true);
+	};
+
+	const resetLocalSessionState = () => {
+		setMessages([createInitialAgentMessage()]);
+		setInputValue("");
+		setUploadedFiles([]);
+		setOutputs(null);
+		setOutputCategoryRecency({});
+		setShowOutputs(false);
+		setCurrentStep("Thinking...");
+		setLiveSteps([]);
+		setShowAgentStatus(false);
+		if (fileInputRef.current) fileInputRef.current.value = "";
+	};
+
+	const handleClearSession = async () => {
+		if (isProcessing || isClearingSession || !user?.uid) return;
+
+		setIsClearingSession(true);
+		try {
+			const response = await server.post("/agent/clear-session", { uid: user.uid });
+			if (!response?.data?.success) {
+				ShowToast("error", "Failed to clear session", "Please try again.");
+				return;
+			}
+
+			resetLocalSessionState();
+			setIsClearDialogOpen(false);
+			ShowToast("success", "Session cleared", "Your new session is ready.");
+		} catch (err) {
+			const detail = err?.response?.data?.detail || err?.response?.data?.error || "";
+			if (detail.startsWith("UERROR: ")) {
+				ShowToast("error", detail.substring("UERROR: ".length), "Check console for more details.");
+			} else if (detail.startsWith("ERROR: ")) {
+				ShowToast("error", detail.substring("ERROR: ".length), "Check console for more details.");
+			} else {
+				ShowToast("error", "Failed to clear session", "Check console for more details.");
+			}
+			console.error("Failed to clear session:", err?.response || err);
+		} finally {
+			setIsClearingSession(false);
 		}
 	};
 
@@ -642,6 +711,78 @@ function AgentPage() {
 								</Text>
 							</VStack>
 						</Flex>
+
+							<HStack gap={2} mr={5}>
+								<Box
+									as="button"
+									onClick={handleOpenClearDialog}
+									disabled={isProcessing || isClearingSession}
+									position="relative"
+									bg="rgba(255, 255, 255, 0.22)"
+									border="1px solid rgba(255, 255, 255, 0.45)"
+									borderRadius="full"
+									px={{ base: 3, md: 4 }}
+									py={{ base: 2, md: 2.5 }}
+									color="white"
+									fontSize={{ base: "xs", md: "sm" }}
+									fontWeight="600"
+									cursor={isProcessing || isClearingSession ? "not-allowed" : "pointer"}
+									opacity={isProcessing || isClearingSession ? 0.5 : 1}
+									transition="all 0.25s ease, box-shadow 0.25s ease"
+									whiteSpace="nowrap"
+									overflow="hidden"
+									boxShadow="0 4px 14px rgba(0, 0, 0, 0.2), inset 0 1px 0 rgba(255, 255, 255, 0.2)"
+									_hover={
+										isProcessing || isClearingSession
+											? {}
+											: {
+													bg: "rgba(255, 255, 255, 0.3)",
+													border: "1px solid rgba(255, 255, 255, 0.65)",
+													transform: "translateY(-2px)"
+											  }
+									}
+									_active={isProcessing || isClearingSession ? {} : { transform: "translateY(0)" }}
+								>
+									<Text as="span">{isClearingSession ? "Clearing..." : "Clear Session"}</Text>
+								</Box>
+
+								<Box
+									as="button"
+									onClick={handleSwitchToChatMode}
+									position="relative"
+									disabled={isProcessing || isClearingSession}
+									bg="linear-gradient(135deg, rgba(212, 175, 55, 0.52), rgba(255, 215, 0, 0.52))"
+									border="1px solid rgba(212, 175, 55, 0.78)"
+									borderRadius="full"
+									px={{ base: 3, md: 5 }}
+									py={{ base: 2, md: 2.5 }}
+									color="white"
+									fontSize={{ base: "xs", md: "sm" }}
+									fontWeight="600"
+									cursor={isProcessing || isClearingSession ? "not-allowed" : "pointer"}
+									opacity={isProcessing || isClearingSession ? 0.5 : 1}
+									transition="all 0.4s ease, box-shadow 0.4s ease"
+									whiteSpace="nowrap"
+									overflow="hidden"
+									boxShadow="0 4px 15px rgba(212, 175, 55, 0.34), inset 0 1px 0 rgba(255, 255, 255, 0.3)"
+									_hover={isProcessing || isClearingSession ? {} : {
+										bg: "linear-gradient(135deg, rgba(212, 175, 55, 0.68), rgba(255, 215, 0, 0.68))",
+										border: "1px solid rgba(255, 215, 0, 0.95)",
+										transform: "translateY(-2px) scale(1.02)",
+										boxShadow:
+											"0 8px 25px rgba(212, 175, 55, 0.4), 0 0 20px rgba(255, 215, 0, 0.3), inset 0 1px 0 rgba(255, 255, 255, 0.3)"
+									}}
+									_active={isProcessing || isClearingSession ? {} : {
+										transform: "translateY(0) scale(0.98)",
+										boxShadow: "0 2px 10px rgba(212, 175, 55, 0.3), inset 0 2px 4px rgba(0, 0, 0, 0.1)"
+									}}
+								>
+									<Flex align="center" gap={2}>
+										<Sparkles size={16} style={{ animation: "pulse 2s ease-in-out infinite" }} />
+										<Text as="span">Switch to Chat Mode</Text>
+									</Flex>
+								</Box>
+							</HStack>
 					</Flex>
 				</Box>
 
@@ -1095,6 +1236,103 @@ function AgentPage() {
 					)}
 				</Flex>
 			</Flex>
+
+			<Dialog.Root
+				placement="center"
+				motionPreset="scale"
+				open={isClearDialogOpen}
+				onOpenChange={(e) => {
+					if (isClearingSession) return;
+					setIsClearDialogOpen(e.open);
+				}}
+			>
+				<Portal>
+					<Dialog.Backdrop bg="blackAlpha.700" backdropFilter="blur(3px)" />
+					<Dialog.Positioner>
+						<Dialog.Content
+							borderRadius="2xl"
+							bg="rgba(18, 18, 18, 0.92)"
+							backdropFilter="blur(10px)"
+							border="1px solid rgba(255, 255, 255, 0.18)"
+							p={5}
+							maxW="420px"
+							boxShadow="0 20px 50px rgba(0,0,0,0.45)"
+						>
+							<Dialog.CloseTrigger asChild>
+								<CloseButton
+									size="sm"
+									position="absolute"
+									top="12px"
+									right="12px"
+									color="white"
+									disabled={isClearingSession}
+									_hover={{ background: "transparent" }}
+								/>
+							</Dialog.CloseTrigger>
+
+							<VStack align="stretch" gap={4}>
+								<Box>
+									<Heading size="md" color="white" mb={2}>
+										Clear Agent Session?
+									</Heading>
+									<Text color="rgba(255,255,255,0.75)" fontSize="sm" lineHeight="1.6">
+										This will remove your current chat history, uploaded files, and output panel for
+										this session.
+									</Text>
+								</Box>
+
+								<HStack justify="flex-end" gap={2}>
+									<Box
+										as="button"
+										onClick={() => setIsClearDialogOpen(false)}
+										disabled={isClearingSession}
+										px={4}
+										py={2}
+										borderRadius="lg"
+										border="1px solid rgba(255,255,255,0.25)"
+										bg="rgba(255,255,255,0.08)"
+										color="white"
+										fontSize="sm"
+										fontWeight="600"
+										cursor={isClearingSession ? "not-allowed" : "pointer"}
+										opacity={isClearingSession ? 0.5 : 1}
+										_hover={
+											isClearingSession ? {} : { bg: "rgba(255,255,255,0.14)" }
+										}
+									>
+										Cancel
+									</Box>
+
+									<Box
+										as="button"
+										onClick={handleClearSession}
+										disabled={isClearingSession}
+										px={4}
+										py={2}
+										borderRadius="lg"
+										border="1px solid rgba(255, 140, 140, 0.55)"
+										bg="rgba(255, 90, 90, 0.2)"
+										color="white"
+										fontSize="sm"
+										fontWeight="700"
+										cursor={isClearingSession ? "not-allowed" : "pointer"}
+										opacity={isClearingSession ? 0.65 : 1}
+										_hover={
+											isClearingSession
+												? {}
+												: {
+														bg: "rgba(255, 90, 90, 0.3)"
+												  }
+										}
+									>
+										{isClearingSession ? "Clearing..." : "Clear Session"}
+									</Box>
+								</HStack>
+							</VStack>
+						</Dialog.Content>
+					</Dialog.Positioner>
+				</Portal>
+			</Dialog.Root>
 
 			<style>
 				{`
