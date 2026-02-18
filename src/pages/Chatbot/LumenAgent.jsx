@@ -401,21 +401,23 @@ function AgentPage() {
 			return bRank - aRank;
 		});
 
-		const OutputImage = ({ src, alt, maxH = "300px" }) => (
-			<Flex justify="center" align="center" w="100%">
-				<Image
-					src={src}
-					alt={alt}
-					borderRadius="md"
-					maxH={maxH}
-					maxW="100%"
-					objectFit="contain"
-					crossOrigin="anonymous"
-					fallback={
-						<Text color="white" fontSize="sm" textAlign="center" py={2}>
-							Image unavailable
-						</Text>
-					}
+			const OutputImage = ({ src, alt, maxH = "300px" }) => (
+				<Flex justify="center" align="center" w="100%">
+					<Image
+						src={src}
+						alt={alt}
+						color="white"
+						borderRadius="md"
+						maxH={maxH}
+						maxW="100%"
+						objectFit="contain"
+						crossOrigin="anonymous"
+						style={{ color: "white" }}
+						fallback={
+							<Text color="white" fontSize="sm" textAlign="center" py={2}>
+								Image unavailable
+							</Text>
+						}
 				/>
 			</Flex>
 		);
