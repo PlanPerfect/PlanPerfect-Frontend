@@ -757,6 +757,7 @@ function AgentPage() {
 					const outputCardPadding = 3;
 					const categoryImageMaxH =
 						category.key === "Generated Floor Plans" ? "560px" : "300px";
+					const isClassifiedStylesCategory = category.key === "Classified Style";
 
 					return (
 						<Box key={category.key}>
@@ -769,6 +770,56 @@ function AgentPage() {
 								</Text>
 							</Flex>
 
+							{isClassifiedStylesCategory ? (
+								<Box
+									display="grid"
+									gridTemplateColumns="repeat(2, minmax(0, 1fr))"
+									gap={3}
+								>
+									{orderedItems.map((item, idx) => {
+										const styleLabel =
+											typeof item === "object" && item !== null
+												? item.style || item.label || item.name || ""
+												: typeof item === "string"
+													? item
+													: "";
+										const styleImageSrc =
+											typeof item === "object" && item !== null
+												? item.image_url || item.url || ""
+												: "";
+
+										return (
+											<Box
+												key={idx}
+												bg="rgba(255, 255, 255, 0.05)"
+												borderRadius="lg"
+												p={2}
+												border="1px solid rgba(255, 255, 255, 0.1)"
+											>
+												{styleImageSrc && (
+													<OutputImageCard
+														src={styleImageSrc}
+														alt={styleLabel || `Style ${idx + 1}`}
+														maxH="180px"
+														onDownload={handleDownloadImage}
+													/>
+												)}
+												{styleLabel && (
+													<Text
+														color="rgba(255, 255, 255, 0.9)"
+														fontSize="sm"
+														fontWeight="600"
+														textAlign="center"
+														mt={styleImageSrc ? 2 : 0}
+													>
+														{styleLabel}
+													</Text>
+												)}
+											</Box>
+										);
+									})}
+								</Box>
+							) : (
 							<VStack align="stretch" gap={3}>
 								{orderedItems.map((item, idx) => (
 									<Box
@@ -928,6 +979,7 @@ function AgentPage() {
 									</Box>
 								))}
 							</VStack>
+							)}
 						</Box>
 					);
 				})}
