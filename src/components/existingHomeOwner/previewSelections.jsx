@@ -37,7 +37,7 @@ function PreviewSelections({ preferences, analysisResults, selectedStyles, uploa
 			const prefsResponse = await server.post("/existingHomeOwners/styleClassification/savePreferences", prefsFormData);
 
 			// Navigate to StyleMatch GetStarted page
-			navigate("/StyleMatch");
+			navigate("/stylematch");
 		} catch (err) {
 			if (err?.response?.data?.detail) {
 				if (err.response.data.detail.startsWith("UERROR: ")) {
