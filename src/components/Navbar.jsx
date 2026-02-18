@@ -10,7 +10,7 @@ const MotionFlex = motion.create(Flex);
 function Navbar() {
 	const location = useLocation();
 	const isHome = location.pathname === "/";
-	const isChatPage = location.pathname === "/lumen/chat";
+	const isChatPage = location.pathname.startsWith("/lumen");
 	const isRecommendationsPage = location.pathname === "/stylematch/reccomendations";
 	const { hasRecommendations } = useRecommendations();
 	const [isWide] = useMediaQuery("(min-width: 530px)");
