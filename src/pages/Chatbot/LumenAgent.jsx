@@ -1032,46 +1032,7 @@ function AgentPage() {
 		/>
 	);
 
-	if (!historyLoaded) {
-		return (
-			<>
-				{backgroundEl}
-				<Flex
-					position="fixed"
-					inset={0}
-					align="center"
-					justify="center"
-					direction="column"
-					gap={4}
-					zIndex={1}
-				>
-					<Box
-						bg="linear-gradient(135deg, rgba(212, 175, 55, 0.3), rgba(255, 215, 0, 0.3))"
-						p={4}
-						borderRadius="2xl"
-						border="1px solid rgba(255, 255, 255, 0.15)"
-						boxShadow="0 8px 24px rgba(31, 38, 135, 0.15)"
-					>
-						<Sparkles size={32} color="#FFD700" style={{ animation: "pulse 2s ease-in-out infinite" }} />
-					</Box>
-					<Flex align="center" gap={2}>
-						<Loader2
-							size={18}
-							color="rgba(255,255,255,0.7)"
-							style={{ animation: "spin 1s linear infinite" }}
-						/>
-						<Text color="rgba(255,255,255,0.7)" fontSize="sm" fontWeight="500">
-							Loading your session...
-						</Text>
-					</Flex>
-				</Flex>
-				<style>{`
-					@keyframes spin { from { transform: rotate(0deg); } to { transform: rotate(360deg); } }
-					@keyframes pulse { 0%, 100% { opacity: 1; } 50% { opacity: 0.5; } }
-				`}</style>
-			</>
-		);
-	}
+	if (!historyLoaded) return null;
 
 	return (
 		<>
