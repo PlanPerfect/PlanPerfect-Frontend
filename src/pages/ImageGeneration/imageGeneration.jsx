@@ -30,6 +30,9 @@ function ImageGeneration() {
 
 	const [showRegenerateInput, setShowRegenerateInput] = useState(false);
 
+	const [designHistory, setDesignHistory] = useState([]);
+	const [showHistory, setShowHistory] = useState(false);
+
 	const imagesSectionRef = useRef(null);
 	const regenerateInputRef = useRef(null);
 
@@ -114,6 +117,19 @@ function ImageGeneration() {
 		}
 	};
 
+	const fetchHistory = async () => {
+		try {
+			const response = await server.get("/image/history", {
+				headers: { "X-User-ID": user.uid }
+			});
+			if (response.data.success) {
+				setDesignHistory(response.data.designs || []);
+			}
+		} catch (err) {
+			console.error("Failed to fetch design history:", err);
+		}
+	};
+
 	const handleFurnitureConfirm = ({ urls, descriptions }) => {
 		setSelectedFurnitureUrls(urls);
 		setSelectedFurnitureDescriptions(descriptions);
@@ -147,6 +163,7 @@ function ImageGeneration() {
 
 			setGeneratedImage(url);
 			sessionStorage.setItem(`generatedImage_${user.uid}`, url);
+			fetchHistory();
 		} catch (err) {
 			handleErrorResponse(err, "Failed to generate design", setGenerationError);
 		} finally {
@@ -171,6 +188,7 @@ function ImageGeneration() {
 			setGeneratedImage(url);
 			sessionStorage.setItem(`generatedImage_${user.uid}`, url);
 			setSelectedStyles(styles);
+			fetchHistory();
 		} catch (err) {
 			setShowRegenerateInput(true);
 			handleErrorResponse(err, "Failed to re-generate design", setGenerationError);
@@ -486,7 +504,7 @@ function ImageGeneration() {
 										<Text fontSize="4xl" mb={3}>🤔</Text>
 										<Heading size="md" color="#D4AF37" mb={4}>Want Changes?</Heading>
 										<Text fontSize="sm" color="gray.600" mb={6}>
-											No problem! Customize the design or try a different style
+											No problem! Customize the design or try a different furniture selection to see new variations
 										</Text>
 										<Button
 											onClick={handleShowRegenerateInput} size="lg"
@@ -495,12 +513,77 @@ function ImageGeneration() {
 											leftIcon={<FaWandMagicSparkles />}
 											_hover={{ bg: "linear-gradient(135deg, #C9A961 0%, #B8984D 100%)", transform: "translateY(-2px)", boxShadow: "lg" }}
 											transition="all 0.2s">
-											{showRegenerateInput ? "Hide Options" : "Regenerate Design"}
+												{showRegenerateInput ? "Hide Options" : "Regenerate Design"}
 										</Button>
 									</Box>
 								</Flex>
 							</Box>
 						)}
+
+						{/* Design History Panel */}
+						<Box border="2px solid #D4AF37" borderRadius="12px" bg="white" boxShadow="md" overflow="hidden">
+							<Flex
+								align="center" justify="space-between"
+								p={5} cursor="pointer" bg="#FFFDF7"
+								onClick={() => {
+									if (!showHistory && designHistory.length === 0) fetchHistory();
+									setShowHistory(!showHistory);
+								}}
+								_hover={{ bg: "#FFF8E7" }}
+								transition="background 0.2s"
+							>
+								<Flex align="center" gap={3}>
+									<Text fontSize="xl">🕐</Text>
+									<Heading size="md" color="#D4AF37">Design History</Heading>
+									{designHistory.length > 0 && (
+										<Box bg="#D4AF37" color="white" borderRadius="full" px={2} py={0.5} fontSize="sm" fontWeight="700">
+											{designHistory.length}
+										</Box>
+									)}
+								</Flex>
+								<Text color="#D4AF37" fontWeight="700" fontSize="lg">
+									{showHistory ? "▲" : "▼"}
+								</Text>
+							</Flex>
+
+							{showHistory && (
+								<Box p={5} borderTop="1px solid #F4E5B2">
+									{designHistory.length === 0 ? (
+										<Text textAlign="center" color="gray.500" py={4}>No previous designs yet.</Text>
+									) : (
+										<Flex gap={4} flexWrap="wrap" justify="flex-start">
+											{designHistory.map((design) => (
+												<Box
+													key={design.id}
+													border={design.url === generatedImage ? "3px solid #D4AF37" : "2px solid #E2E8F0"}
+													borderRadius="10px" overflow="hidden" w={{ base: "100%", sm: "180px" }}
+													boxShadow={design.url === generatedImage ? "0 0 0 2px #D4AF37" : "sm"}
+													cursor="pointer" transition="all 0.2s"
+													_hover={{ transform: "translateY(-2px)", boxShadow: "md" }}
+													onClick={() => setGeneratedImage(design.url)}
+												>
+													<Image
+														src={design.url} w="100%" h="140px" objectFit="cover"
+														fallback={<Box bg="gray.100" h="140px" display="flex" alignItems="center" justifyContent="center"><Text color="gray.400" fontSize="sm">Loading...</Text></Box>}
+													/>
+													<Box p={2} bg={design.url === generatedImage ? "#FFFDF7" : "white"}>
+														<Text fontSize="xs" color="gray.500" noOfLines={1}>
+															{design.styles || "—"}
+														</Text>
+														<Text fontSize="xs" color="gray.400">
+															{design.created_at ? new Date(design.created_at).toLocaleDateString() : ""}
+														</Text>
+														{design.url === generatedImage && (
+															<Text fontSize="xs" color="#D4AF37" fontWeight="700">● Current</Text>
+														)}
+													</Box>
+												</Box>
+											))}
+										</Flex>
+									)}
+								</Box>
+							)}
+						</Box>
 					</Flex>
 				</Box>
 			</Container>
