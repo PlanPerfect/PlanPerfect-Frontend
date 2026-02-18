@@ -77,10 +77,9 @@ const renderMessageContent = (content) => {
 			while (nextLineIndex < lines.length && lines[nextLineIndex].trim() === "") {
 				nextLineIndex += 1;
 			}
-
 			if (nextLineIndex < lines.length) {
 				const nextText = lines[nextLineIndex].trim();
-					if (nextText && !/^(\d+\.|[-*•]\s|#{1,3}\s)/.test(nextText)) {
+				if (nextText && !/^(\d+\.|[-*•]\s|#{1,3}\s)/.test(nextText)) {
 					trimmed = `${trimmed} ${nextText}`;
 					i = nextLineIndex;
 				}
@@ -91,7 +90,6 @@ const renderMessageContent = (content) => {
 			while (nextLineIndex < lines.length && lines[nextLineIndex].trim() === "") {
 				nextLineIndex += 1;
 			}
-
 			if (nextLineIndex < lines.length) {
 				const nextText = lines[nextLineIndex].trim();
 				if (nextText && !/^(\d+\.|[-*•]\s|#{1,3}\s)/.test(nextText)) {
@@ -188,6 +186,38 @@ const createInitialAgentMessage = () => ({
 	timestamp: new Date(),
 	isThinking: false
 });
+
+/**
+ * Reconstruct a flat messages array from persisted session steps.
+ * Steps of type "user_query" → role "user"
+ * Steps of type "response"   → role "assistant"
+ * All other step types are internal and are skipped.
+ */
+const buildMessagesFromSteps = (steps) => {
+	if (!Array.isArray(steps) || steps.length === 0) return null;
+
+	const messages = [];
+	for (const step of steps) {
+		if (!step || typeof step !== "object") continue;
+		const { type, content, timestamp } = step;
+
+		if (type === "user_query" && typeof content === "string" && content.trim()) {
+			messages.push({
+				role: "user",
+				content: content.trim(),
+				timestamp: timestamp ? new Date(timestamp) : new Date()
+			});
+		} else if (type === "response" && typeof content === "string" && content.trim()) {
+			messages.push({
+				role: "assistant",
+				content: content.trim(),
+				timestamp: timestamp ? new Date(timestamp) : new Date()
+			});
+		}
+	}
+
+	return messages.length > 0 ? messages : null;
+};
 
 function ImageDownloadButton({ onDownload, label }) {
 	const [isDownloading, setIsDownloading] = useState(false);
@@ -320,6 +350,9 @@ function OutputImageCard({ src, alt, maxH = "300px", onDownload }) {
 function AgentPage() {
 	const { user } = useAuth();
 	const navigate = useNavigate();
+
+	const [historyLoaded, setHistoryLoaded] = useState(false);
+
 	const [messages, setMessages] = useState([createInitialAgentMessage()]);
 	const [inputValue, setInputValue] = useState("");
 	const [isProcessing, setIsProcessing] = useState(false);
@@ -357,6 +390,51 @@ function AgentPage() {
 			transform: "translateZ(0)"
 		}
 	};
+
+	useEffect(() => {
+		if (!user?.uid) return;
+
+		let cancelled = false;
+
+		const loadHistory = async () => {
+			try {
+				const response = await server.post("/agent/get-session", { uid: user.uid });
+				if (cancelled) return;
+
+				const session = response?.data;
+
+				const rebuilt = buildMessagesFromSteps(session?.steps);
+				if (rebuilt) {
+					setMessages(rebuilt);
+				}
+
+				const sessionOutputs = session?.Outputs;
+				if (sessionOutputs && typeof sessionOutputs === "object") {
+					const hasOutputs = Object.values(sessionOutputs).some(
+						(arr) => Array.isArray(arr) && arr.length > 0
+					);
+					if (hasOutputs) {
+						setOutputs(sessionOutputs);
+						setShowOutputs(true);
+					}
+				}
+			} catch (err) {
+				if (!cancelled) {
+					console.warn("[AgentPage] Could not load session history:", err);
+				}
+			} finally {
+				if (!cancelled) {
+					setHistoryLoaded(true);
+				}
+			}
+		};
+
+		loadHistory();
+
+		return () => {
+			cancelled = true;
+		};
+	}, [user?.uid]);
 
 	useEffect(() => {
 		messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
@@ -569,9 +647,7 @@ function AgentPage() {
 			const { pathname } = new URL(imageUrl);
 			const extMatch = pathname.match(/\.(png|jpe?g|webp|gif|bmp|svg)$/i);
 			if (extMatch) extension = extMatch[0].toLowerCase();
-		} catch (_) {
-			// Keep default extension when URL parsing fails.
-		}
+		} catch (_) {}
 
 		return `${safeBase}${extension}`;
 	}, []);
@@ -672,18 +748,18 @@ function AgentPage() {
 			return bRank - aRank;
 		});
 
-			return (
-				<VStack align="stretch" gap={4} w="100%">
-					{sortedCategories.map((category) => {
-						const items = outputs[category.key];
-						if (!items || !Array.isArray(items) || items.length === 0) return null;
-						const orderedItems = [...items].reverse();
-						const outputCardPadding = 3;
-						const categoryImageMaxH =
-							category.key === "Generated Floor Plans" ? "560px" : "300px";
+		return (
+			<VStack align="stretch" gap={4} w="100%">
+				{sortedCategories.map((category) => {
+					const items = outputs[category.key];
+					if (!items || !Array.isArray(items) || items.length === 0) return null;
+					const orderedItems = [...items].reverse();
+					const outputCardPadding = 3;
+					const categoryImageMaxH =
+						category.key === "Generated Floor Plans" ? "560px" : "300px";
 
-						return (
-							<Box key={category.key}>
+					return (
+						<Box key={category.key}>
 							<Flex align="center" gap={2} mb={3}>
 								<Heading size="sm" color="white">
 									{category.label}
@@ -691,10 +767,10 @@ function AgentPage() {
 								<Text color="rgba(255, 255, 255, 0.5)" fontSize="xs">
 									({items.length})
 								</Text>
-								</Flex>
+							</Flex>
 
-								<VStack align="stretch" gap={3}>
-									{orderedItems.map((item, idx) => (
+							<VStack align="stretch" gap={3}>
+								{orderedItems.map((item, idx) => (
 									<Box
 										key={idx}
 										bg="rgba(255, 255, 255, 0.05)"
@@ -715,32 +791,32 @@ function AgentPage() {
 											</Text>
 										) : typeof item === "object" && item !== null ? (
 											<VStack align="stretch" gap={2}>
-													{item.query && (
-														<>
+												{item.query && (
+													<>
+														<Text
+															color="rgba(255, 255, 255, 0.6)"
+															fontSize="xs"
+															fontWeight="600"
+															textAlign="left"
+														>
+															Query: {item.query}
+														</Text>
+														{typeof item.result === "string" ? (
+															<Box textAlign="left">
+																{renderMessageContent(item.result)}
+															</Box>
+														) : (
 															<Text
-																color="rgba(255, 255, 255, 0.6)"
-																fontSize="xs"
-																fontWeight="600"
+																color="rgba(255, 255, 255, 0.85)"
+																fontSize="sm"
 																textAlign="left"
+																lineHeight="1.7"
 															>
-																Query: {item.query}
+																{String(item.result ?? "")}
 															</Text>
-															{typeof item.result === "string" ? (
-																<Box textAlign="left">
-																	{renderMessageContent(item.result)}
-																</Box>
-															) : (
-																<Text
-																	color="rgba(255, 255, 255, 0.85)"
-																	fontSize="sm"
-																	textAlign="left"
-																	lineHeight="1.7"
-																>
-																	{String(item.result ?? "")}
-																</Text>
-															)}
-														</>
-													)}
+														)}
+													</>
+												)}
 
 												{item.style && (
 													<>
@@ -819,7 +895,7 @@ function AgentPage() {
 																onDownload={handleDownloadImage}
 															/>
 														)}
-															<Flex gap={2} flexWrap="wrap" justify="center" w="100%">
+														<Flex gap={2} flexWrap="wrap" justify="center" w="100%">
 															{item.colors.map((color, i) => (
 																<Box key={i} textAlign="center">
 																	<Box
@@ -858,24 +934,70 @@ function AgentPage() {
 			</VStack>
 		);
 	}, [outputs, outputCategoryRecency, handleDownloadImage]);
+
 	const renderedOutputs = useMemo(() => renderOutputs(), [renderOutputs]);
+
+	const backgroundEl = (
+		<Box
+			style={{
+				position: "fixed",
+				top: 0,
+				left: 0,
+				right: 0,
+				bottom: 0,
+				backgroundImage: `url(${LandingBackground})`,
+				backgroundSize: "cover",
+				backgroundPosition: "center",
+				backgroundRepeat: "no-repeat",
+				zIndex: -1
+			}}
+		/>
+	);
+
+	if (!historyLoaded) {
+		return (
+			<>
+				{backgroundEl}
+				<Flex
+					position="fixed"
+					inset={0}
+					align="center"
+					justify="center"
+					direction="column"
+					gap={4}
+					zIndex={1}
+				>
+					<Box
+						bg="linear-gradient(135deg, rgba(212, 175, 55, 0.3), rgba(255, 215, 0, 0.3))"
+						p={4}
+						borderRadius="2xl"
+						border="1px solid rgba(255, 255, 255, 0.15)"
+						boxShadow="0 8px 24px rgba(31, 38, 135, 0.15)"
+					>
+						<Sparkles size={32} color="#FFD700" style={{ animation: "pulse 2s ease-in-out infinite" }} />
+					</Box>
+					<Flex align="center" gap={2}>
+						<Loader2
+							size={18}
+							color="rgba(255,255,255,0.7)"
+							style={{ animation: "spin 1s linear infinite" }}
+						/>
+						<Text color="rgba(255,255,255,0.7)" fontSize="sm" fontWeight="500">
+							Loading your session...
+						</Text>
+					</Flex>
+				</Flex>
+				<style>{`
+					@keyframes spin { from { transform: rotate(0deg); } to { transform: rotate(360deg); } }
+					@keyframes pulse { 0%, 100% { opacity: 1; } 50% { opacity: 0.5; } }
+				`}</style>
+			</>
+		);
+	}
 
 	return (
 		<>
-			<Box
-				style={{
-					position: "fixed",
-					top: 0,
-					left: 0,
-					right: 0,
-					bottom: 0,
-					backgroundImage: `url(${LandingBackground})`,
-					backgroundSize: "cover",
-					backgroundPosition: "center",
-					backgroundRepeat: "no-repeat",
-					zIndex: -1
-				}}
-			/>
+			{backgroundEl}
 
 			<Flex h="82vh" direction="column" w="100%" py={{ base: 4, md: 6 }} mt={-6}>
 				<Box mb={4} w="100%" ml={3}>
@@ -905,77 +1027,77 @@ function AgentPage() {
 							</VStack>
 						</Flex>
 
-							<HStack gap={2} mr={5}>
-								<Box
-									as="button"
-									onClick={handleOpenClearDialog}
-									disabled={isProcessing || isClearingSession}
-									position="relative"
-									bg="rgba(255, 255, 255, 0.22)"
-									border="1px solid rgba(255, 255, 255, 0.45)"
-									borderRadius="full"
-									px={{ base: 3, md: 4 }}
-									py={{ base: 2, md: 2.5 }}
-									color="white"
-									fontSize={{ base: "xs", md: "sm" }}
-									fontWeight="600"
-									cursor={isProcessing || isClearingSession ? "not-allowed" : "pointer"}
-									opacity={isProcessing || isClearingSession ? 0.5 : 1}
-									transition="all 0.25s ease, box-shadow 0.25s ease"
-									whiteSpace="nowrap"
-									overflow="hidden"
-									boxShadow="0 4px 14px rgba(0, 0, 0, 0.2), inset 0 1px 0 rgba(255, 255, 255, 0.2)"
-									_hover={
-										isProcessing || isClearingSession
-											? {}
-											: {
-													bg: "rgba(255, 255, 255, 0.3)",
-													border: "1px solid rgba(255, 255, 255, 0.65)",
-													transform: "translateY(-2px)"
-											  }
-									}
-									_active={isProcessing || isClearingSession ? {} : { transform: "translateY(0)" }}
-								>
-									<Text as="span">{isClearingSession ? "Clearing..." : "Clear Session"}</Text>
-								</Box>
+						<HStack gap={2} mr={5}>
+							<Box
+								as="button"
+								onClick={handleOpenClearDialog}
+								disabled={isProcessing || isClearingSession}
+								position="relative"
+								bg="rgba(255, 255, 255, 0.22)"
+								border="1px solid rgba(255, 255, 255, 0.45)"
+								borderRadius="full"
+								px={{ base: 3, md: 4 }}
+								py={{ base: 2, md: 2.5 }}
+								color="white"
+								fontSize={{ base: "xs", md: "sm" }}
+								fontWeight="600"
+								cursor={isProcessing || isClearingSession ? "not-allowed" : "pointer"}
+								opacity={isProcessing || isClearingSession ? 0.5 : 1}
+								transition="all 0.25s ease, box-shadow 0.25s ease"
+								whiteSpace="nowrap"
+								overflow="hidden"
+								boxShadow="0 4px 14px rgba(0, 0, 0, 0.2), inset 0 1px 0 rgba(255, 255, 255, 0.2)"
+								_hover={
+									isProcessing || isClearingSession
+										? {}
+										: {
+												bg: "rgba(255, 255, 255, 0.3)",
+												border: "1px solid rgba(255, 255, 255, 0.65)",
+												transform: "translateY(-2px)"
+										  }
+								}
+								_active={isProcessing || isClearingSession ? {} : { transform: "translateY(0)" }}
+							>
+								<Text as="span">{isClearingSession ? "Clearing..." : "Clear Session"}</Text>
+							</Box>
 
-								<Box
-									as="button"
-									onClick={handleSwitchToChatMode}
-									position="relative"
-									disabled={isProcessing || isClearingSession}
-									bg="linear-gradient(135deg, rgba(212, 175, 55, 0.52), rgba(255, 215, 0, 0.52))"
-									border="1px solid rgba(212, 175, 55, 0.78)"
-									borderRadius="full"
-									px={{ base: 3, md: 5 }}
-									py={{ base: 2, md: 2.5 }}
-									color="white"
-									fontSize={{ base: "xs", md: "sm" }}
-									fontWeight="600"
-									cursor={isProcessing || isClearingSession ? "not-allowed" : "pointer"}
-									opacity={isProcessing || isClearingSession ? 0.5 : 1}
-									transition="all 0.4s ease, box-shadow 0.4s ease"
-									whiteSpace="nowrap"
-									overflow="hidden"
-									boxShadow="0 4px 15px rgba(212, 175, 55, 0.34), inset 0 1px 0 rgba(255, 255, 255, 0.3)"
-									_hover={isProcessing || isClearingSession ? {} : {
-										bg: "linear-gradient(135deg, rgba(212, 175, 55, 0.68), rgba(255, 215, 0, 0.68))",
-										border: "1px solid rgba(255, 215, 0, 0.95)",
-										transform: "translateY(-2px) scale(1.02)",
-										boxShadow:
-											"0 8px 25px rgba(212, 175, 55, 0.4), 0 0 20px rgba(255, 215, 0, 0.3), inset 0 1px 0 rgba(255, 255, 255, 0.3)"
-									}}
-									_active={isProcessing || isClearingSession ? {} : {
-										transform: "translateY(0) scale(0.98)",
-										boxShadow: "0 2px 10px rgba(212, 175, 55, 0.3), inset 0 2px 4px rgba(0, 0, 0, 0.1)"
-									}}
-								>
-									<Flex align="center" gap={2}>
-										<Sparkles size={16} style={{ animation: "pulse 2s ease-in-out infinite" }} />
-										<Text as="span">Switch to Chat Mode</Text>
-									</Flex>
-								</Box>
-							</HStack>
+							<Box
+								as="button"
+								onClick={handleSwitchToChatMode}
+								position="relative"
+								disabled={isProcessing || isClearingSession}
+								bg="linear-gradient(135deg, rgba(212, 175, 55, 0.52), rgba(255, 215, 0, 0.52))"
+								border="1px solid rgba(212, 175, 55, 0.78)"
+								borderRadius="full"
+								px={{ base: 3, md: 5 }}
+								py={{ base: 2, md: 2.5 }}
+								color="white"
+								fontSize={{ base: "xs", md: "sm" }}
+								fontWeight="600"
+								cursor={isProcessing || isClearingSession ? "not-allowed" : "pointer"}
+								opacity={isProcessing || isClearingSession ? 0.5 : 1}
+								transition="all 0.4s ease, box-shadow 0.4s ease"
+								whiteSpace="nowrap"
+								overflow="hidden"
+								boxShadow="0 4px 15px rgba(212, 175, 55, 0.34), inset 0 1px 0 rgba(255, 255, 255, 0.3)"
+								_hover={isProcessing || isClearingSession ? {} : {
+									bg: "linear-gradient(135deg, rgba(212, 175, 55, 0.68), rgba(255, 215, 0, 0.68))",
+									border: "1px solid rgba(255, 215, 0, 0.95)",
+									transform: "translateY(-2px) scale(1.02)",
+									boxShadow:
+										"0 8px 25px rgba(212, 175, 55, 0.4), 0 0 20px rgba(255, 215, 0, 0.3), inset 0 1px 0 rgba(255, 255, 255, 0.3)"
+								}}
+								_active={isProcessing || isClearingSession ? {} : {
+									transform: "translateY(0) scale(0.98)",
+									boxShadow: "0 2px 10px rgba(212, 175, 55, 0.3), inset 0 2px 4px rgba(0, 0, 0, 0.1)"
+								}}
+							>
+								<Flex align="center" gap={2}>
+									<Sparkles size={16} style={{ animation: "pulse 2s ease-in-out infinite" }} />
+									<Text as="span">Switch to Chat Mode</Text>
+								</Flex>
+							</Box>
+						</HStack>
 					</Flex>
 				</Box>
 
@@ -1009,8 +1131,8 @@ function AgentPage() {
 							<VStack gap={6} align="stretch" w="100%">
 								{messages.map((message, idx) => (
 									<Box key={idx} animation="fadeInUp 0.4s ease-out" w="100%">
-											{message.role === "user" ? (
-												<Flex justify="flex-end" w="100%">
+										{message.role === "user" ? (
+											<Flex justify="flex-end" w="100%">
 												<Box
 													maxW={{ base: "85%", md: "75%", lg: "65%", xl: "55%" }}
 													bg="linear-gradient(135deg, rgba(212, 175, 55, 0.25), rgba(255, 215, 0, 0.25))"
@@ -1019,7 +1141,6 @@ function AgentPage() {
 													p={{ base: 4, md: 5 }}
 													boxShadow="0 4px 20px rgba(212, 175, 55, 0.15)"
 												>
-													{/* Change 14: Markdown support in user messages */}
 													<Box fontSize={{ base: "sm", md: "md" }} lineHeight="1.7">
 														{renderMessageContent(message.content)}
 													</Box>
@@ -1038,19 +1159,18 @@ function AgentPage() {
 														<Sparkles size={20} color="#FFD700" />
 													</Box>
 													<Box flex="1" maxW="100%">
+														<Box
+															bg="rgba(255, 255, 255, 0.08)"
+															border="1px solid rgba(255, 255, 255, 0.12)"
+															borderRadius="2xl"
+															p={{ base: 4, md: 5 }}
+															textAlign="left"
+														>
 															<Box
-																bg="rgba(255, 255, 255, 0.08)"
-																border="1px solid rgba(255, 255, 255, 0.12)"
-																borderRadius="2xl"
-																p={{ base: 4, md: 5 }}
+																fontSize={{ base: "sm", md: "md" }}
+																lineHeight="1.8"
 																textAlign="left"
 															>
-																{/* Change 14: Markdown support in assistant messages */}
-																<Box
-																	fontSize={{ base: "sm", md: "md" }}
-																	lineHeight="1.8"
-																	textAlign="left"
-																>
 																{renderMessageContent(message.content)}
 															</Box>
 														</Box>
@@ -1080,12 +1200,12 @@ function AgentPage() {
 													borderRadius="2xl"
 													p={{ base: 4, md: 5 }}
 												>
-														<Flex
-															align="center"
-															justify="flex-start"
-															mb={liveSteps.length > 0 ? 4 : 2}
-														>
-															<Flex align="center" gap={2}>
+													<Flex
+														align="center"
+														justify="flex-start"
+														mb={liveSteps.length > 0 ? 4 : 2}
+													>
+														<Flex align="center" gap={2}>
 															<Text
 																color="rgba(255, 255, 255, 0.7)"
 																fontSize="sm"
@@ -1106,12 +1226,12 @@ function AgentPage() {
 																	<Text color="#FFD700" fontSize="xs" fontWeight="600">
 																		PROCESSING
 																	</Text>
-																	</Flex>
-																)}
-															</Flex>
+																</Flex>
+															)}
 														</Flex>
+													</Flex>
 
-														{liveSteps.length > 0 && (
+													{liveSteps.length > 0 && (
 														<VStack gap={3} align="stretch">
 															{liveSteps.map((step, i) => {
 																const isLastStep = i === liveSteps.length - 1;
@@ -1129,9 +1249,9 @@ function AgentPage() {
 																			animation: `stepFadeIn 0.35s ease-out ${i * 0.06}s both`
 																		}}
 																	>
-																			<Box
-																				w="20px"
-																				h="20px"
+																		<Box
+																			w="20px"
+																			h="20px"
 																			borderRadius="full"
 																			border={
 																				isActive
@@ -1147,44 +1267,44 @@ function AgentPage() {
 																			alignItems="center"
 																			justifyContent="center"
 																			flexShrink={0}
-																				transition="all 0.3s ease"
-																			>
-																				{isActive ? (
-																					<Flex
-																						w="100%"
-																						h="100%"
-																						align="center"
-																						justify="center"
-																						lineHeight="1"
-																					>
-																						<Loader2
-																							size={10}
-																							color="#FFD700"
-																							style={{
-																								animation:
-																									"spin 1s linear infinite",
-																								display: "block",
-																								transformOrigin: "center center"
-																							}}
-																						/>
-																					</Flex>
-																				) : (
-																						<Flex
-																							w="100%"
-																							h="100%"
-																							align="center"
-																							justify="center"
-																							lineHeight="1"
-																						>
-																							<Box
-																								w="8px"
-																								h="8px"
-																								borderRadius="full"
-																								bg="#00FF9D"
-																								display="block"
-																							/>
-																						</Flex>
-																				)}
+																			transition="all 0.3s ease"
+																		>
+																			{isActive ? (
+																				<Flex
+																					w="100%"
+																					h="100%"
+																					align="center"
+																					justify="center"
+																					lineHeight="1"
+																				>
+																					<Loader2
+																						size={10}
+																						color="#FFD700"
+																						style={{
+																							animation:
+																								"spin 1s linear infinite",
+																							display: "block",
+																							transformOrigin: "center center"
+																						}}
+																					/>
+																				</Flex>
+																			) : (
+																				<Flex
+																					w="100%"
+																					h="100%"
+																					align="center"
+																					justify="center"
+																					lineHeight="1"
+																				>
+																					<Box
+																						w="8px"
+																						h="8px"
+																						borderRadius="full"
+																						bg="#00FF9D"
+																						display="block"
+																					/>
+																				</Flex>
+																			)}
 																		</Box>
 																		<Text
 																			color={
@@ -1236,7 +1356,7 @@ function AgentPage() {
 						>
 							{uploadedFiles.length > 0 && (
 								<Box mb={3}>
-										<Flex gap={2} flexWrap="wrap">
+									<Flex gap={2} flexWrap="wrap">
 										{uploadedFiles.map((file, idx) => (
 											<Flex
 												key={idx}
