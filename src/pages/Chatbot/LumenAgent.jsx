@@ -187,12 +187,6 @@ const createInitialAgentMessage = () => ({
 	isThinking: false
 });
 
-/**
- * Reconstruct a flat messages array from persisted session steps.
- * Steps of type "user_query" → role "user"
- * Steps of type "response"   → role "assistant"
- * All other step types are internal and are skipped.
- */
 const buildMessagesFromSteps = (steps) => {
 	if (!Array.isArray(steps) || steps.length === 0) return null;
 
@@ -369,6 +363,7 @@ function AgentPage() {
 	const [showAgentStatus, setShowAgentStatus] = useState(false);
 	const [isClearingSession, setIsClearingSession] = useState(false);
 	const [isClearDialogOpen, setIsClearDialogOpen] = useState(false);
+	const [currentAgentModel, setCurrentAgentModel] = useState("");
 
 	const glassPanelStyle = {
 		position: "relative",
@@ -439,6 +434,19 @@ function AgentPage() {
 	useEffect(() => {
 		messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
 	}, [messages, currentStep]);
+
+	const fetchCurrentAgentModel = async () => {
+		try {
+			const response = await server.get("/agent/current-agent-model");
+			setCurrentAgentModel(response.data.model);
+		} catch (err) {
+			setCurrentAgentModel("");
+		}
+	};
+
+	useEffect(() => {
+		fetchCurrentAgentModel();
+	}, []);
 
 	useEffect(() => {
 		if (!user?.uid) return;
@@ -737,6 +745,24 @@ function AgentPage() {
 		} finally {
 			setIsClearingSession(false);
 		}
+	};
+
+	const formatModelName = modelString => {
+		const modelName = modelString.split("/")[1] || modelString;
+
+		if (modelName.includes("llama")) {
+			const match = modelName.match(/llama-(\d+\.\d+)-(\d+b)/i);
+			if (match) {
+				return `Llama ${match[1]} ${match[2].toUpperCase()}`;
+			}
+		} else if (modelName.includes("gemini")) {
+			const match = modelName.match(/gemini-(\d+\.\d+)-(\w+)/i);
+			if (match) {
+				return `Gemini ${match[1]} ${match[2].charAt(0).toUpperCase() + match[2].slice(1)}`;
+			}
+		}
+
+		return modelName.charAt(0).toUpperCase() + modelName.slice(1);
 	};
 
 	const renderOutputs = useCallback(() => {
@@ -1075,6 +1101,12 @@ function AgentPage() {
 								</Heading>
 								<Text fontSize={{ base: "xs", md: "sm" }} color="rgba(255, 255, 255, 0.6)">
 									Autonomous Agentic AI Design Assistant
+									{currentAgentModel && (
+										<>
+											{" • "}
+											Powered by {formatModelName(currentAgentModel)}
+										</>
+									)}
 								</Text>
 							</VStack>
 						</Flex>
