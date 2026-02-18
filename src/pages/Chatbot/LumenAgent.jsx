@@ -190,12 +190,25 @@ function AgentPage() {
 	const [liveSteps, setLiveSteps] = useState([]);
 	const [showAgentStatus, setShowAgentStatus] = useState(false);
 
-	const glassStyle = {
+	const glassPanelStyle = {
+		position: "relative",
+		isolation: "isolate",
 		background: "rgba(255, 255, 255, 0.08)",
-		backdropFilter: "blur(24px) saturate(180%)",
-		WebkitBackdropFilter: "blur(24px) saturate(180%)",
 		border: "1px solid rgba(255, 255, 255, 0.15)",
-		boxShadow: "0 8px 32px 0 rgba(31, 38, 135, 0.12)"
+		boxShadow: "0 8px 32px 0 rgba(31, 38, 135, 0.12)",
+		transform: "translateZ(0)",
+		backfaceVisibility: "hidden",
+		WebkitBackfaceVisibility: "hidden",
+		_before: {
+			content: '""',
+			position: "absolute",
+			inset: 0,
+			pointerEvents: "none",
+			borderRadius: "inherit",
+			backdropFilter: "blur(22px) saturate(165%)",
+			WebkitBackdropFilter: "blur(22px) saturate(165%)",
+			transform: "translateZ(0)"
+		}
 	};
 
 	useEffect(() => {
@@ -610,7 +623,8 @@ function AgentPage() {
 								bg="linear-gradient(135deg, rgba(212, 175, 55, 0.3), rgba(255, 215, 0, 0.3))"
 								p={3}
 								borderRadius="xl"
-								style={glassStyle}
+								border="1px solid rgba(255, 255, 255, 0.15)"
+								boxShadow="0 8px 24px rgba(31, 38, 135, 0.15)"
 							>
 								<Sparkles size={24} color="#FFD700" />
 							</Box>
@@ -636,16 +650,18 @@ function AgentPage() {
 					<Box
 						flex="1"
 						borderRadius={{ base: 20, md: 28 }}
-						style={glassStyle}
+						{...glassPanelStyle}
 						overflow="hidden"
 						display="flex"
 						flexDirection="column"
-						transition="all 0.3s ease"
+						transition="box-shadow 0.3s ease, border-color 0.3s ease"
 					>
 						<Box
 							flex="1"
 							overflowY="auto"
 							p={{ base: 4, md: 6, lg: 8 }}
+							position="relative"
+							zIndex={1}
 							css={{
 								"&::-webkit-scrollbar": { width: "6px" },
 								"&::-webkit-scrollbar-track": { background: "transparent" },
@@ -664,7 +680,6 @@ function AgentPage() {
 												<Box
 													maxW={{ base: "85%", md: "75%", lg: "65%", xl: "55%" }}
 													bg="linear-gradient(135deg, rgba(212, 175, 55, 0.25), rgba(255, 215, 0, 0.25))"
-													backdropFilter="blur(10px)"
 													border="1px solid rgba(212, 175, 55, 0.4)"
 													borderRadius="2xl"
 													p={{ base: 4, md: 5 }}
@@ -691,7 +706,6 @@ function AgentPage() {
 													<Box flex="1" maxW="100%">
 															<Box
 																bg="rgba(255, 255, 255, 0.08)"
-																backdropFilter="blur(10px)"
 																border="1px solid rgba(255, 255, 255, 0.12)"
 																borderRadius="2xl"
 																p={{ base: 4, md: 5 }}
@@ -728,7 +742,6 @@ function AgentPage() {
 											<Box flex="1" maxW="100%">
 												<Box
 													bg="rgba(255, 255, 255, 0.08)"
-													backdropFilter="blur(10px)"
 													border="1px solid rgba(255, 255, 255, 0.12)"
 													borderRadius="2xl"
 													p={{ base: 4, md: 5 }}
@@ -884,6 +897,8 @@ function AgentPage() {
 							p={{ base: 4, md: 5, lg: 6 }}
 							bg="rgba(0, 0, 0, 0.2)"
 							w="100%"
+							position="relative"
+							zIndex={1}
 						>
 							{uploadedFiles.length > 0 && (
 								<Box mb={3}>
@@ -930,7 +945,6 @@ function AgentPage() {
 									<Box
 										flex="1"
 										bg="rgba(255, 255, 255, 0.08)"
-										backdropFilter="blur(10px)"
 										border="1px solid rgba(255, 255, 255, 0.15)"
 										borderRadius="2xl"
 										p={1}
@@ -1037,11 +1051,11 @@ function AgentPage() {
 						<Box
 							w="400px"
 							borderRadius={{ base: 20, md: 28 }}
-							style={glassStyle}
+							{...glassPanelStyle}
 							overflow="hidden"
 							display="flex"
 							flexDirection="column"
-							animation="slideInRight 0.3s ease-out"
+							animation="fadeIn 0.24s ease-out"
 							flexShrink={0}
 						>
 							<Flex
@@ -1049,6 +1063,8 @@ function AgentPage() {
 								p={4}
 								borderBottom="1px solid rgba(255, 255, 255, 0.1)"
 								bg="rgba(0, 0, 0, 0.2)"
+								position="relative"
+								zIndex={1}
 							>
 								<Heading size="sm" color="white">
 									Agent Ensemble
@@ -1059,6 +1075,8 @@ function AgentPage() {
 								flex="1"
 								overflowY="auto"
 								p={4}
+								position="relative"
+								zIndex={1}
 								css={{
 									"&::-webkit-scrollbar": { width: "6px" },
 									"&::-webkit-scrollbar-track": { background: "transparent" },
@@ -1081,19 +1099,18 @@ function AgentPage() {
 			<style>
 				{`
           @keyframes fadeInUp {
-            from { opacity: 0; transform: translateY(20px); }
-            to   { opacity: 1; transform: translateY(0); }
+            from { opacity: 0; }
+            to   { opacity: 1; }
           }
 
-          /* Change 9: Smooth step entry animation */
           @keyframes stepFadeIn {
-            from { opacity: 0; transform: translateY(8px); }
-            to   { opacity: 1; transform: translateY(0); }
+            from { opacity: 0; }
+            to   { opacity: 1; }
           }
 
-          @keyframes slideInRight {
-            from { opacity: 0; transform: translateX(100%); }
-            to   { opacity: 1; transform: translateX(0); }
+          @keyframes fadeIn {
+            from { opacity: 0; }
+            to   { opacity: 1; }
           }
 
           @keyframes spin {
