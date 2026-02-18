@@ -14,16 +14,23 @@ import {
 	Text,
 	VStack
 } from "@chakra-ui/react";
-import { LuLogOut, LuMenu } from "react-icons/lu";
+import {
+	LuSparkle,
+	LuBriefcaseBusiness,
+	LuHouse,
+	LuLogOut,
+	LuMenu,
+	LuPalette
+} from "react-icons/lu";
 import { useAuth } from "../../contexts/AuthContext";
 import LogoSVG from "../../assets/Logo.svg";
 import TextPNG from "../../assets/Logo-Text.png";
 
 const drawerItems = [
-	{ label: "Home", path: "/" },
-	{ label: "Our Services", path: "/onboarding" },
-	{ label: "StyleMatch", path: "/stylematch" },
-	{ label: "AI Assistant", path: "/lumen/chat" }
+	{ label: "Home", path: "/", icon: LuHouse },
+	{ label: "Services", path: "/onboarding", icon: LuBriefcaseBusiness },
+	{ label: "StyleMatch", path: "/stylematch", icon: LuPalette },
+	{ label: "AI Assistant", path: "/lumen/chat", icon: LuSparkle }
 ];
 
 function Sidebar({ onDrawerOpenChange }) {
@@ -114,21 +121,27 @@ function Sidebar({ onDrawerOpenChange }) {
 
 						<Drawer.Body pt={1}>
 							<VStack align="stretch" gap={2}>
-								{drawerItems.map(item => (
-									<Button
-										key={item.path}
-										variant="ghost"
-										borderRadius={15}
-										justifyContent="flex-start"
-										fontWeight={isItemActive(item.path) ? "700" : "500"}
-										color={isItemActive(item.path) ? "#D4AF37" : "white"}
-										bg={isItemActive(item.path) ? "rgba(212, 175, 55, 0.12)" : "transparent"}
-										_hover={{ bg: "rgba(212, 175, 55, 0.2)" }}
-										onClick={() => handleNavigate(item.path)}
-									>
-										{item.label}
-									</Button>
-								))}
+								{drawerItems.map(item => {
+									const ItemIcon = item.icon;
+									return (
+										<Button
+											key={item.path}
+											variant="ghost"
+											borderRadius={15}
+											justifyContent="flex-start"
+											fontWeight={isItemActive(item.path) ? "700" : "500"}
+											color={isItemActive(item.path) ? "#D4AF37" : "white"}
+											bg={isItemActive(item.path) ? "rgba(212, 175, 55, 0.12)" : "transparent"}
+											_hover={{ bg: "rgba(212, 175, 55, 0.2)" }}
+											onClick={() => handleNavigate(item.path)}
+										>
+											<HStack gap={2.5}>
+												<Box as={ItemIcon} boxSize="15px" flexShrink={0} />
+												<Text>{item.label}</Text>
+											</HStack>
+										</Button>
+									);
+								})}
 							</VStack>
 						</Drawer.Body>
 
