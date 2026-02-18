@@ -1032,7 +1032,7 @@ function AgentPage() {
 		/>
 	);
 
-	if (!historyLoaded) return null;
+	if (!historyLoaded) return <>{backgroundEl}</>;
 
 	return (
 		<>
