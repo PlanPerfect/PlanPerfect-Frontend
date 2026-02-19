@@ -1,19 +1,5 @@
 import { useState, useRef, useEffect, useCallback, useMemo } from "react";
-import {
-	Box,
-	Flex,
-	Heading,
-	Text,
-	Textarea,
-	VStack,
-	HStack,
-	IconButton,
-	Button,
-	Image,
-	Dialog,
-	Portal,
-	CloseButton
-} from "@chakra-ui/react";
+import { Box, Flex, Heading, Text, Textarea, VStack, HStack, IconButton, Button, Image, Dialog, Portal, CloseButton } from "@chakra-ui/react";
 import { Send, Sparkles, Loader2, Paperclip, X, Download } from "lucide-react";
 import { useAuth } from "@/contexts/AuthContext";
 import { useNavigate } from "react-router-dom";
@@ -23,7 +9,7 @@ import LandingBackground from "../../assets/LandingBackground.png";
 import ShowToast from "@/Extensions/ShowToast";
 import server from "../../../networking";
 
-const renderInline = (text) => {
+const renderInline = text => {
 	if (!text) return text;
 	const regex = /(\*\*[^*\n]+?\*\*|\*[^*\n]+?\*|`[^`\n]+?`)/g;
 	const segments = text.split(regex);
@@ -58,7 +44,7 @@ const renderInline = (text) => {
 	});
 };
 
-const renderMessageContent = (content) => {
+const renderMessageContent = content => {
 	if (!content) return null;
 	const elements = [];
 	const normalizedContent = content
@@ -154,10 +140,10 @@ const renderMessageContent = (content) => {
 	return <Box textAlign="left">{elements}</Box>;
 };
 
-const titleCase = (str) =>
+const titleCase = str =>
 	(str || "")
 		.split(" ")
-		.map((w) => w.charAt(0).toUpperCase() + w.slice(1))
+		.map(w => w.charAt(0).toUpperCase() + w.slice(1))
 		.join(" ");
 
 const OUTPUT_CATEGORIES = [
@@ -187,7 +173,7 @@ const createInitialAgentMessage = () => ({
 	isThinking: false
 });
 
-const buildMessagesFromSteps = (steps) => {
+const buildMessagesFromSteps = steps => {
 	if (!Array.isArray(steps) || steps.length === 0) return null;
 
 	const messages = [];
@@ -216,7 +202,7 @@ const buildMessagesFromSteps = (steps) => {
 function ImageDownloadButton({ onDownload, label }) {
 	const [isDownloading, setIsDownloading] = useState(false);
 
-	const handleClick = async (e) => {
+	const handleClick = async e => {
 		e.preventDefault();
 		e.stopPropagation();
 		if (isDownloading) return;
@@ -234,8 +220,8 @@ function ImageDownloadButton({ onDownload, label }) {
 			w="100%"
 			size="xs"
 			disabled={isDownloading}
-			onPointerDown={(e) => e.preventDefault()}
-			onMouseDown={(e) => e.preventDefault()}
+			onPointerDown={e => e.preventDefault()}
+			onMouseDown={e => e.preventDefault()}
 			onClick={handleClick}
 			aria-label={`Download ${label}`}
 			borderRadius="md"
@@ -265,7 +251,7 @@ function ImageDownloadButton({ onDownload, label }) {
 function ThumbnailDownloadButton({ onDownload, label, isFurniture = false }) {
 	const [isDownloading, setIsDownloading] = useState(false);
 
-	const handleClick = async (e) => {
+	const handleClick = async e => {
 		e.preventDefault();
 		e.stopPropagation();
 		if (isDownloading) return;
@@ -283,8 +269,8 @@ function ThumbnailDownloadButton({ onDownload, label, isFurniture = false }) {
 			variant="ghost"
 			colorPalette="whiteAlpha"
 			disabled={isDownloading}
-			onPointerDown={(e) => e.preventDefault()}
-			onMouseDown={(e) => e.preventDefault()}
+			onPointerDown={e => e.preventDefault()}
+			onMouseDown={e => e.preventDefault()}
 			onClick={handleClick}
 			aria-label={`Download ${label}`}
 			flexShrink={0}
@@ -308,13 +294,7 @@ function ThumbnailDownloadButton({ onDownload, label, isFurniture = false }) {
 function OutputImageCard({ src, alt, maxH = "300px", onDownload }) {
 	return (
 		<Flex justify="center" align="center" w="100%">
-			<Box
-				display="inline-flex"
-				flexDirection="column"
-				alignItems="stretch"
-				w="fit-content"
-				maxW="100%"
-			>
+			<Box display="inline-flex" flexDirection="column" alignItems="stretch" w="fit-content" maxW="100%">
 				<Image
 					src={src}
 					alt={alt}
@@ -404,9 +384,7 @@ function AgentPage() {
 
 				const sessionOutputs = session?.Outputs;
 				if (sessionOutputs && typeof sessionOutputs === "object") {
-					const hasOutputs = Object.values(sessionOutputs).some(
-						(arr) => Array.isArray(arr) && arr.length > 0
-					);
+					const hasOutputs = Object.values(sessionOutputs).some(arr => Array.isArray(arr) && arr.length > 0);
 					if (hasOutputs) {
 						setOutputs(sessionOutputs);
 						setShowOutputs(true);
@@ -454,19 +432,19 @@ function AgentPage() {
 
 		const unsubscribe = onValue(
 			currentStepRef,
-			(snapshot) => {
+			snapshot => {
 				const step = snapshot.val();
 				if (!step) return;
 
 				setCurrentStep(step);
 
 				if (step !== "Done!") {
-					setLiveSteps((prev) => {
+					setLiveSteps(prev => {
 						if (prev.length > 0 && prev[prev.length - 1].step === step) return prev;
 						return [...prev, { step, timestamp: new Date().toISOString(), status: "active" }];
 					});
 				} else {
-					setLiveSteps((prev) => prev.map((s) => ({ ...s, status: "complete" })));
+					setLiveSteps(prev => prev.map(s => ({ ...s, status: "complete" })));
 				}
 
 				if (step === "Done!") {
@@ -475,7 +453,7 @@ function AgentPage() {
 					setIsProcessing(true);
 				}
 			},
-			(error) => {
+			error => {
 				console.error("❌ [FIREBASE ERROR]:", error);
 			}
 		);
@@ -488,7 +466,7 @@ function AgentPage() {
 
 		const statusRef = ref(database, `Users/${user.uid}/Agent/status`);
 
-		const unsubscribe = onValue(statusRef, (snapshot) => {
+		const unsubscribe = onValue(statusRef, snapshot => {
 			const status = snapshot.val();
 			setIsProcessing(status === "running");
 		});
@@ -501,11 +479,11 @@ function AgentPage() {
 
 		const outputsRef = ref(database, `Users/${user.uid}/Agent/Outputs`);
 
-		const unsubscribe = onValue(outputsRef, (snapshot) => {
+		const unsubscribe = onValue(outputsRef, snapshot => {
 			const outputsData = snapshot.val();
 			if (!outputsData) return;
 			setOutputs(outputsData);
-			const hasOutputs = Object.values(outputsData).some((arr) => Array.isArray(arr) && arr.length > 0);
+			const hasOutputs = Object.values(outputsData).some(arr => Array.isArray(arr) && arr.length > 0);
 			if (hasOutputs) setShowOutputs(true);
 		});
 
@@ -516,7 +494,7 @@ function AgentPage() {
 		if (!user?.uid) return;
 
 		const stepsRef = ref(database, `Users/${user.uid}/Agent/steps`);
-		onValue(stepsRef, (snapshot) => {
+		onValue(stepsRef, snapshot => {
 			const rawSteps = snapshot.val();
 			const steps = Array.isArray(rawSteps) ? rawSteps : rawSteps ? Object.values(rawSteps) : [];
 			const nextRecency = {};
@@ -562,10 +540,10 @@ function AgentPage() {
 		adjustTextareaHeight();
 	}, [inputValue]);
 
-	const handleFileSelect = (e) => {
+	const handleFileSelect = e => {
 		const ALLOWED = ["image/png", "image/jpeg", "image/jpg"];
 		const selectedFiles = Array.from(e.target.files || []);
-		const files = selectedFiles.filter((f) => {
+		const files = selectedFiles.filter(f => {
 			if (ALLOWED.includes(f.type.toLowerCase())) return true;
 			ShowToast("error", `Unsupported file: ${f.name}`, "Only PNG and JPG/JPEG images are allowed.");
 			return false;
@@ -584,8 +562,8 @@ function AgentPage() {
 		e.target.value = "";
 	};
 
-	const removeFile = (index) => {
-		setUploadedFiles((prev) => prev.filter((_, i) => i !== index));
+	const removeFile = index => {
+		setUploadedFiles(prev => prev.filter((_, i) => i !== index));
 	};
 
 	const canSend = inputValue.trim().length > 0 && !isProcessing && !isClearingSession;
@@ -608,7 +586,7 @@ function AgentPage() {
 			timestamp: new Date()
 		};
 
-		setMessages((prev) => [...prev, userMessage]);
+		setMessages(prev => [...prev, userMessage]);
 		setInputValue("");
 		setUploadedFiles([]);
 		setIsProcessing(true);
@@ -619,17 +597,14 @@ function AgentPage() {
 			const formData = new FormData();
 			formData.append("uid", user.uid);
 			formData.append("query", queryToSend);
-			filesToSend.forEach((file) => formData.append("files", file));
+			filesToSend.forEach(file => formData.append("files", file));
 
 			const response = await server.post("/agent/execute", formData, {
 				headers: { "Content-Type": "multipart/form-data" }
 			});
 
 			if (response.data.response) {
-				setMessages((prev) => [
-					...prev,
-					{ role: "assistant", content: response.data.response, timestamp: new Date() }
-				]);
+				setMessages(prev => [...prev, { role: "assistant", content: response.data.response, timestamp: new Date() }]);
 			}
 
 			setIsProcessing(false);
@@ -648,7 +623,7 @@ function AgentPage() {
 		}
 	};
 
-	const handleKeyPress = (e) => {
+	const handleKeyPress = e => {
 		if (e.key === "Enter" && !e.shiftKey) {
 			e.preventDefault();
 			handleSend();
@@ -677,7 +652,7 @@ function AgentPage() {
 		return `${safeBase}${extension}`;
 	}, []);
 
-	const restoreOutputsScrollPosition = useCallback((scrollTop) => {
+	const restoreOutputsScrollPosition = useCallback(scrollTop => {
 		if (!Number.isFinite(scrollTop)) return;
 		requestAnimationFrame(() => {
 			requestAnimationFrame(() => {
@@ -697,28 +672,31 @@ function AgentPage() {
 		link.click();
 	}, []);
 
-	const handleDownloadImage = useCallback(async (imageUrl, label = "image") => {
-		if (!imageUrl) return;
-		const fileName = getDownloadFileName(label, imageUrl);
-		const startScrollTop = outputsScrollRef.current?.scrollTop;
-		restoreOutputsScrollPosition(startScrollTop);
-
-		try {
-			const response = await fetch(imageUrl, { mode: "cors" });
-			if (!response.ok) throw new Error(`Image fetch failed: ${response.status}`);
-			const blob = await response.blob();
-			const blobUrl = window.URL.createObjectURL(blob);
-			triggerDownload(blobUrl, fileName);
-			setTimeout(() => window.URL.revokeObjectURL(blobUrl), 1000);
-		} catch (_) {
-			triggerDownload(imageUrl, fileName);
-		} finally {
+	const handleDownloadImage = useCallback(
+		async (imageUrl, label = "image") => {
+			if (!imageUrl) return;
+			const fileName = getDownloadFileName(label, imageUrl);
+			const startScrollTop = outputsScrollRef.current?.scrollTop;
 			restoreOutputsScrollPosition(startScrollTop);
-		}
-	}, [getDownloadFileName, restoreOutputsScrollPosition, triggerDownload]);
+
+			try {
+				const response = await fetch(imageUrl, { mode: "cors" });
+				if (!response.ok) throw new Error(`Image fetch failed: ${response.status}`);
+				const blob = await response.blob();
+				const blobUrl = window.URL.createObjectURL(blob);
+				triggerDownload(blobUrl, fileName);
+				setTimeout(() => window.URL.revokeObjectURL(blobUrl), 1000);
+			} catch (_) {
+				triggerDownload(imageUrl, fileName);
+			} finally {
+				restoreOutputsScrollPosition(startScrollTop);
+			}
+		},
+		[getDownloadFileName, restoreOutputsScrollPosition, triggerDownload]
+	);
 
 	const releaseMessagePreviewUrls = useCallback(() => {
-		messagePreviewUrlsRef.current.forEach((previewUrl) => URL.revokeObjectURL(previewUrl));
+		messagePreviewUrlsRef.current.forEach(previewUrl => URL.revokeObjectURL(previewUrl));
 		messagePreviewUrlsRef.current.clear();
 	}, []);
 
@@ -740,6 +718,27 @@ function AgentPage() {
 		setShowAgentStatus(false);
 		if (fileInputRef.current) fileInputRef.current.value = "";
 	};
+
+	useEffect(() => {
+		const handleGlobalKeyDown = e => {
+			// Ignore if already focused on an input/textarea/select/contenteditable
+			const tag = document.activeElement?.tagName?.toLowerCase();
+			const isEditable = document.activeElement?.isContentEditable;
+			if (tag === "input" || tag === "textarea" || tag === "select" || isEditable) return;
+
+			// Ignore modifier-only keys, special keys, and shortcuts (Ctrl/Cmd+Key)
+			if (e.ctrlKey || e.metaKey || e.altKey) return;
+			if (e.key.length > 1) return; // Filters out "Enter", "Escape", "F1", etc.
+
+			// Focus and let the keystroke land in the textarea
+			if (textareaRef.current && !isProcessing && !isClearingSession) {
+				textareaRef.current.focus();
+			}
+		};
+
+		document.addEventListener("keydown", handleGlobalKeyDown);
+		return () => document.removeEventListener("keydown", handleGlobalKeyDown);
+	}, [isProcessing, isClearingSession]);
 
 	useEffect(() => {
 		return () => {
@@ -805,13 +804,12 @@ function AgentPage() {
 
 		return (
 			<VStack align="stretch" gap={4} w="100%">
-				{sortedCategories.map((category) => {
+				{sortedCategories.map(category => {
 					const items = outputs[category.key];
 					if (!items || !Array.isArray(items) || items.length === 0) return null;
 					const orderedItems = [...items].reverse();
 					const outputCardPadding = 3;
-					const categoryImageMaxH =
-						category.key === "Generated Floor Plans" ? "560px" : "300px";
+					const categoryImageMaxH = category.key === "Generated Floor Plans" ? "560px" : "300px";
 					const isClassifiedStylesCategory = category.key === "Classified Style";
 
 					return (
@@ -826,47 +824,16 @@ function AgentPage() {
 							</Flex>
 
 							{isClassifiedStylesCategory ? (
-								<Box
-									display="grid"
-									gridTemplateColumns="repeat(2, minmax(0, 1fr))"
-									gap={3}
-								>
+								<Box display="grid" gridTemplateColumns="repeat(2, minmax(0, 1fr))" gap={3}>
 									{orderedItems.map((item, idx) => {
-										const styleLabel =
-											typeof item === "object" && item !== null
-												? item.style || item.label || item.name || ""
-												: typeof item === "string"
-													? item
-													: "";
-										const styleImageSrc =
-											typeof item === "object" && item !== null
-												? item.image_url || item.url || ""
-												: "";
+										const styleLabel = typeof item === "object" && item !== null ? item.style || item.label || item.name || "" : typeof item === "string" ? item : "";
+										const styleImageSrc = typeof item === "object" && item !== null ? item.image_url || item.url || "" : "";
 
 										return (
-											<Box
-												key={idx}
-												bg="rgba(255, 255, 255, 0.05)"
-												borderRadius="lg"
-												p={2}
-												border="1px solid rgba(255, 255, 255, 0.1)"
-											>
-												{styleImageSrc && (
-													<OutputImageCard
-														src={styleImageSrc}
-														alt={styleLabel || `Style ${idx + 1}`}
-														maxH="180px"
-														onDownload={handleDownloadImage}
-													/>
-												)}
+											<Box key={idx} bg="rgba(255, 255, 255, 0.05)" borderRadius="lg" p={2} border="1px solid rgba(255, 255, 255, 0.1)">
+												{styleImageSrc && <OutputImageCard src={styleImageSrc} alt={styleLabel || `Style ${idx + 1}`} maxH="180px" onDownload={handleDownloadImage} />}
 												{styleLabel && (
-													<Text
-														color="rgba(255, 255, 255, 0.9)"
-														fontSize="sm"
-														fontWeight="600"
-														textAlign="center"
-														mt={styleImageSrc ? 2 : 0}
-													>
+													<Text color="rgba(255, 255, 255, 0.9)" fontSize="sm" fontWeight="600" textAlign="center" mt={styleImageSrc ? 2 : 0}>
 														{styleLabel}
 													</Text>
 												)}
@@ -875,176 +842,99 @@ function AgentPage() {
 									})}
 								</Box>
 							) : (
-							<VStack align="stretch" gap={3}>
-								{orderedItems.map((item, idx) => (
-									<Box
-										key={idx}
-										bg="rgba(255, 255, 255, 0.05)"
-										borderRadius="lg"
-										p={outputCardPadding}
-										border="1px solid rgba(255, 255, 255, 0.1)"
-									>
-										{typeof item === "string" && item.startsWith("http") ? (
-											<OutputImageCard
-												src={item}
-												alt={`${category.label} ${idx + 1}`}
-												maxH={categoryImageMaxH}
-												onDownload={handleDownloadImage}
-											/>
-										) : typeof item === "string" ? (
-											<Text color="rgba(255, 255, 255, 0.8)" fontSize="sm">
-												{item}
-											</Text>
-										) : typeof item === "object" && item !== null ? (
-											<VStack align="stretch" gap={2}>
-												{item.query && (
-													<>
-														<Text
-															color="rgba(255, 255, 255, 0.6)"
-															fontSize="xs"
-															fontWeight="600"
-															textAlign="left"
-														>
-															Query: {item.query}
-														</Text>
-														{typeof item.result === "string" ? (
-															<Box textAlign="left">
-																{renderMessageContent(item.result)}
-															</Box>
-														) : (
-															<Text
-																color="rgba(255, 255, 255, 0.85)"
-																fontSize="sm"
-																textAlign="left"
-																lineHeight="1.7"
-															>
-																{String(item.result ?? "")}
+								<VStack align="stretch" gap={3}>
+									{orderedItems.map((item, idx) => (
+										<Box key={idx} bg="rgba(255, 255, 255, 0.05)" borderRadius="lg" p={outputCardPadding} border="1px solid rgba(255, 255, 255, 0.1)">
+											{typeof item === "string" && item.startsWith("http") ? (
+												<OutputImageCard src={item} alt={`${category.label} ${idx + 1}`} maxH={categoryImageMaxH} onDownload={handleDownloadImage} />
+											) : typeof item === "string" ? (
+												<Text color="rgba(255, 255, 255, 0.8)" fontSize="sm">
+													{item}
+												</Text>
+											) : typeof item === "object" && item !== null ? (
+												<VStack align="stretch" gap={2}>
+													{item.query && (
+														<>
+															<Text color="rgba(255, 255, 255, 0.6)" fontSize="xs" fontWeight="600" textAlign="left">
+																Query: {item.query}
 															</Text>
-														)}
-													</>
-												)}
+															{typeof item.result === "string" ? (
+																<Box textAlign="left">{renderMessageContent(item.result)}</Box>
+															) : (
+																<Text color="rgba(255, 255, 255, 0.85)" fontSize="sm" textAlign="left" lineHeight="1.7">
+																	{String(item.result ?? "")}
+																</Text>
+															)}
+														</>
+													)}
 
-												{item.style && (
-													<>
-														{item.image_url && (
-															<OutputImageCard
-																src={item.image_url}
-																alt="Style classification"
-																maxH="200px"
-																onDownload={handleDownloadImage}
-															/>
-														)}
-														<Text color="rgba(255, 255, 255, 0.8)" fontSize="sm" fontWeight="600">
-															{item.style}
-														</Text>
-													</>
-												)}
+													{item.style && (
+														<>
+															{item.image_url && <OutputImageCard src={item.image_url} alt="Style classification" maxH="200px" onDownload={handleDownloadImage} />}
+															<Text color="rgba(255, 255, 255, 0.8)" fontSize="sm" fontWeight="600">
+																{item.style}
+															</Text>
+														</>
+													)}
 
-												{item.furniture && Array.isArray(item.furniture) && (
-													<>
-														{item.image_url && (
-															<OutputImageCard
-																src={item.image_url}
-																alt="Furniture detection"
-																maxH="200px"
-																onDownload={handleDownloadImage}
-															/>
-														)}
-														<VStack align="stretch" gap={2}>
-															{item.furniture.map((furn, i) => (
-																<Flex key={i} gap={3} align="center" justify="space-between" w="100%">
-																	<Flex align="center" gap={3} minW={0}>
-																		{furn.url && (
-																			<Flex justify="center" flexShrink={0}>
-																				<Box w="44px" h="44px">
-																					<Image
-																						src={furn.url}
-																						alt={furn.name}
-																						w="44px"
-																						h="44px"
-																						objectFit="cover"
-																						borderRadius="md"
-																						crossOrigin="anonymous"
-																						fallback={
-																							<Box
-																								w="44px"
-																								h="44px"
-																								bg="rgba(255,255,255,0.1)"
-																								borderRadius="md"
-																							/>
-																						}
-																					/>
-																				</Box>
-																			</Flex>
-																		)}
-																		<Text
-																			color="rgba(255, 255, 255, 0.9)"
-																			fontSize="sm"
-																			flexShrink={1}
-																			minW={0}
-																			textAlign="left"
-																		>
-																			{titleCase(furn.name)}
-																		</Text>
+													{item.furniture && Array.isArray(item.furniture) && (
+														<>
+															{item.image_url && <OutputImageCard src={item.image_url} alt="Furniture detection" maxH="200px" onDownload={handleDownloadImage} />}
+															<VStack align="stretch" gap={2}>
+																{item.furniture.map((furn, i) => (
+																	<Flex key={i} gap={3} align="center" justify="space-between" w="100%">
+																		<Flex align="center" gap={3} minW={0}>
+																			{furn.url && (
+																				<Flex justify="center" flexShrink={0}>
+																					<Box w="44px" h="44px">
+																						<Image
+																							src={furn.url}
+																							alt={furn.name}
+																							w="44px"
+																							h="44px"
+																							objectFit="cover"
+																							borderRadius="md"
+																							crossOrigin="anonymous"
+																							fallback={<Box w="44px" h="44px" bg="rgba(255,255,255,0.1)" borderRadius="md" />}
+																						/>
+																					</Box>
+																				</Flex>
+																			)}
+																			<Text color="rgba(255, 255, 255, 0.9)" fontSize="sm" flexShrink={1} minW={0} textAlign="left">
+																				{titleCase(furn.name)}
+																			</Text>
+																		</Flex>
+																		{furn.url && <ThumbnailDownloadButton onDownload={() => handleDownloadImage(furn.url, furn.name || "furniture")} label={furn.name || "furniture image"} isFurniture />}
 																	</Flex>
-																	{furn.url && (
-																		<ThumbnailDownloadButton
-																			onDownload={() =>
-																				handleDownloadImage(furn.url, furn.name || "furniture")
-																			}
-																			label={furn.name || "furniture image"}
-																			isFurniture
-																		/>
-																	)}
-																</Flex>
-															))}
-														</VStack>
-													</>
-												)}
+																))}
+															</VStack>
+														</>
+													)}
 
-												{item.colors && Array.isArray(item.colors) && (
-													<>
-														{item.image_url && (
-															<OutputImageCard
-																src={item.image_url}
-																alt="Color palette source"
-																maxH="200px"
-																onDownload={handleDownloadImage}
-															/>
-														)}
-														<Flex gap={2} flexWrap="wrap" justify="center" w="100%">
-															{item.colors.map((color, i) => (
-																<Box key={i} textAlign="center">
-																	<Box
-																		w="40px"
-																		h="40px"
-																		bg={color.hex || color}
-																		borderRadius="md"
-																		border="1px solid rgba(255, 255, 255, 0.2)"
-																		mb={1}
-																	/>
-																	<Text color="rgba(255, 255, 255, 0.6)" fontSize="xs">
-																		{color.hex || color}
-																	</Text>
-																</Box>
-															))}
-														</Flex>
-													</>
-												)}
+													{item.colors && Array.isArray(item.colors) && (
+														<>
+															{item.image_url && <OutputImageCard src={item.image_url} alt="Color palette source" maxH="200px" onDownload={handleDownloadImage} />}
+															<Flex gap={2} flexWrap="wrap" justify="center" w="100%">
+																{item.colors.map((color, i) => (
+																	<Box key={i} textAlign="center">
+																		<Box w="40px" h="40px" bg={color.hex || color} borderRadius="md" border="1px solid rgba(255, 255, 255, 0.2)" mb={1} />
+																		<Text color="rgba(255, 255, 255, 0.6)" fontSize="xs">
+																			{color.hex || color}
+																		</Text>
+																	</Box>
+																))}
+															</Flex>
+														</>
+													)}
 
-												{item.url && !item.furniture && !item.colors && !item.style && !item.query && (
-													<OutputImageCard
-														src={item.url}
-														alt={`${category.label} ${idx + 1}`}
-														maxH={categoryImageMaxH}
-														onDownload={handleDownloadImage}
-													/>
-												)}
-											</VStack>
-										) : null}
-									</Box>
-								))}
-							</VStack>
+													{item.url && !item.furniture && !item.colors && !item.style && !item.query && (
+														<OutputImageCard src={item.url} alt={`${category.label} ${idx + 1}`} maxH={categoryImageMaxH} onDownload={handleDownloadImage} />
+													)}
+												</VStack>
+											) : null}
+										</Box>
+									))}
+								</VStack>
 							)}
 						</Box>
 					);
@@ -1082,22 +972,11 @@ function AgentPage() {
 				<Box mb={4} w="100%" ml={3}>
 					<Flex align="center" justify="space-between" mx="auto" w="100%">
 						<Flex align="center" gap={3}>
-							<Box
-								bg="linear-gradient(135deg, rgba(212, 175, 55, 0.3), rgba(255, 215, 0, 0.3))"
-								p={3}
-								borderRadius="xl"
-								border="1px solid rgba(255, 255, 255, 0.15)"
-								boxShadow="0 8px 24px rgba(31, 38, 135, 0.15)"
-							>
+							<Box bg="linear-gradient(135deg, rgba(212, 175, 55, 0.3), rgba(255, 215, 0, 0.3))" p={3} borderRadius="xl" border="1px solid rgba(255, 255, 255, 0.15)" boxShadow="0 8px 24px rgba(31, 38, 135, 0.15)">
 								<Sparkles size={24} color="#FFD700" />
 							</Box>
 							<VStack align="start" gap={0}>
-								<Heading
-									size={{ base: "lg", md: "xl" }}
-									color="white"
-									fontWeight="700"
-									letterSpacing="-0.02em"
-								>
+								<Heading size={{ base: "lg", md: "xl" }} color="white" fontWeight="700" letterSpacing="-0.02em">
 									Le'Orchestra
 								</Heading>
 								<Text fontSize={{ base: "xs", md: "sm" }} color="rgba(255, 255, 255, 0.6)">
@@ -1139,7 +1018,7 @@ function AgentPage() {
 												bg: "rgba(255, 255, 255, 0.3)",
 												border: "1px solid rgba(255, 255, 255, 0.65)",
 												transform: "translateY(-2px)"
-										  }
+											}
 								}
 								_active={isProcessing || isClearingSession ? {} : { transform: "translateY(0)" }}
 							>
@@ -1165,17 +1044,24 @@ function AgentPage() {
 								whiteSpace="nowrap"
 								overflow="hidden"
 								boxShadow="0 4px 15px rgba(212, 175, 55, 0.34), inset 0 1px 0 rgba(255, 255, 255, 0.3)"
-								_hover={isProcessing || isClearingSession ? {} : {
-									bg: "linear-gradient(135deg, rgba(212, 175, 55, 0.68), rgba(255, 215, 0, 0.68))",
-									border: "1px solid rgba(255, 215, 0, 0.95)",
-									transform: "translateY(-2px) scale(1.02)",
-									boxShadow:
-										"0 8px 25px rgba(212, 175, 55, 0.4), 0 0 20px rgba(255, 215, 0, 0.3), inset 0 1px 0 rgba(255, 255, 255, 0.3)"
-								}}
-								_active={isProcessing || isClearingSession ? {} : {
-									transform: "translateY(0) scale(0.98)",
-									boxShadow: "0 2px 10px rgba(212, 175, 55, 0.3), inset 0 2px 4px rgba(0, 0, 0, 0.1)"
-								}}
+								_hover={
+									isProcessing || isClearingSession
+										? {}
+										: {
+												bg: "linear-gradient(135deg, rgba(212, 175, 55, 0.68), rgba(255, 215, 0, 0.68))",
+												border: "1px solid rgba(255, 215, 0, 0.95)",
+												transform: "translateY(-2px) scale(1.02)",
+												boxShadow: "0 8px 25px rgba(212, 175, 55, 0.4), 0 0 20px rgba(255, 215, 0, 0.3), inset 0 1px 0 rgba(255, 255, 255, 0.3)"
+											}
+								}
+								_active={
+									isProcessing || isClearingSession
+										? {}
+										: {
+												transform: "translateY(0) scale(0.98)",
+												boxShadow: "0 2px 10px rgba(212, 175, 55, 0.3), inset 0 2px 4px rgba(0, 0, 0, 0.1)"
+											}
+								}
 							>
 								<Flex align="center" gap={2}>
 									<Sparkles size={16} style={{ animation: "pulse 2s ease-in-out infinite" }} />
@@ -1188,15 +1074,7 @@ function AgentPage() {
 
 				<Flex gap={4} flex="1" overflow="hidden" w="100%">
 					{/* Chat Area */}
-					<Box
-						flex="1"
-						borderRadius={{ base: 20, md: 28 }}
-						{...glassPanelStyle}
-						overflow="hidden"
-						display="flex"
-						flexDirection="column"
-						transition="box-shadow 0.3s ease, border-color 0.3s ease"
-					>
+					<Box flex="1" borderRadius={{ base: 20, md: 28 }} {...glassPanelStyle} overflow="hidden" display="flex" flexDirection="column" transition="box-shadow 0.3s ease, border-color 0.3s ease">
 						<Box
 							flex="1"
 							overflowY="auto"
@@ -1218,13 +1096,7 @@ function AgentPage() {
 									<Box key={idx} animation="fadeInUp 0.4s ease-out" w="100%">
 										{message.role === "user" ? (
 											<Flex justify="flex-end" w="100%">
-												<Flex
-													align="stretch"
-													gap={2}
-													w="100%"
-													justify="flex-end"
-													maxW={{ base: "85%", md: "75%", lg: "65%", xl: "55%" }}
-												>
+												<Flex align="stretch" gap={2} w="100%" justify="flex-end" maxW={{ base: "85%", md: "75%", lg: "65%", xl: "55%" }}>
 													{message.imagePreviewUrl && (
 														<Box
 															flexShrink={0}
@@ -1237,13 +1109,7 @@ function AgentPage() {
 															minW={{ base: "48px", md: "56px" }}
 															maxW={{ base: "78px", md: "90px" }}
 														>
-															<Image
-																src={message.imagePreviewUrl}
-																alt="Uploaded image preview"
-																w="100%"
-																h="100%"
-																objectFit="cover"
-															/>
+															<Image src={message.imagePreviewUrl} alt="Uploaded image preview" w="100%" h="100%" objectFit="cover" />
 														</Box>
 													)}
 													<Box
@@ -1265,28 +1131,12 @@ function AgentPage() {
 										) : (
 											<VStack align="stretch" gap={3} w="100%">
 												<Flex align="start" gap={3} w="100%">
-													<Box
-														bg="rgba(255, 215, 0, 0.15)"
-														p={2}
-														borderRadius="lg"
-														flexShrink={0}
-														mt={1}
-													>
+													<Box bg="rgba(255, 215, 0, 0.15)" p={2} borderRadius="lg" flexShrink={0} mt={1}>
 														<Sparkles size={20} color="#FFD700" />
 													</Box>
 													<Box flex="1" maxW="100%">
-														<Box
-															bg="rgba(255, 255, 255, 0.08)"
-															border="1px solid rgba(255, 255, 255, 0.12)"
-															borderRadius="2xl"
-															p={{ base: 4, md: 5 }}
-															textAlign="left"
-														>
-															<Box
-																fontSize={{ base: "sm", md: "md" }}
-																lineHeight="1.8"
-																textAlign="left"
-															>
+														<Box bg="rgba(255, 255, 255, 0.08)" border="1px solid rgba(255, 255, 255, 0.12)" borderRadius="2xl" p={{ base: 4, md: 5 }} textAlign="left">
+															<Box fontSize={{ base: "sm", md: "md" }} lineHeight="1.8" textAlign="left">
 																{renderMessageContent(message.content)}
 															</Box>
 														</Box>
@@ -1300,45 +1150,19 @@ function AgentPage() {
 								{showAgentStatus && (
 									<Box animation="fadeInUp 0.4s ease-out" w="100%">
 										<Flex align="start" gap={3} w="100%">
-											<Box
-												bg="rgba(255, 215, 0, 0.15)"
-												p={2}
-												borderRadius="lg"
-												flexShrink={0}
-												mt={1}
-											>
+											<Box bg="rgba(255, 215, 0, 0.15)" p={2} borderRadius="lg" flexShrink={0} mt={1}>
 												<Sparkles size={20} color="#FFD700" />
 											</Box>
 											<Box flex="1" maxW="100%">
-												<Box
-													bg="rgba(255, 255, 255, 0.08)"
-													border="1px solid rgba(255, 255, 255, 0.12)"
-													borderRadius="2xl"
-													p={{ base: 4, md: 5 }}
-												>
-													<Flex
-														align="center"
-														justify="flex-start"
-														mb={liveSteps.length > 0 ? 4 : 2}
-													>
+												<Box bg="rgba(255, 255, 255, 0.08)" border="1px solid rgba(255, 255, 255, 0.12)" borderRadius="2xl" p={{ base: 4, md: 5 }}>
+													<Flex align="center" justify="flex-start" mb={liveSteps.length > 0 ? 4 : 2}>
 														<Flex align="center" gap={2}>
-															<Text
-																color="rgba(255, 255, 255, 0.7)"
-																fontSize="sm"
-																fontWeight="600"
-																letterSpacing="0.02em"
-															>
+															<Text color="rgba(255, 255, 255, 0.7)" fontSize="sm" fontWeight="600" letterSpacing="0.02em">
 																AGENT ORCHESTRATION
 															</Text>
 															{isProcessing && currentStep !== "Done!" && (
 																<Flex align="center" gap={2}>
-																	<Box
-																		w="6px"
-																		h="6px"
-																		borderRadius="full"
-																		bg="#FFD700"
-																		animation="pulse 2s ease-in-out infinite"
-																	/>
+																	<Box w="6px" h="6px" borderRadius="full" bg="#FFD700" animation="pulse 2s ease-in-out infinite" />
 																	<Text color="#FFD700" fontSize="xs" fontWeight="600">
 																		PROCESSING
 																	</Text>
@@ -1351,10 +1175,7 @@ function AgentPage() {
 														<VStack gap={3} align="stretch">
 															{liveSteps.map((step, i) => {
 																const isLastStep = i === liveSteps.length - 1;
-																const isActive =
-																	isLastStep &&
-																	isProcessing &&
-																	currentStep !== "Done!";
+																const isActive = isLastStep && isProcessing && currentStep !== "Done!";
 
 																return (
 																	<Flex
@@ -1369,16 +1190,8 @@ function AgentPage() {
 																			w="20px"
 																			h="20px"
 																			borderRadius="full"
-																			border={
-																				isActive
-																					? "2px solid #FFD700"
-																					: "2px solid #00FF9D"
-																			}
-																			bg={
-																				isActive
-																					? "rgba(255, 215, 0, 0.2)"
-																					: "rgba(0, 255, 157, 0.2)"
-																			}
+																			border={isActive ? "2px solid #FFD700" : "2px solid #00FF9D"}
+																			bg={isActive ? "rgba(255, 215, 0, 0.2)" : "rgba(0, 255, 157, 0.2)"}
 																			display="flex"
 																			alignItems="center"
 																			justifyContent="center"
@@ -1386,52 +1199,24 @@ function AgentPage() {
 																			transition="all 0.3s ease"
 																		>
 																			{isActive ? (
-																				<Flex
-																					w="100%"
-																					h="100%"
-																					align="center"
-																					justify="center"
-																					lineHeight="1"
-																				>
+																				<Flex w="100%" h="100%" align="center" justify="center" lineHeight="1">
 																					<Loader2
 																						size={10}
 																						color="#FFD700"
 																						style={{
-																							animation:
-																								"spin 1s linear infinite",
+																							animation: "spin 1s linear infinite",
 																							display: "block",
 																							transformOrigin: "center center"
 																						}}
 																					/>
 																				</Flex>
 																			) : (
-																				<Flex
-																					w="100%"
-																					h="100%"
-																					align="center"
-																					justify="center"
-																					lineHeight="1"
-																				>
-																					<Box
-																						w="8px"
-																						h="8px"
-																						borderRadius="full"
-																						bg="#00FF9D"
-																						display="block"
-																					/>
+																				<Flex w="100%" h="100%" align="center" justify="center" lineHeight="1">
+																					<Box w="8px" h="8px" borderRadius="full" bg="#00FF9D" display="block" />
 																				</Flex>
 																			)}
 																		</Box>
-																		<Text
-																			color={
-																				isActive
-																					? "#FFD700"
-																					: "rgba(255, 255, 255, 0.9)"
-																			}
-																			fontSize="sm"
-																			fontWeight={isActive ? "600" : "400"}
-																			transition="color 0.3s ease"
-																		>
+																		<Text color={isActive ? "#FFD700" : "rgba(255, 255, 255, 0.9)"} fontSize="sm" fontWeight={isActive ? "600" : "400"} transition="color 0.3s ease">
 																			{step.step}
 																		</Text>
 																	</Flex>
@@ -1442,11 +1227,7 @@ function AgentPage() {
 
 													{isProcessing && liveSteps.length === 0 && (
 														<Flex align="center" gap={3}>
-															<Loader2
-																size={16}
-																color="#FFD700"
-																style={{ animation: "spin 1s linear infinite" }}
-															/>
+															<Loader2 size={16} color="#FFD700" style={{ animation: "spin 1s linear infinite" }} />
 															<Text color="rgba(255, 255, 255, 0.7)" fontSize="sm">
 																Initializing...
 															</Text>
@@ -1462,48 +1243,19 @@ function AgentPage() {
 							</VStack>
 						</Box>
 
-						<Box
-							borderTop="1px solid rgba(255, 255, 255, 0.1)"
-							p={{ base: 4, md: 5, lg: 6 }}
-							bg="rgba(0, 0, 0, 0.2)"
-							w="100%"
-							position="relative"
-							zIndex={1}
-						>
+						<Box borderTop="1px solid rgba(255, 255, 255, 0.1)" p={{ base: 4, md: 5, lg: 6 }} bg="rgba(0, 0, 0, 0.2)" w="100%" position="relative" zIndex={1}>
 							{uploadedFiles.length > 0 && (
 								<Box mb={3}>
 									<Flex gap={2} flexWrap="wrap">
 										{uploadedFiles.map((file, idx) => (
-											<Flex
-												key={idx}
-												align="center"
-												gap={2}
-												bg="rgba(255, 255, 255, 0.08)"
-												border="1px solid rgba(255, 255, 255, 0.15)"
-												borderRadius="lg"
-												p={2}
-												pr={3}
-											>
+											<Flex key={idx} align="center" gap={2} bg="rgba(255, 255, 255, 0.08)" border="1px solid rgba(255, 255, 255, 0.15)" borderRadius="lg" p={2} pr={3}>
 												<Box bg="rgba(255, 215, 0, 0.2)" p={2} borderRadius="md">
 													<Paperclip size={14} color="#FFD700" />
 												</Box>
-												<Text
-													color="rgba(255, 255, 255, 0.8)"
-													fontSize="xs"
-													maxW="150px"
-													isTruncated
-												>
+												<Text color="rgba(255, 255, 255, 0.8)" fontSize="xs" maxW="150px" isTruncated>
 													{file.name}
 												</Text>
-												<IconButton
-													size="xs"
-													variant="ghost"
-													colorPalette="whiteAlpha"
-													onClick={() => removeFile(idx)}
-													aria-label="Remove file"
-													borderRadius={10}
-													_hover={{ background: "rgba(255,255,255,0.1)" }}
-												>
+												<IconButton size="xs" variant="ghost" colorPalette="whiteAlpha" onClick={() => removeFile(idx)} aria-label="Remove file" borderRadius={10} _hover={{ background: "rgba(255,255,255,0.1)" }}>
 													<X size={14} color="white" />
 												</IconButton>
 											</Flex>
@@ -1528,13 +1280,7 @@ function AgentPage() {
 											boxShadow: "0 0 0 3px rgba(255, 215, 0, 0.1)"
 										}}
 									>
-										<input
-											ref={fileInputRef}
-											type="file"
-											onChange={handleFileSelect}
-											style={{ display: "none" }}
-											accept="image/png, image/jpeg, .png, .jpg, .jpeg"
-										/>
+										<input ref={fileInputRef} type="file" onChange={handleFileSelect} style={{ display: "none" }} accept="image/png, image/jpeg, .png, .jpg, .jpeg" />
 
 										<IconButton
 											size="sm"
@@ -1554,7 +1300,7 @@ function AgentPage() {
 										<Textarea
 											ref={textareaRef}
 											value={inputValue}
-											onChange={(e) => setInputValue(e.target.value)}
+											onChange={e => setInputValue(e.target.value)}
 											onKeyDown={handleKeyPress}
 											placeholder="Ask me to help with something..."
 											bg="transparent"
@@ -1578,11 +1324,7 @@ function AgentPage() {
 									<Box
 										as="button"
 										onClick={handleSend}
-										bg={
-											canSend
-												? "linear-gradient(135deg, #D4AF37, #FFD700)"
-												: "rgba(255, 255, 255, 0.1)"
-										}
+										bg={canSend ? "linear-gradient(135deg, #D4AF37, #FFD700)" : "rgba(255, 255, 255, 0.1)"}
 										px={4}
 										borderRadius="xl"
 										cursor={canSend ? "pointer" : "not-allowed"}
@@ -1598,20 +1340,12 @@ function AgentPage() {
 												? {
 														transform: "translateY(-2px)",
 														boxShadow: "0 6px 25px rgba(212, 175, 55, 0.4)"
-												  }
+													}
 												: {}
 										}
 										_active={canSend ? { transform: "translateY(0)" } : {}}
 									>
-										{isProcessing ? (
-											<Loader2
-												size={20}
-												color="white"
-												style={{ animation: "spin 1s linear infinite" }}
-											/>
-										) : (
-											<Send size={20} color="white" />
-										)}
+										{isProcessing ? <Loader2 size={20} color="white" style={{ animation: "spin 1s linear infinite" }} /> : <Send size={20} color="white" />}
 									</Box>
 								</Flex>
 							</Box>
@@ -1619,24 +1353,8 @@ function AgentPage() {
 					</Box>
 
 					{showOutputs && (
-						<Box
-							w="400px"
-							borderRadius={{ base: 20, md: 28 }}
-							{...glassPanelStyle}
-							overflow="hidden"
-							display="flex"
-							flexDirection="column"
-							animation="fadeIn 0.24s ease-out"
-							flexShrink={0}
-						>
-							<Flex
-								align="center"
-								p={4}
-								borderBottom="1px solid rgba(255, 255, 255, 0.1)"
-								bg="rgba(0, 0, 0, 0.2)"
-								position="relative"
-								zIndex={1}
-							>
+						<Box w="400px" borderRadius={{ base: 20, md: 28 }} {...glassPanelStyle} overflow="hidden" display="flex" flexDirection="column" animation="fadeIn 0.24s ease-out" flexShrink={0}>
+							<Flex align="center" p={4} borderBottom="1px solid rgba(255, 255, 255, 0.1)" bg="rgba(0, 0, 0, 0.2)" position="relative" zIndex={1}>
 								<Heading size="sm" color="white">
 									Agent Ensemble
 								</Heading>
@@ -1672,7 +1390,7 @@ function AgentPage() {
 				placement="center"
 				motionPreset="scale"
 				open={isClearDialogOpen}
-				onOpenChange={(e) => {
+				onOpenChange={e => {
 					if (isClearingSession) return;
 					setIsClearDialogOpen(e.open);
 				}}
@@ -1680,25 +1398,9 @@ function AgentPage() {
 				<Portal>
 					<Dialog.Backdrop bg="blackAlpha.700" backdropFilter="blur(3px)" />
 					<Dialog.Positioner>
-						<Dialog.Content
-							borderRadius="2xl"
-							bg="rgba(18, 18, 18, 0.92)"
-							backdropFilter="blur(10px)"
-							border="1px solid rgba(255, 255, 255, 0.18)"
-							p={5}
-							maxW="420px"
-							boxShadow="0 20px 50px rgba(0,0,0,0.45)"
-						>
+						<Dialog.Content borderRadius="2xl" bg="rgba(18, 18, 18, 0.92)" backdropFilter="blur(10px)" border="1px solid rgba(255, 255, 255, 0.18)" p={5} maxW="420px" boxShadow="0 20px 50px rgba(0,0,0,0.45)">
 							<Dialog.CloseTrigger asChild>
-								<CloseButton
-									size="sm"
-									position="absolute"
-									top="12px"
-									right="12px"
-									color="white"
-									disabled={isClearingSession}
-									_hover={{ background: "transparent" }}
-								/>
+								<CloseButton size="sm" position="absolute" top="12px" right="12px" color="white" disabled={isClearingSession} _hover={{ background: "transparent" }} />
 							</Dialog.CloseTrigger>
 
 							<VStack align="stretch" gap={4}>
@@ -1707,8 +1409,7 @@ function AgentPage() {
 										Clear Agent Session?
 									</Heading>
 									<Text color="rgba(255,255,255,0.75)" fontSize="sm" lineHeight="1.6">
-										This will remove your current chat history, uploaded files, and output panel for
-										this session.
+										This will remove your current chat history, uploaded files, and output panel for this session.
 									</Text>
 								</Box>
 
@@ -1727,9 +1428,7 @@ function AgentPage() {
 										fontWeight="600"
 										cursor={isClearingSession ? "not-allowed" : "pointer"}
 										opacity={isClearingSession ? 0.5 : 1}
-										_hover={
-											isClearingSession ? {} : { bg: "rgba(255,255,255,0.14)" }
-										}
+										_hover={isClearingSession ? {} : { bg: "rgba(255,255,255,0.14)" }}
 									>
 										Cancel
 									</Box>
@@ -1753,7 +1452,7 @@ function AgentPage() {
 												? {}
 												: {
 														bg: "rgba(255, 90, 90, 0.3)"
-												  }
+													}
 										}
 									>
 										{isClearingSession ? "Clearing..." : "Clear Session"}
