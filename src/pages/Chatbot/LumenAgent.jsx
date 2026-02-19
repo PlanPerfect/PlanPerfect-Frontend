@@ -357,6 +357,7 @@ function AgentPage() {
 	const textareaRef = useRef(null);
 	const fileInputRef = useRef(null);
 	const outputsScrollRef = useRef(null);
+	const messagePreviewUrlsRef = useRef(new Set());
 	const [liveSteps, setLiveSteps] = useState([]);
 	const [showAgentStatus, setShowAgentStatus] = useState(false);
 	const [isClearingSession, setIsClearingSession] = useState(false);
@@ -592,15 +593,22 @@ function AgentPage() {
 	const handleSend = async () => {
 		if (!canSend) return;
 
+		const queryToSend = inputValue;
+		const filesToSend = uploadedFiles;
+		let imagePreviewUrl = "";
+		if (filesToSend.length > 0) {
+			imagePreviewUrl = URL.createObjectURL(filesToSend[0]);
+			messagePreviewUrlsRef.current.add(imagePreviewUrl);
+		}
+
 		const userMessage = {
 			role: "user",
-			content: inputValue,
+			content: queryToSend,
+			imagePreviewUrl,
 			timestamp: new Date()
 		};
 
 		setMessages((prev) => [...prev, userMessage]);
-		const queryToSend = inputValue;
-		const filesToSend = uploadedFiles;
 		setInputValue("");
 		setUploadedFiles([]);
 		setIsProcessing(true);
@@ -709,12 +717,18 @@ function AgentPage() {
 		}
 	}, [getDownloadFileName, restoreOutputsScrollPosition, triggerDownload]);
 
+	const releaseMessagePreviewUrls = useCallback(() => {
+		messagePreviewUrlsRef.current.forEach((previewUrl) => URL.revokeObjectURL(previewUrl));
+		messagePreviewUrlsRef.current.clear();
+	}, []);
+
 	const handleOpenClearDialog = () => {
 		if (isProcessing || isClearingSession || !user?.uid) return;
 		setIsClearDialogOpen(true);
 	};
 
 	const resetLocalSessionState = () => {
+		releaseMessagePreviewUrls();
 		setMessages([createInitialAgentMessage()]);
 		setInputValue("");
 		setUploadedFiles([]);
@@ -726,6 +740,12 @@ function AgentPage() {
 		setShowAgentStatus(false);
 		if (fileInputRef.current) fileInputRef.current.value = "";
 	};
+
+	useEffect(() => {
+		return () => {
+			releaseMessagePreviewUrls();
+		};
+	}, [releaseMessagePreviewUrls]);
 
 	const handleClearSession = async () => {
 		if (isProcessing || isClearingSession || !user?.uid) return;
@@ -1198,18 +1218,49 @@ function AgentPage() {
 									<Box key={idx} animation="fadeInUp 0.4s ease-out" w="100%">
 										{message.role === "user" ? (
 											<Flex justify="flex-end" w="100%">
-												<Box
+												<Flex
+													align="stretch"
+													gap={2}
+													w="100%"
+													justify="flex-end"
 													maxW={{ base: "85%", md: "75%", lg: "65%", xl: "55%" }}
-													bg="linear-gradient(135deg, rgba(212, 175, 55, 0.25), rgba(255, 215, 0, 0.25))"
-													border="1px solid rgba(212, 175, 55, 0.4)"
-													borderRadius="2xl"
-													p={{ base: 4, md: 5 }}
-													boxShadow="0 4px 20px rgba(212, 175, 55, 0.15)"
 												>
-													<Box fontSize={{ base: "sm", md: "md" }} lineHeight="1.7">
-														{renderMessageContent(message.content)}
+													{message.imagePreviewUrl && (
+														<Box
+															flexShrink={0}
+															alignSelf="stretch"
+															style={{ aspectRatio: "1 / 1" }}
+															borderRadius="lg"
+															overflow="hidden"
+															border="1px solid rgba(255, 255, 255, 0.22)"
+															bg="rgba(255, 255, 255, 0.08)"
+															minW={{ base: "48px", md: "56px" }}
+															maxW={{ base: "78px", md: "90px" }}
+														>
+															<Image
+																src={message.imagePreviewUrl}
+																alt="Uploaded image preview"
+																w="100%"
+																h="100%"
+																objectFit="cover"
+															/>
+														</Box>
+													)}
+													<Box
+														flex={message.imagePreviewUrl ? 1 : undefined}
+														minW={message.imagePreviewUrl ? 0 : undefined}
+														maxW="100%"
+														bg="linear-gradient(135deg, rgba(212, 175, 55, 0.25), rgba(255, 215, 0, 0.25))"
+														border="1px solid rgba(212, 175, 55, 0.4)"
+														borderRadius="2xl"
+														p={{ base: 4, md: 5 }}
+														boxShadow="0 4px 20px rgba(212, 175, 55, 0.15)"
+													>
+														<Box fontSize={{ base: "sm", md: "md" }} lineHeight="1.7">
+															{renderMessageContent(message.content)}
+														</Box>
 													</Box>
-												</Box>
+												</Flex>
 											</Flex>
 										) : (
 											<VStack align="stretch" gap={3} w="100%">
