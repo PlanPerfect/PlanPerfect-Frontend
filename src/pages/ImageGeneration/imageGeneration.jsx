@@ -191,14 +191,17 @@ function ImageGeneration() {
 		}
 	};
 
-	const handleRegenerateDesign = async ({ prompt, styles }) => {
+	const handleRegenerateDesign = async ({ prompt, styles, furnitureUrls, furnitureDescriptions }) => {
 		setIsGenerating(true);
 		setGenerationError(null);
 		setIsRestoredImage(false);
 		setShowRegenerateInput(false);
 
+		const urls = furnitureUrls ?? selectedFurnitureUrls;
+		const descs = furnitureDescriptions ?? selectedFurnitureDescriptions;
+
 		try {
-			const formData = buildFormData(styles, selectedFurnitureUrls, selectedFurnitureDescriptions, prompt || null);
+			const formData = buildFormData(styles, urls, descs, prompt || null);
 
 			const response = await server.post("/image/generate", formData, {
 				headers: { "Content-Type": "multipart/form-data", "X-User-ID": user.uid }

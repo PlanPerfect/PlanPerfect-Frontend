@@ -1,6 +1,8 @@
 import { Box, Flex, Heading, Text, Button, Textarea, VStack } from "@chakra-ui/react";
 import { FaWandMagicSparkles } from "react-icons/fa6";
+import { FaCouch } from "react-icons/fa";
 import { useState } from "react";
+import FurnitureSelector from "@/components/existingHomeOwner/FurnitureSelector";
 
 function RegenerateDesignInput({ 
 	onRegenerate, 
@@ -10,15 +12,34 @@ function RegenerateDesignInput({
 }) {
 	const [regeneratePrompt, setRegeneratePrompt] = useState("");
 	const [error, setError] = useState("");
+	const [showFurnitureSelector, setShowFurnitureSelector] = useState(false);
+	const [selectedFurnitureUrls, setSelectedFurnitureUrls] = useState([]);
+	const [selectedFurnitureDescriptions, setSelectedFurnitureDescriptions] = useState([]);
 
 	const handleRegenerate = () => {
 		onRegenerate({
 			prompt: regeneratePrompt.trim(),
-			styles: currentStyles
+			styles: currentStyles,
+			furnitureUrls: selectedFurnitureUrls,
+			furnitureDescriptions: selectedFurnitureDescriptions
 		});
 	};
 
-	const hasChanges = true;
+	const handleFurnitureConfirm = ({ urls, descriptions }) => {
+		setSelectedFurnitureUrls(urls);
+		setSelectedFurnitureDescriptions(descriptions);
+		setShowFurnitureSelector(false);
+	};
+
+	if (showFurnitureSelector) {
+		return (
+			<FurnitureSelector
+				onConfirm={handleFurnitureConfirm}
+				onBack={() => setShowFurnitureSelector(false)}
+				confirmLabel="Confirm"
+			/>
+		);
+	}
 
 	return (
 		<Box border="2px solid #D4AF37" borderRadius="12px" p={6} bg="#FFFDF7" boxShadow="md">
@@ -49,6 +70,30 @@ function RegenerateDesignInput({
 					/>
 				</Box>
 
+				<Box border="1px solid #F4E5B2" borderRadius="10px" p={4} bg="white">
+					<Flex align="center" justify="space-between" flexWrap="wrap" gap={3}>
+						<Box>
+							<Text fontWeight="600" color="gray.700" fontSize="md">Furniture Selection</Text>
+							<Text fontSize="sm" color="gray.500">
+								{selectedFurnitureUrls.length > 0
+									? `${selectedFurnitureUrls.length} item${selectedFurnitureUrls.length > 1 ? "s" : ""} selected`
+									: "No furniture selected"}
+							</Text>
+						</Box>
+						<Button
+							onClick={() => setShowFurnitureSelector(true)}
+							size="md" variant="outline"
+							borderColor="#D4AF37" color="#D4AF37"
+							leftIcon={<FaCouch />}
+							fontWeight="600" borderRadius="md"
+							_hover={{ bg: "#FFFDF7", borderColor: "#C9A961", color: "#C9A961" }}
+							isDisabled={isLoading}
+						>
+							{selectedFurnitureUrls.length > 0 ? "Change Furniture" : "Select Furniture"}
+						</Button>
+					</Flex>
+				</Box>
+
 				{error && (
 					<Box bg="red.50" border="1px solid" borderColor="red.300"
 						borderRadius="md" p={3} textAlign="center"
@@ -71,7 +116,7 @@ function RegenerateDesignInput({
 							boxShadow: "lg"
 						}}
 						transition="all 0.2s"
-						isDisabled={!hasChanges || isLoading}
+						isDisabled={isLoading}
 						isLoading={isLoading}
 						loadingText="Generating..."
 					>

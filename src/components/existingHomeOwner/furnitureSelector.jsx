@@ -5,7 +5,7 @@ import { useAuth } from "../../contexts/AuthContext";
 import server from "../../../networking";
 import ShowToast from "@/Extensions/ShowToast";
 
-function FurnitureSelector({ onConfirm, onBack }) {
+function FurnitureSelector({ onConfirm, onBack, confirmLabel }) {
     const { user } = useAuth();
     const [furnitureItems, setFurnitureItems] = useState([]);
     const [selectedUrls, setSelectedUrls] = useState([]);
@@ -229,7 +229,7 @@ function FurnitureSelector({ onConfirm, onBack }) {
                     }}
                     transition="all 0.2s"
                 >
-                    {selectedUrls.length > 0 ? "Generate with Selected Items" : "Generate Design"}
+                    {confirmLabel || (selectedUrls.length > 0 ? "Generate with Selected Items" : "Generate Design")}
                 </Button>
             </Flex>
         </Box>
