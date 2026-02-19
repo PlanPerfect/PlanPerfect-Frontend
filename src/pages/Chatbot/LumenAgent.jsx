@@ -1430,6 +1430,8 @@ function AgentPage() {
 													colorPalette="whiteAlpha"
 													onClick={() => removeFile(idx)}
 													aria-label="Remove file"
+													borderRadius={10}
+													_hover={{ background: "rgba(255,255,255,0.1)" }}
 												>
 													<X size={14} color="white" />
 												</IconButton>
@@ -1472,7 +1474,7 @@ function AgentPage() {
 											disabled={isProcessing}
 											aria-label="Attach file"
 											ml={1}
-											borderRadius={"full"}
+											borderRadius={11}
 											color="white"
 											_hover={{ backgroundColor: "rgba(255,255,255,0.1)" }}
 										>
