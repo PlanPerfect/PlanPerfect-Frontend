@@ -262,7 +262,7 @@ function ImageDownloadButton({ onDownload, label }) {
 	);
 }
 
-function ThumbnailDownloadButton({ onDownload, label }) {
+function ThumbnailDownloadButton({ onDownload, label, isFurniture = false }) {
 	const [isDownloading, setIsDownloading] = useState(false);
 
 	const handleClick = async (e) => {
@@ -287,13 +287,11 @@ function ThumbnailDownloadButton({ onDownload, label }) {
 			onMouseDown={(e) => e.preventDefault()}
 			onClick={handleClick}
 			aria-label={`Download ${label}`}
-			position="absolute"
-			bottom="1px"
-			right="1px"
-			minW="20px"
-			h="20px"
+			flexShrink={0}
+			minW={isFurniture ? "28px" : "24px"}
+			h={isFurniture ? "28px" : "24px"}
 			p={0}
-			borderRadius="full"
+			borderRadius={isFurniture ? 10 : "full"}
 			bg="rgba(255, 255, 255, 0.14)"
 			border="1px solid rgba(255, 255, 255, 0.28)"
 			backdropFilter="blur(8px) saturate(160%)"
@@ -302,7 +300,7 @@ function ThumbnailDownloadButton({ onDownload, label }) {
 			cursor={isDownloading ? "not-allowed" : "pointer"}
 			_hover={isDownloading ? {} : { bg: "rgba(255, 255, 255, 0.22)" }}
 		>
-			<Download size={10} color="white" />
+			<Download size={isFurniture ? 14 : 10} color="white" />
 		</IconButton>
 	);
 }
@@ -565,12 +563,23 @@ function AgentPage() {
 
 	const handleFileSelect = (e) => {
 		const ALLOWED = ["image/png", "image/jpeg", "image/jpg"];
-		const files = Array.from(e.target.files).filter((f) => {
+		const selectedFiles = Array.from(e.target.files || []);
+		const files = selectedFiles.filter((f) => {
 			if (ALLOWED.includes(f.type.toLowerCase())) return true;
 			ShowToast("error", `Unsupported file: ${f.name}`, "Only PNG and JPG/JPEG images are allowed.");
 			return false;
 		});
-		setUploadedFiles((prev) => [...prev, ...files]);
+
+		if (files.length === 0) {
+			e.target.value = "";
+			return;
+		}
+
+		if (selectedFiles.length > 1) {
+			ShowToast("warning", "Only one file allowed", "Using the first valid image.");
+		}
+
+		setUploadedFiles([files[0]]);
 		e.target.value = "";
 	};
 
@@ -923,39 +932,50 @@ function AgentPage() {
 														)}
 														<VStack align="stretch" gap={2}>
 															{item.furniture.map((furn, i) => (
-																<Flex key={i} gap={3} align="center">
+																<Flex key={i} gap={3} align="center" justify="space-between" w="100%">
+																	<Flex align="center" gap={3} minW={0}>
+																		{furn.url && (
+																			<Flex justify="center" flexShrink={0}>
+																				<Box w="44px" h="44px">
+																					<Image
+																						src={furn.url}
+																						alt={furn.name}
+																						w="44px"
+																						h="44px"
+																						objectFit="cover"
+																						borderRadius="md"
+																						crossOrigin="anonymous"
+																						fallback={
+																							<Box
+																								w="44px"
+																								h="44px"
+																								bg="rgba(255,255,255,0.1)"
+																								borderRadius="md"
+																							/>
+																						}
+																					/>
+																				</Box>
+																			</Flex>
+																		)}
+																		<Text
+																			color="rgba(255, 255, 255, 0.9)"
+																			fontSize="sm"
+																			flexShrink={1}
+																			minW={0}
+																			textAlign="left"
+																		>
+																			{titleCase(furn.name)}
+																		</Text>
+																	</Flex>
 																	{furn.url && (
-																		<Flex justify="center" flexShrink={0}>
-																			<Box position="relative" w="44px" h="44px">
-																				<Image
-																					src={furn.url}
-																					alt={furn.name}
-																					w="44px"
-																					h="44px"
-																					objectFit="cover"
-																					borderRadius="md"
-																					crossOrigin="anonymous"
-																					fallback={
-																						<Box
-																							w="44px"
-																							h="44px"
-																							bg="rgba(255,255,255,0.1)"
-																							borderRadius="md"
-																						/>
-																					}
-																				/>
-																				<ThumbnailDownloadButton
-																					onDownload={() =>
-																						handleDownloadImage(furn.url, furn.name || "furniture")
-																					}
-																					label={furn.name || "furniture image"}
-																				/>
-																			</Box>
-																		</Flex>
+																		<ThumbnailDownloadButton
+																			onDownload={() =>
+																				handleDownloadImage(furn.url, furn.name || "furniture")
+																			}
+																			label={furn.name || "furniture image"}
+																			isFurniture
+																		/>
 																	)}
-																	<Text color="rgba(255, 255, 255, 0.9)" fontSize="sm">
-																		{titleCase(furn.name)}
-																	</Text>
 																</Flex>
 															))}
 														</VStack>
@@ -1460,7 +1480,6 @@ function AgentPage() {
 										<input
 											ref={fileInputRef}
 											type="file"
-											multiple
 											onChange={handleFileSelect}
 											style={{ display: "none" }}
 											accept="image/png, image/jpeg, .png, .jpg, .jpeg"
