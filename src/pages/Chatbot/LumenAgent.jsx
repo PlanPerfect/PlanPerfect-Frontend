@@ -721,16 +721,13 @@ function AgentPage() {
 
 	useEffect(() => {
 		const handleGlobalKeyDown = e => {
-			// Ignore if already focused on an input/textarea/select/contenteditable
 			const tag = document.activeElement?.tagName?.toLowerCase();
 			const isEditable = document.activeElement?.isContentEditable;
 			if (tag === "input" || tag === "textarea" || tag === "select" || isEditable) return;
 
-			// Ignore modifier-only keys, special keys, and shortcuts (Ctrl/Cmd+Key)
 			if (e.ctrlKey || e.metaKey || e.altKey) return;
-			if (e.key.length > 1) return; // Filters out "Enter", "Escape", "F1", etc.
+			if (e.key.length > 1) return;
 
-			// Focus and let the keystroke land in the textarea
 			if (textareaRef.current && !isProcessing && !isClearingSession) {
 				textareaRef.current.focus();
 			}
