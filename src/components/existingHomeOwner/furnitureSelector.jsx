@@ -3,7 +3,7 @@ import { FaCouch, FaCheckCircle, FaArrowRight } from "react-icons/fa";
 import { useState, useEffect } from "react";
 import { useAuth } from "../../contexts/AuthContext";
 import server from "../../../networking";
-import ShowToast from "@/Extensions/ShowToast";
+
 
 function FurnitureSelector({ onConfirm, onBack, confirmLabel }) {
     const { user } = useAuth();
@@ -11,6 +11,7 @@ function FurnitureSelector({ onConfirm, onBack, confirmLabel }) {
     const [selectedUrls, setSelectedUrls] = useState([]);
     const [isLoading, setIsLoading] = useState(true);
     const [loadError, setLoadError] = useState(null);
+    const [atMax, setAtMax] = useState(false);
 
     useEffect(() => {
         const fetchFurniture = async () => {
@@ -34,7 +35,6 @@ function FurnitureSelector({ onConfirm, onBack, confirmLabel }) {
                     "Failed to load recommendations.";
                 const clean = msg.replace(/^(UERROR|ERROR):\s*/, "");
                 setLoadError(clean);
-                ShowToast("error", clean, "Check console for more details.");
                 console.error("[FurnitureSelector] load error:", err);
             } finally {
                 setIsLoading(false);
@@ -45,12 +45,17 @@ function FurnitureSelector({ onConfirm, onBack, confirmLabel }) {
 
     const toggleSelect = (url) => {
         setSelectedUrls((prev) => {
-            if (prev.includes(url)) return prev.filter((u) => u !== url);
+            if (prev.includes(url)) {
+                setAtMax(false);
+                return prev.filter((u) => u !== url);
+            }
             if (prev.length >= 4) {
-                ShowToast("error", "Maximum 4 items", "Deselect an item first.");
+                setAtMax(true);
                 return prev;
             }
-            return [...prev, url];
+            const next = [...prev, url];
+            setAtMax(next.length >= 4);
+            return next;
         });
     };
 
@@ -61,6 +66,14 @@ function FurnitureSelector({ onConfirm, onBack, confirmLabel }) {
             descriptions: selectedItems.map((i) => i.description).filter(Boolean)
         });
     };
+
+    // Group items by name
+    const groupedItems = furnitureItems.reduce((groups, item) => {
+        const key = item.name || "Other";
+        if (!groups[key]) groups[key] = [];
+        groups[key].push(item);
+        return groups;
+    }, {});
 
     if (isLoading) {
         return (
@@ -118,73 +131,89 @@ function FurnitureSelector({ onConfirm, onBack, confirmLabel }) {
                 </Text>
             </Text>
 
-            <Flex justify="center" mb={5}>
-                <Badge
-                    fontSize="sm" px={4} py={2} borderRadius="full"
-                    bg={selectedUrls.length > 0 ? "#F4E5B2" : "gray.100"}
-                    color={selectedUrls.length > 0 ? "#8B7355" : "gray.500"}
-                    border="1px solid"
-                    borderColor={selectedUrls.length > 0 ? "#D4AF37" : "gray.200"}
-                >
-                    {selectedUrls.length === 0
-                        ? "No pieces selected — AI will decide"
-                        : `${selectedUrls.length}/4 piece${selectedUrls.length > 1 ? "s" : ""} selected`}
-                </Badge>
+            <Box
+                position="sticky" top={0} zIndex={10}
+                bg="white" py={3} mb={5}
+                borderBottom="1px solid" borderColor={atMax ? "orange.200" : "#F4E5B2"}
+                transition="all 0.2s"
+            >
+                <Flex justify="center" align="center" gap={3}>
+                    <Badge
+                        fontSize="sm" px={4} py={2} borderRadius="full"
+                        bg={selectedUrls.length > 0 ? "#F4E5B2" : "gray.100"}
+                        color={selectedUrls.length > 0 ? "#8B7355" : "gray.500"}
+                        border="1px solid"
+                        borderColor={selectedUrls.length > 0 ? "#D4AF37" : "gray.200"}
+                    >
+                        {selectedUrls.length === 0
+                            ? "No pieces selected — AI will decide"
+                            : `${selectedUrls.length}/4 piece${selectedUrls.length > 1 ? "s" : ""} selected`}
+                    </Badge>
+                    {atMax && (
+                        <Text fontSize="xs" color="orange.500" fontWeight="700">
+                            ⚠ Max reached — deselect to swap
+                        </Text>
+                    )}
+                </Flex>
+            </Box>
+
+            {/* Grouped items */}
+            <Flex direction="column" gap={6} mb={6}>
+                {Object.entries(groupedItems).map(([groupName, items]) => (
+                    <Box key={groupName}>
+                        <Flex align="center" gap={2} mb={3}>
+                            <Text fontWeight="700" fontSize="sm" color="#8B7355" textTransform="uppercase" letterSpacing="wide">
+                                {groupName}
+                            </Text>
+                            <Box flex="1" h="1px" bg="#F4E5B2" />
+                            <Text fontSize="xs" color="gray.400">{items.length} item{items.length > 1 ? "s" : ""}</Text>
+                        </Flex>
+                        <SimpleGrid columns={{ base: 2, sm: 3, md: 4 }} gap={4}>
+                            {items.map((item) => {
+                                const isSelected = selectedUrls.includes(item.image_url);
+                                return (
+                                    <Box
+                                        key={item.id}
+                                        onClick={() => toggleSelect(item.image_url)}
+                                        cursor="pointer"
+                                        borderRadius="10px"
+                                        border="2px solid"
+                                        borderColor={isSelected ? "#D4AF37" : "#E2E8F0"}
+                                        bg={isSelected ? "#FFFDF7" : "white"}
+                                        boxShadow={isSelected ? "0 0 0 3px rgba(212,175,55,0.25)" : "sm"}
+                                        overflow="hidden"
+                                        transition="all 0.2s"
+                                        position="relative"
+                                        _hover={{ borderColor: "#D4AF37", transform: "translateY(-3px)", boxShadow: "md" }}
+                                    >
+                                        {isSelected && (
+                                            <Box position="absolute" top={2} right={2} zIndex={1}>
+                                                <FaCheckCircle color="#D4AF37" size={20} />
+                                            </Box>
+                                        )}
+                                        <Image
+                                            src={item.image_url}
+                                            alt={item.name}
+                                            w="100%" h="130px"
+                                            objectFit="cover"
+                                            bg="gray.50"
+                                        />
+                                        <Box p={2} textAlign="center">
+                                            <Text
+                                                fontSize="xs" fontWeight="600"
+                                                color={isSelected ? "#8B7355" : "gray.500"}
+                                                noOfLines={1} lineHeight="1.3"
+                                            >
+                                                Option {items.indexOf(item) + 1}
+                                            </Text>
+                                        </Box>
+                                    </Box>
+                                );
+                            })}
+                        </SimpleGrid>
+                    </Box>
+                ))}
             </Flex>
-
-            <SimpleGrid columns={{ base: 2, sm: 3, md: 4 }} gap={4} mb={6}>
-                {furnitureItems.map((item) => {
-                    const isSelected = selectedUrls.includes(item.image_url);
-                    return (
-                        <Box
-                            key={item.id}
-                            onClick={() => toggleSelect(item.image_url)}
-                            cursor="pointer"
-                            borderRadius="10px"
-                            border="2px solid"
-                            borderColor={isSelected ? "#D4AF37" : "#E2E8F0"}
-                            bg={isSelected ? "#FFFDF7" : "white"}
-                            boxShadow={isSelected ? "0 0 0 3px rgba(212,175,55,0.25)" : "sm"}
-                            overflow="hidden"
-                            transition="all 0.2s"
-                            position="relative"
-                            _hover={{
-                                borderColor: "#D4AF37",
-                                transform: "translateY(-3px)",
-                                boxShadow: "md"
-                            }}
-                        >
-                            {isSelected && (
-                                <Box position="absolute" top={2} right={2} zIndex={1}>
-                                    <FaCheckCircle color="#D4AF37" size={20} />
-                                </Box>
-                            )}
-
-                            <Image
-                                src={item.image_url}
-                                alt={item.name}
-                                w="100%"
-                                h="130px"
-                                objectFit="cover"
-                                bg="gray.50"
-                            />
-
-                            <Box p={2} textAlign="center">
-                                <Text
-                                    fontSize="xs"
-                                    fontWeight="600"
-                                    color={isSelected ? "#8B7355" : "gray.600"}
-                                    noOfLines={2}
-                                    lineHeight="1.3"
-                                    textTransform="capitalize"
-                                >
-                                    {item.name}
-                                </Text>
-                            </Box>
-                        </Box>
-                    );
-                })}
-            </SimpleGrid>
 
             <Flex justify="center" gap={3} mb={6} flexWrap="wrap">
                 <Button

@@ -42,14 +42,17 @@ function ImageGeneration() {
 
 	useEffect(() => {
 		if (!user) return;
+		const referrer = document.referrer;
+		const fromLumen = referrer.includes("/lumen/chat");
 		const savedImage = sessionStorage.getItem(`generatedImage_${user.uid}`);
 		const savedImageId = sessionStorage.getItem(`generatedImageId_${user.uid}`);
-		if (savedImage) {
+		if (fromLumen && savedImage) {
 			setIsRestoredImage(true);
 			setGeneratedImage(savedImage);
-		}
-		if (savedImageId) {
-			setGeneratedImageId(savedImageId);
+			if (savedImageId) setGeneratedImageId(savedImageId);
+		} else {
+			sessionStorage.removeItem(`generatedImage_${user.uid}`);
+			sessionStorage.removeItem(`generatedImageId_${user.uid}`);
 		}
 	}, [user]);
 
@@ -191,17 +194,14 @@ function ImageGeneration() {
 		}
 	};
 
-	const handleRegenerateDesign = async ({ prompt, styles, furnitureUrls, furnitureDescriptions }) => {
+	const handleRegenerateDesign = async ({ prompt, styles }) => {
 		setIsGenerating(true);
 		setGenerationError(null);
 		setIsRestoredImage(false);
 		setShowRegenerateInput(false);
 
-		const urls = furnitureUrls ?? selectedFurnitureUrls;
-		const descs = furnitureDescriptions ?? selectedFurnitureDescriptions;
-
 		try {
-			const formData = buildFormData(styles, urls, descs, prompt || null);
+			const formData = buildFormData(styles, selectedFurnitureUrls, selectedFurnitureDescriptions, prompt || null);
 
 			const response = await server.post("/image/generate", formData, {
 				headers: { "Content-Type": "multipart/form-data", "X-User-ID": user.uid }
@@ -409,7 +409,6 @@ function ImageGeneration() {
 	return (
 		<>
 			<Background />
-
 			{/* Lightbox Overlay */}
 			{lightboxUrl && (
 				<Box
