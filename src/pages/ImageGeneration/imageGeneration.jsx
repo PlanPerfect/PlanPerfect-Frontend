@@ -20,6 +20,7 @@ function ImageGeneration() {
 
 	const [isGenerating, setIsGenerating] = useState(false);
 	const [generatedImage, setGeneratedImage] = useState(null);
+	const [generatedImageId, setGeneratedImageId] = useState(null);
 	const [generationError, setGenerationError] = useState(null);
 	const [isRestoredImage, setIsRestoredImage] = useState(false);
 
@@ -32,20 +33,25 @@ function ImageGeneration() {
 
 	const [designHistory, setDesignHistory] = useState([]);
 	const [showHistory, setShowHistory] = useState(false);
+	const [lightboxUrl, setLightboxUrl] = useState(null);
 
 	const imagesSectionRef = useRef(null);
 	const regenerateInputRef = useRef(null);
 
 	const availableStyles = ["Boutique", "Classical", "Contemporary", "Country", "Electic", "Industrial", "Japanese", "Luxury", "Minimalist", "Modern", "Persian", "Scandinavian", "Vintage", "Wabi Sabi", "Japandi", "Peranakan", "Boho"];
 
-	// useEffect(() => {
-	// 	if (!user) return;
-	// 	const savedImage = sessionStorage.getItem(`generatedImage_${user.uid}`);
-	// 	if (savedImage) {
-	// 		setIsRestoredImage(true);
-	// 		setGeneratedImage(savedImage);
-	// 	}
-	// }, [user]);
+	useEffect(() => {
+		if (!user) return;
+		const savedImage = sessionStorage.getItem(`generatedImage_${user.uid}`);
+		const savedImageId = sessionStorage.getItem(`generatedImageId_${user.uid}`);
+		if (savedImage) {
+			setIsRestoredImage(true);
+			setGeneratedImage(savedImage);
+		}
+		if (savedImageId) {
+			setGeneratedImageId(savedImageId);
+		}
+	}, [user]);
 
 	useEffect(() => {
 		const fetchUserData = async () => {
@@ -74,6 +80,7 @@ function ImageGeneration() {
 					setAnalysisResults({ detected_style: data.detected_style });
 					setSelectedStyles(data.selected_styles || []);
 					setOriginalImageUrl(data.original_image_url || null);
+					fetchHistory();
 				} else {
 					setLoadError("No preferences found. Please complete the setup first.");
 				}
@@ -83,11 +90,10 @@ function ImageGeneration() {
 					const clean = errDetail.replace(/^(UERROR|ERROR):\s*/, "");
 					setLoadError(clean);
 					console.error("Failed to fetch user data: ", clean);
-					ShowToast("error", clean, "Check console for more details.");
+					
 				} else {
 					console.error("Failed to fetch user data: ", err?.response);
-					ShowToast("error", "An unexpected error occurred", "Check console for more details.");
-				}
+					setLoadError("An unexpected error occurred while fetching your data.");}
 			} finally {
 				setIsLoading(false);
 			}
@@ -130,6 +136,18 @@ function ImageGeneration() {
 		}
 	};
 
+	const saveFinalSelection = async (imageUrl, generationId) => {
+		console.log("[saveFinalSelection] id:", generationId, "url:", imageUrl);
+		if (!generationId) return;
+		try {
+			await server.post("/image/selectFinal", { generation_id: generationId, image_url: imageUrl }, {
+				headers: { "X-User-ID": user.uid }
+			});
+		} catch (err) {
+			console.error("Failed to save final selection:", err);
+		}
+	};
+
 	const handleFurnitureConfirm = ({ urls, descriptions }) => {
 		setSelectedFurnitureUrls(urls);
 		setSelectedFurnitureDescriptions(descriptions);
@@ -159,10 +177,12 @@ function ImageGeneration() {
 			const response = await server.post("/image/generate", formData, {
 				headers: { "Content-Type": "multipart/form-data", "X-User-ID": user.uid }
 			});
-			const { url } = response.data;
+			const { url, generation_id } = response.data;
 
 			setGeneratedImage(url);
+			setGeneratedImageId(generation_id);
 			sessionStorage.setItem(`generatedImage_${user.uid}`, url);
+			sessionStorage.setItem(`generatedImageId_${user.uid}`, generation_id);
 			fetchHistory();
 		} catch (err) {
 			handleErrorResponse(err, "Failed to generate design", setGenerationError);
@@ -183,10 +203,12 @@ function ImageGeneration() {
 			const response = await server.post("/image/generate", formData, {
 				headers: { "Content-Type": "multipart/form-data", "X-User-ID": user.uid }
 			});
-			const { url } = response.data;
+			const { url, generation_id } = response.data;
 
 			setGeneratedImage(url);
+			setGeneratedImageId(generation_id);
 			sessionStorage.setItem(`generatedImage_${user.uid}`, url);
+			sessionStorage.setItem(`generatedImageId_${user.uid}`, generation_id);
 			setSelectedStyles(styles);
 			fetchHistory();
 		} catch (err) {
@@ -384,6 +406,58 @@ function ImageGeneration() {
 	return (
 		<>
 			<Background />
+
+			{/* Lightbox Overlay */}
+			{lightboxUrl && (
+				<Box
+					position="fixed" top={0} left={0} right={0} bottom={0} zIndex={9999}
+					bg="blackAlpha.900"
+					display="flex" alignItems="center" justifyContent="center"
+					onClick={() => setLightboxUrl(null)}
+					cursor="zoom-out"
+				>
+					<Box onClick={(e) => e.stopPropagation()} display="flex" flexDirection="column" alignItems="center" gap={4}>
+						<Box position="relative">
+							<Image src={lightboxUrl} maxW="88vw" maxH="72vh" objectFit="contain"
+								borderRadius="12px" boxShadow="0 0 60px rgba(212,175,55,0.4)"
+								border="3px solid #D4AF37"
+							/>
+							<Button position="absolute" top="-14px" right="-14px"
+								borderRadius="full" size="sm" bg="#D4AF37" color="white"
+								_hover={{ bg: "#C9A961" }}
+								onClick={() => setLightboxUrl(null)}
+								minW="32px" h="32px" p={0} fontSize="md" fontWeight="700"
+							>
+								✕
+							</Button>
+						</Box>
+						{lightboxUrl !== generatedImage && (
+							<Button bg="linear-gradient(135deg, #D4AF37 0%, #C9A961 100%)"
+								color="white" px={8} py={6} fontSize="md" fontWeight="700"
+								borderRadius="md" leftIcon={<FaWandMagicSparkles />}
+								boxShadow="0 4px 20px rgba(0,0,0,0.5)"
+								_hover={{ bg: "linear-gradient(135deg, #C9A961 0%, #B8984D 100%)", transform: "translateY(-2px)" }}
+								transition="all 0.2s"
+								onClick={() => {
+									const selectedId = designHistory.find(d => d.url === lightboxUrl)?.id || null;
+									setGeneratedImage(lightboxUrl);
+									setGeneratedImageId(selectedId);
+									sessionStorage.setItem(`generatedImage_${user.uid}`, lightboxUrl);
+									if (selectedId) sessionStorage.setItem(`generatedImageId_${user.uid}`, selectedId);
+									saveFinalSelection(lightboxUrl, selectedId);
+									setLightboxUrl(null);
+									setTimeout(() => {
+										imagesSectionRef.current?.scrollIntoView({ behavior: "smooth", block: "start" });
+									}, 100);
+								}}
+							>
+								Use This Design
+							</Button>
+						)}
+					</Box>
+				</Box>
+			)}
+
 			<Container maxW="6xl" py={8}>
 				<Box bg="white" borderRadius="12px" p={8} boxShadow="xl">
 					<Heading size="2xl" textAlign="center" mb={2} color="#D4AF37">
@@ -446,8 +520,7 @@ function ImageGeneration() {
 
 						{showRegenerateInput && !isGenerating && (
 							<Box ref={regenerateInputRef}>
-								<RegenerateDesignInput
-									onRegenerate={handleRegenerateDesign}
+								<RegenerateDesignInput onRegenerate={handleRegenerateDesign}
 									onCancel={() => setShowRegenerateInput(false)}
 									currentStyles={selectedStyles}
 									availableStyles={availableStyles}
@@ -484,13 +557,13 @@ function ImageGeneration() {
 											Download your design and chat with our AI assistant to bring it to life
 										</Text>
 										<Flex direction="column" gap={3}>
-											<Button onClick={handleDownloadImage} size="lg" bg="green.500" color="white" w="100%" py={6} fontSize="md" fontWeight="700" borderRadius="md"
+											<Button onClick={() => { saveFinalSelection(generatedImage, generatedImageId); handleDownloadImage(); }} size="lg" bg="green.500" color="white" w="100%" py={6} fontSize="md" fontWeight="700" borderRadius="md"
 												leftIcon={<Text fontSize="xl">📥</Text>}
 												_hover={{ bg: "green.600", transform: "translateY(-2px)", boxShadow: "lg" }}
 												transition="all 0.2s">
 												Download Image
 											</Button>
-											<Button onClick={() => (window.location.href = "/lumen/chat")} size="lg" color="white" w="100%" py={6} fontSize="md"
+											<Button onClick={() => { saveFinalSelection(generatedImage, generatedImageId); window.location.href = "/lumen/chat"; }} size="lg" color="white" w="100%" py={6} fontSize="md"
 												bg="linear-gradient(135deg, #3B82F6 0%, #2563EB 100%)" fontWeight="700" borderRadius="md"
 												leftIcon={<Text fontSize="xl">💬</Text>}
 												_hover={{ bg: "linear-gradient(135deg, #2563EB 0%, #1D4ED8 100%)", transform: "translateY(-2px)", boxShadow: "lg" }}
@@ -553,18 +626,19 @@ function ImageGeneration() {
 									) : (
 										<Flex gap={4} flexWrap="wrap" justify="flex-start">
 											{designHistory.map((design) => (
-												<Box
-													key={design.id}
+												<Box key={design.id}
 													border={design.url === generatedImage ? "3px solid #D4AF37" : "2px solid #E2E8F0"}
 													borderRadius="10px" overflow="hidden" w={{ base: "100%", sm: "180px" }}
 													boxShadow={design.url === generatedImage ? "0 0 0 2px #D4AF37" : "sm"}
 													cursor="pointer" transition="all 0.2s"
 													_hover={{ transform: "translateY(-2px)", boxShadow: "md" }}
-													onClick={() => setGeneratedImage(design.url)}
+													onClick={() => setLightboxUrl(design.url)}
 												>
-													<Image
-														src={design.url} w="100%" h="140px" objectFit="cover"
-														fallback={<Box bg="gray.100" h="140px" display="flex" alignItems="center" justifyContent="center"><Text color="gray.400" fontSize="sm">Loading...</Text></Box>}
+													<Image src={design.url} w="100%" h="140px" objectFit="cover"
+														fallback={<Box bg="gray.100" h="140px" display="flex" alignItems="center" 
+														justifyContent="center">
+														<Text color="gray.400" fontSize="sm">Loading...</Text>
+														</Box>}
 													/>
 													<Box p={2} bg={design.url === generatedImage ? "#FFFDF7" : "white"}>
 														<Text fontSize="xs" color="gray.500" noOfLines={1}>
