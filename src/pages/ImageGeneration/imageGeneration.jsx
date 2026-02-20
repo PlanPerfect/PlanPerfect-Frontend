@@ -16,7 +16,6 @@ function ImageGeneration() {
 	const [originalImageUrl, setOriginalImageUrl] = useState(null);
 
 	const [isLoading, setIsLoading] = useState(true);
-	const [loadError, setLoadError] = useState(null);
 
 	const [isGenerating, setIsGenerating] = useState(false);
 	const [generatedImage, setGeneratedImage] = useState(null);
@@ -46,14 +45,13 @@ function ImageGeneration() {
 	useEffect(() => {
 		const fetchUserData = async () => {
 			if (!user) {
-				setLoadError("User not authenticated");
+				ShowToast("error", "User not authenticated", "Check console for more details.");
 				setIsLoading(false);
 				return;
 			}
 
 			try {
 				setIsLoading(true);
-				setLoadError(null);
 
 				const response = await server.get(`/existingHomeOwners/styleClassification/getPreferences/${user.uid}`);
 
@@ -72,17 +70,38 @@ function ImageGeneration() {
 					setOriginalImageUrl(data.original_image_url || null);
 					fetchHistory();
 				} else {
-					setLoadError("No preferences found. Please complete the setup first.");
+					ShowToast("info", "No preferences found. Please complete the setup first.");
 				}
 			} catch (err) {
-				const errDetail = err?.response?.data?.detail || err?.response?.data?.error;
-				if (errDetail) {
-					const clean = errDetail.replace(/^(UERROR|ERROR):\s*/, "");
-					setLoadError(clean);
-					console.error("Failed to fetch user data: ", clean);
+				if (err?.response?.data?.detail) {
+					if (err.response.data.detail.startsWith("UERROR: ")) {
+						const errorMessage = err.response.data.detail.substring("UERROR: ".length);
+						console.error("Failed to fetch user data: ", errorMessage);
+						ShowToast("error", errorMessage, "Check console for more details.");
+					} else if (err.response.data.detail.startsWith("ERROR: ")) {
+						const errorMessage = err.response.data.detail.substring("ERROR: ".length);
+						console.error("Failed to fetch user data: ", errorMessage);
+						ShowToast("error", errorMessage, "Check console for more details.");
+					} else {
+						console.error("Failed to fetch user data: ", err.response.data.detail);
+						ShowToast("error", "An unexpected error occurred", "Check console for more details.");
+					}
+				} else if (err?.response?.data?.error) {
+					if (err.response.data.error.startsWith("UERROR: ")) {
+						const errorMessage = err.response.data.error.substring("UERROR: ".length);
+						console.error("Failed to fetch user data: ", errorMessage);
+						ShowToast("error", errorMessage, "Check console for more details.");
+					} else if (err.response.data.error.startsWith("ERROR: ")) {
+						const errorMessage = err.response.data.error.substring("ERROR: ".length);
+						console.error("Failed to fetch user data: ", errorMessage);
+						ShowToast("error", errorMessage, "Check console for more details.");
+					} else {
+						console.error("Failed to fetch user data: ", err.response.data.error);
+						ShowToast("error", "An unexpected error occurred", "Check console for more details.");
+					}
 				} else {
 					console.error("Failed to fetch user data: ", err?.response);
-					setLoadError("An unexpected error occurred while fetching your data.");
+					ShowToast("error", "An unexpected error occurred", "Check console for more details.");
 				}
 			} finally {
 				setIsLoading(false);
@@ -101,12 +120,36 @@ function ImageGeneration() {
 	}, [generatedImage]);
 
 	const handleErrorResponse = (err, context, setError) => {
-		const errDetail = err?.response?.data?.detail || err?.response?.data?.error;
-		if (errDetail) {
-			const clean = errDetail.replace(/^(UERROR|ERROR):\s*/, "");
-			if (setError) setError(clean);
-			console.error(`${context}: `, clean);
-			ShowToast("error", clean, "Check console for more details.");
+		if (err?.response?.data?.detail) {
+			if (err.response.data.detail.startsWith("UERROR: ")) {
+				const errorMessage = err.response.data.detail.substring("UERROR: ".length);
+				if (setError) setError(errorMessage);
+				console.error(`${context}: `, errorMessage);
+				ShowToast("error", errorMessage, "Check console for more details.");
+			} else if (err.response.data.detail.startsWith("ERROR: ")) {
+				const errorMessage = err.response.data.detail.substring("ERROR: ".length);
+				if (setError) setError(errorMessage);
+				console.error(`${context}: `, errorMessage);
+				ShowToast("error", errorMessage, "Check console for more details.");
+			} else {
+				console.error(`${context}: `, err.response.data.detail);
+				ShowToast("error", "An unexpected error occurred", "Check console for more details.");
+			}
+		} else if (err?.response?.data?.error) {
+			if (err.response.data.error.startsWith("UERROR: ")) {
+				const errorMessage = err.response.data.error.substring("UERROR: ".length);
+				if (setError) setError(errorMessage);
+				console.error(`${context}: `, errorMessage);
+				ShowToast("error", errorMessage, "Check console for more details.");
+			} else if (err.response.data.error.startsWith("ERROR: ")) {
+				const errorMessage = err.response.data.error.substring("ERROR: ".length);
+				if (setError) setError(errorMessage);
+				console.error(`${context}: `, errorMessage);
+				ShowToast("error", errorMessage, "Check console for more details.");
+			} else {
+				console.error(`${context}: `, err.response.data.error);
+				ShowToast("error", "An unexpected error occurred", "Check console for more details.");
+			}
 		} else {
 			console.error(`${context}: `, err?.response);
 			ShowToast("error", "An unexpected error occurred", "Check console for more details.");
@@ -122,7 +165,36 @@ function ImageGeneration() {
 				setDesignHistory(response.data.designs || []);
 			}
 		} catch (err) {
-			console.error("Failed to fetch design history:", err);
+			if (err?.response?.data?.detail) {
+				if (err.response.data.detail.startsWith("UERROR: ")) {
+					const errorMessage = err.response.data.detail.substring("UERROR: ".length);
+					console.error("Failed to fetch design history: ", errorMessage);
+					ShowToast("error", errorMessage, "Check console for more details.");
+				} else if (err.response.data.detail.startsWith("ERROR: ")) {
+					const errorMessage = err.response.data.detail.substring("ERROR: ".length);
+					console.error("Failed to fetch design history: ", errorMessage);
+					ShowToast("error", errorMessage, "Check console for more details.");
+				} else {
+					console.error("Failed to fetch design history: ", err.response.data.detail);
+					ShowToast("error", "An unexpected error occurred", "Check console for more details.");
+				}
+			} else if (err?.response?.data?.error) {
+				if (err.response.data.error.startsWith("UERROR: ")) {
+					const errorMessage = err.response.data.error.substring("UERROR: ".length);
+					console.error("Failed to fetch design history: ", errorMessage);
+					ShowToast("error", errorMessage, "Check console for more details.");
+				} else if (err.response.data.error.startsWith("ERROR: ")) {
+					const errorMessage = err.response.data.error.substring("ERROR: ".length);
+					console.error("Failed to fetch design history: ", errorMessage);
+					ShowToast("error", errorMessage, "Check console for more details.");
+				} else {
+					console.error("Failed to fetch design history: ", err.response.data.error);
+					ShowToast("error", "An unexpected error occurred", "Check console for more details.");
+				}
+			} else {
+				console.error("Failed to fetch design history: ", err?.response);
+				ShowToast("error", "An unexpected error occurred", "Check console for more details.");
+			}
 		}
 	};
 
@@ -134,7 +206,36 @@ function ImageGeneration() {
 				headers: { "X-User-ID": user.uid }
 			});
 		} catch (err) {
-			console.error("Failed to save final selection:", err);
+			if (err?.response?.data?.detail) {
+				if (err.response.data.detail.startsWith("UERROR: ")) {
+					const errorMessage = err.response.data.detail.substring("UERROR: ".length);
+					console.error("Failed to save final selection: ", errorMessage);
+					ShowToast("error", errorMessage, "Check console for more details.");
+				} else if (err.response.data.detail.startsWith("ERROR: ")) {
+					const errorMessage = err.response.data.detail.substring("ERROR: ".length);
+					console.error("Failed to save final selection: ", errorMessage);
+					ShowToast("error", errorMessage, "Check console for more details.");
+				} else {
+					console.error("Failed to save final selection: ", err.response.data.detail);
+					ShowToast("error", "An unexpected error occurred", "Check console for more details.");
+				}
+			} else if (err?.response?.data?.error) {
+				if (err.response.data.error.startsWith("UERROR: ")) {
+					const errorMessage = err.response.data.error.substring("UERROR: ".length);
+					console.error("Failed to save final selection: ", errorMessage);
+					ShowToast("error", errorMessage, "Check console for more details.");
+				} else if (err.response.data.error.startsWith("ERROR: ")) {
+					const errorMessage = err.response.data.error.substring("ERROR: ".length);
+					console.error("Failed to save final selection: ", errorMessage);
+					ShowToast("error", errorMessage, "Check console for more details.");
+				} else {
+					console.error("Failed to save final selection: ", err.response.data.error);
+					ShowToast("error", "An unexpected error occurred", "Check console for more details.");
+				}
+			} else {
+				console.error("Failed to save final selection: ", err?.response);
+				ShowToast("error", "An unexpected error occurred", "Check console for more details.");
+			}
 		}
 	};
 
@@ -275,19 +376,6 @@ function ImageGeneration() {
 		);
 	}
 
-	if (loadError) {
-		return (
-			<>
-				<Background />
-				<Container maxW="6xl" py={8}>
-					<Box bg="red.50" border="2px solid" borderColor="red.400" borderRadius="12px" p={8} textAlign="center" boxShadow="xl">
-						<Text color="red.600" fontWeight="600" fontSize="xl">⚠️ {loadError}</Text>
-					</Box>
-				</Container>
-			</>
-		);
-	}
-
 	if (!generatedImage && preGenStep === "furniture") {
 		return (
 			<>
@@ -315,8 +403,7 @@ function ImageGeneration() {
 								</Flex>
 							</Box>
 						) : (
-							<FurnitureSelector
-								onConfirm={handleFurnitureConfirm}
+							<FurnitureSelector onConfirm={handleFurnitureConfirm}
 								onBack={() => setPreGenStep("preview")}
 							/>
 						)}
@@ -381,10 +468,8 @@ function ImageGeneration() {
 
 							{selectedStyles.length > 0 && (
 								<Flex justify="center" mt={4}>
-									<Button
-										onClick={() => setPreGenStep("furniture")}
-										size="xl" borderRadius="md"
-										bg="linear-gradient(135deg, #D4AF37 0%, #C9A961 100%)"
+									<Button onClick={() => setPreGenStep("furniture")}
+										size="xl" borderRadius="md" bg="linear-gradient(135deg, #D4AF37 0%, #C9A961 100%)"
 										color="white" px={16} py={7} fontSize="xl" fontWeight="700"
 										leftIcon={<FaWandMagicSparkles />}
 										_hover={{
@@ -533,11 +618,6 @@ function ImageGeneration() {
 													/>
 												</Box>
 											))}
-											{lastUsedFurnitureDescriptions.some(Boolean) && (
-												<Text fontSize="xs" color="gray.400" ml={1}>
-													{lastUsedFurnitureDescriptions.filter(Boolean).join(" · ")}
-												</Text>
-											)}
 										</Flex>
 									</Flex>
 								</Box>
@@ -613,8 +693,7 @@ function ImageGeneration() {
 										<Text fontSize="sm" color="gray.600" mb={6}>
 											No problem! Customize the design or try a different furniture selection to see new variations
 										</Text>
-										<Button
-											onClick={handleShowRegenerateInput} size="lg"
+										<Button onClick={handleShowRegenerateInput} size="lg"
 											bg="linear-gradient(135deg, #D4AF37 0%, #C9A961 100%)"
 											color="white" w="100%" py={6} fontSize="md" fontWeight="700" borderRadius="md"
 											leftIcon={<FaWandMagicSparkles />}
@@ -629,8 +708,7 @@ function ImageGeneration() {
 
 						{/* Design History Panel */}
 						<Box border="2px solid #D4AF37" borderRadius="12px" bg="white" boxShadow="md" overflow="hidden">
-							<Flex
-								align="center" justify="space-between"
+							<Flex align="center" justify="space-between"
 								p={5} cursor="pointer" bg="#FFFDF7"
 								onClick={() => {
 									if (!showHistory && designHistory.length === 0) fetchHistory();
