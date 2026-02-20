@@ -772,22 +772,39 @@ function AgentPage() {
 		}
 	};
 
-	const formatModelName = modelString => {
-		const modelName = modelString.split("/")[1] || modelString;
+	const formatModelName = (modelString = "") => {
+		const normalized = String(modelString).trim();
+		if (!normalized) return "";
 
-		if (modelName.includes("llama")) {
-			const match = modelName.match(/llama-(\d+\.\d+)-(\d+b)/i);
-			if (match) {
-				return `Llama ${match[1]} ${match[2].toUpperCase()}`;
-			}
-		} else if (modelName.includes("gemini")) {
-			const match = modelName.match(/gemini-(\d+\.\d+)-(\w+)/i);
-			if (match) {
-				return `Gemini ${match[1]} ${match[2].charAt(0).toUpperCase() + match[2].slice(1)}`;
-			}
+		const segments = normalized.split("/").filter(Boolean);
+		const modelName = segments[segments.length - 1] || normalized;
+		const hasOpenAIPrefix = segments.slice(0, -1).some((seg) => seg.toLowerCase() === "openai");
+
+		const llamaMatch = modelName.match(/llama-(\d+(?:\.\d+)?)-(\d+b)/i);
+		if (llamaMatch) {
+			return `Llama ${llamaMatch[1]} ${llamaMatch[2].toUpperCase()}`;
 		}
 
-		return modelName.charAt(0).toUpperCase() + modelName.slice(1);
+		const geminiMatch = modelName.match(/gemini-(\d+(?:\.\d+)?)-([a-z0-9-]+)/i);
+		if (geminiMatch) {
+			const geminiTier = geminiMatch[2]
+				.split("-")
+				.map((part) => part.charAt(0).toUpperCase() + part.slice(1))
+				.join(" ");
+			return `Gemini ${geminiMatch[1]} ${geminiTier}`;
+		}
+
+		const gptOssMatch = modelName.match(/gpt-oss-(\d+b)/i);
+		if (gptOssMatch) {
+			const display = `GPT-OSS ${gptOssMatch[1].toUpperCase()}`;
+			return hasOpenAIPrefix ? `OpenAI ${display}` : display;
+		}
+
+		const prettified = modelName
+			.replace(/[-_]+/g, " ")
+			.replace(/\b\w/g, (char) => char.toUpperCase());
+
+		return hasOpenAIPrefix ? `OpenAI ${prettified}` : prettified;
 	};
 
 	const renderOutputs = useCallback(() => {
