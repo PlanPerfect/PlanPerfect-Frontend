@@ -1,132 +1,76 @@
-import { Box, Flex, Heading, Text, Button, Textarea, VStack } from "@chakra-ui/react";
-import { FaWandMagicSparkles, FaPalette } from "react-icons/fa6";
+import { Box, Flex, Heading, Text, Button, Textarea, VStack, Image } from "@chakra-ui/react";
+import { FaWandMagicSparkles } from "react-icons/fa6";
+import { FaCouch } from "react-icons/fa";
 import { useState } from "react";
+import FurnitureSelector from "@/components/existingHomeOwner/FurnitureSelector";
 
 function RegenerateDesignInput({ 
 	onRegenerate, 
 	onCancel, 
 	currentStyles = [],
-	availableStyles = [],
-	isLoading = false 
+	isLoading = false,
+	initialFurnitureUrls = [],
+	initialFurnitureDescriptions = []
 }) {
 	const [regeneratePrompt, setRegeneratePrompt] = useState("");
-	// Initialize with the first current style (since we only allow one)
-	const [selectedStyles, setSelectedStyles] = useState(currentStyles.length > 0 ? [currentStyles[0]] : []);
 	const [error, setError] = useState("");
+	const [showFurnitureSelector, setShowFurnitureSelector] = useState(false);
+	const [selectedFurnitureUrls, setSelectedFurnitureUrls] = useState(initialFurnitureUrls);
+	const [selectedFurnitureDescriptions, setSelectedFurnitureDescriptions] = useState(initialFurnitureDescriptions);
 
-	// Toggle style selection - only allow one at a time
-	const handleStyleToggle = (style) => {
-		setSelectedStyles(prev => {
-			if (prev.includes(style)) {
-				// Deselect if clicking the same style
-				return [];
-			} else {
-				// Select new style (replace any existing selection)
-				return [style];
-			}
-		});
-		setError(""); // Clear error when user makes changes
-	};
-
-	// Handle regenerate button click
 	const handleRegenerate = () => {
-		// Validate that at least something has changed
-		if (!regeneratePrompt.trim() && selectedStyles.length === 0) {
-			setError("Please either enter a prompt or select a design style");
-			return;
-		}
-
-		// Call parent's regenerate handler
 		onRegenerate({
 			prompt: regeneratePrompt.trim(),
-			styles: selectedStyles
+			styles: currentStyles,
+			furnitureUrls: selectedFurnitureUrls,
+			furnitureDescriptions: selectedFurnitureDescriptions
 		});
 	};
 
-	// Check if anything has changed
-	const hasChanges = regeneratePrompt.trim() || 
-		JSON.stringify(selectedStyles.sort()) !== JSON.stringify(currentStyles.sort());
+	const handleFurnitureConfirm = ({ urls, descriptions }) => {
+		setSelectedFurnitureUrls(urls);
+		setSelectedFurnitureDescriptions(descriptions);
+		setShowFurnitureSelector(false);
+	};
+
+	const handleRemoveFurniture = (urlToRemove) => {
+		const idx = selectedFurnitureUrls.indexOf(urlToRemove);
+		setSelectedFurnitureUrls((prev) => prev.filter((u) => u !== urlToRemove));
+		setSelectedFurnitureDescriptions((prev) => prev.filter((_, i) => i !== idx));
+	};
+
+	if (showFurnitureSelector) {
+		return (
+			<FurnitureSelector
+				onConfirm={handleFurnitureConfirm}
+				onBack={() => setShowFurnitureSelector(false)}
+				confirmLabel="Confirm"
+			/>
+		);
+	}
+
+	const hasFurniture = selectedFurnitureUrls.length > 0;
 
 	return (
 		<Box border="2px solid #D4AF37" borderRadius="12px" p={6} bg="#FFFDF7" boxShadow="md">
 			<VStack spacing={8} align="stretch">
-				{/* Header */}
 				<Box textAlign="center">
 					<Flex align="center" justify="center" gap={2} mb={2}>
-						<FaPalette color="#D4AF37" size={24} />
+						<FaWandMagicSparkles color="#D4AF37" size={24} />
 						<Heading size="lg" color="#D4AF37">
 							Customize Your Design
 						</Heading>
 					</Flex>
 					<Text color="gray.600" fontSize="md">
-						Change the design styles or add custom instructions
-					</Text>
-				</Box>
-
-				{/* Style Selection Section */}
-				<Box>
-					<Flex align="center" gap={2} mb={3} justify="center">
-						<FaPalette color="#D4AF37" size={20} />
-						<Heading size="md" color="gray.700">
-							Design Themes
-						</Heading>
-					</Flex>
-					<Text fontSize="sm" color="gray.600" mb={5} textAlign="center">
-						Select one design style for your space
-					</Text>
-					
-					<Flex gap={3} flexWrap="wrap" justify="center">
-						{availableStyles.map((style) => {
-							const isSelected = selectedStyles.includes(style);
-							return (
-								<Button key={style} onClick={() => handleStyleToggle(style)}
-									size="md" bg={isSelected ? "#D4AF37" : "white"}
-									color={isSelected ? "white" : "#8B7355"}
-									border="2px solid"
-									borderColor={isSelected ? "#D4AF37" : "#E2E8F0"}
-									px={6} py={3} borderRadius="full"
-									fontSize="md" fontWeight="600"
-									_hover={{
-										bg: isSelected ? "#C9A961" : "#F4E5B2",
-										borderColor: "#D4AF37",
-										transform: "translateY(-2px)",
-										boxShadow: "md"
-									}}
-									transition="all 0.2s"
-								>
-									{style}
-								</Button>
-							);
-						})}
-					</Flex>
-				</Box>
-
-				{/* Divider */}
-				<Flex justify="center" align="center" position="relative" py={3}>
-					<Box position="absolute" left="0" right="0" h="1px" bg="gray.300"/>
-					<Box bg="#FFFDF7" px={4} position="relative"zIndex={1}>
-						<Text color="gray.500" fontSize="sm" fontWeight="600">
-							AND/OR
-						</Text>
-					</Box>
-				</Flex>
-
-				{/* Custom Prompt Section */}
-				<Box>
-					<Flex align="center" gap={2} mb={3} justify="center">
-						<FaWandMagicSparkles color="#D4AF37" size={20} />
-						<Heading size="md" color="gray.700">
-							Custom Instructions
-						</Heading>
-					</Flex>
-					<Text fontSize="sm" color="gray.600" mb={5} textAlign="center">
 						Describe specific changes you'd like to see
 					</Text>
-					
+				</Box>
+
+				<Box>
 					<Textarea value={regeneratePrompt}
 						onChange={(e) => {
 							setRegeneratePrompt(e.target.value);
-							setError(""); // Clear error on input
+							setError("");
 						}}
 						placeholder="E.g., Make the walls darker blue, add more plants, change the sofa to gray, include warmer lighting..."
 						size="lg" minH="120px" borderColor="#D4AF37"
@@ -136,7 +80,75 @@ function RegenerateDesignInput({
 					/>
 				</Box>
 
-				{/* Error Display */}
+				{/* Furniture Selection Box */}
+				<Box border="1px solid #F4E5B2" borderRadius="10px" p={4} bg="white">
+					<Flex align="center" justify="space-between" flexWrap="wrap" gap={3} mb={hasFurniture ? 4 : 0}>
+						<Box>
+							<Text fontWeight="600" color="gray.700" fontSize="md">Furniture Selection</Text>
+							<Text fontSize="sm" color="gray.500">
+								{hasFurniture
+									? `${selectedFurnitureUrls.length} item${selectedFurnitureUrls.length > 1 ? "s" : ""} selected`
+									: "No furniture selected"}
+							</Text>
+						</Box>
+						<Button
+							onClick={() => setShowFurnitureSelector(true)}
+							size="md" variant="outline"
+							borderColor="#D4AF37" color="#D4AF37"
+							leftIcon={<FaCouch />}
+							fontWeight="600" borderRadius="md"
+							_hover={{ bg: "#FFFDF7", borderColor: "#C9A961", color: "#C9A961" }}
+							isDisabled={isLoading}
+						>
+							{hasFurniture ? "Change Furniture" : "Select Furniture"}
+						</Button>
+					</Flex>
+
+					{/* Furniture Preview Strip */}
+					{hasFurniture && (
+						<Flex gap={3} flexWrap="wrap">
+							{selectedFurnitureUrls.map((url, idx) => (
+								<Box key={url} position="relative" borderRadius="8px"
+									overflow="visible" border="2px solid #D4AF37"
+									boxShadow="sm" w="100px" h="100px"
+									flexShrink={0}
+								>
+									<Image src={url} alt={selectedFurnitureDescriptions[idx] || `Furniture ${idx + 1}`}
+										w="100%" h="100%" objectFit="cover" borderRadius="6px"
+									/>
+
+									{/* Tooltip label */}
+									{selectedFurnitureDescriptions[idx] && (
+										<Box position="absolute" bottom="-22px" left="50%"
+											transform="translateX(-50%)" bg="gray.700" color="white"
+											fontSize="9px" fontWeight="600" px={1.5} py={0.5}
+											borderRadius="4px" whiteSpace="nowrap" maxW="90px"
+											overflow="hidden" textOverflow="ellipsis"
+											pointerEvents="none"
+										>
+											{selectedFurnitureDescriptions[idx]}
+										</Box>
+									)}
+									{/* Remove button */}
+									<Button size="xs" position="absolute" top="-10px" 	 right="-10px"
+										borderRadius="full" bg="red.400" color="white" minW="22px"
+										h="22px" p={0} fontSize="10px" fontWeight="700" lineHeight="1"
+										_hover={{ bg: "red.500" }}
+										onClick={(e) => {
+											e.stopPropagation();
+											handleRemoveFurniture(url);
+										}}
+										isDisabled={isLoading}
+										aria-label="Remove furniture"
+									>
+										✕
+									</Button>
+								</Box>
+							))}
+						</Flex>
+					)}
+				</Box>
+
 				{error && (
 					<Box bg="red.50" border="1px solid" borderColor="red.300"
 						borderRadius="md" p={3} textAlign="center"
@@ -147,12 +159,11 @@ function RegenerateDesignInput({
 					</Box>
 				)}
 
-				{/* Action Buttons */}
-				<Flex gap={3} justify="center" flexWrap="wrap" pt={2}>
+				<Flex gap={3} justify="center" flexWrap="wrap" pt={hasFurniture ? 4 : 2}>
 					<Button onClick={handleRegenerate} size="lg"
 						bg="linear-gradient(135deg, #D4AF37 0%, #C9A961 100%)"
-						color="white" px={8} py={6} fontSize="md" 
-                        fontWeight="700" borderRadius="md"
+						color="white" px={8} py={6} fontSize="md"
+						fontWeight="700" borderRadius="md"
 						leftIcon={<FaWandMagicSparkles />}
 						_hover={{ 
 							bg: "linear-gradient(135deg, #C9A961 0%, #B8984D 100%)",
@@ -160,7 +171,7 @@ function RegenerateDesignInput({
 							boxShadow: "lg"
 						}}
 						transition="all 0.2s"
-						isDisabled={!hasChanges || isLoading}
+						isDisabled={isLoading}
 						isLoading={isLoading}
 						loadingText="Generating..."
 					>

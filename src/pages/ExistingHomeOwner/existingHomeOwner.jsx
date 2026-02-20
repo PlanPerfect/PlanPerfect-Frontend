@@ -1,7 +1,7 @@
 import { Box, Flex, Heading, Text, Button, Steps, useSteps, Container, Stack } from "@chakra-ui/react";
 import { BsPalette2 } from "react-icons/bs";
 import { RiFileUploadFill } from "react-icons/ri";
-import { FaCheck, FaEye } from "react-icons/fa6";
+import { FaCheck, FaEye, FaMagnifyingGlass } from "react-icons/fa6";
 import { FaPalette } from "react-icons/fa";
 import PropertyPreferences from "@/components/existingHomeOwner/propertyPreference";
 import UploadRoomImage from "@/components/existingHomeOwner/uploadRoomImage";
@@ -23,7 +23,6 @@ function ExistingHomeOwner() {
 		count: 5
 	});
 
-	// Handler: Analysis Complete
 	const handleAnalysisComplete = (results) => {
 		setAnalysisResults(results);
 		setUploadedImageUrl(results.image_url);
@@ -51,7 +50,6 @@ function ExistingHomeOwner() {
 					<Text fontSize="lg" color="gray.600">
 						Your image has been uploaded and analyzed successfully. Click Next to see the results.
 					</Text>
-					{/* Debug Info - Remove in production */}
 					<Box mt={4} p={4} bg="gray.100" borderRadius="md" fontSize="sm" textAlign="left">
 						<Text fontWeight="bold">Debug Info:</Text>
 						<Text>Image URL: {uploadedImageUrl}</Text>
@@ -89,7 +87,7 @@ function ExistingHomeOwner() {
 		},
 		{
 			title: "Preview",
-			icon: <FaCheck />,
+			icon: <FaMagnifyingGlass />,
 			content: (
 				<PreviewSelections
 					preferences={preferences}
@@ -103,18 +101,15 @@ function ExistingHomeOwner() {
 		}
 	];
 
-	// Navigation Logic
 	const isNextDisabled =
 		(steps.value === 0 && !preferences) ||
 		(steps.value === 1 && !analysisResults) ||
 		(steps.value === 3 && selectedStyles.length === 0);
 
-	// Hide default navigation buttons during upload/analysis and on the Preview step
 	const showNavigationButtons = !(steps.value === 1 && uploadedRoomImage && !analysisResults) && steps.value !== 4;
 
 	return (
 		<>
-			{/* Background */}
 			<Box
 				style={{
 					position: "fixed",
@@ -130,7 +125,6 @@ function ExistingHomeOwner() {
 				}}
 			/>
 
-			{/* Hero Section */}
 			<Box h="100vh" position="relative">
 				<Box h="100%">
 					<Container maxW="6xl" py={24}>
@@ -159,7 +153,6 @@ function ExistingHomeOwner() {
 				</Box>
 			</Box>
 
-			{/* Action Steps */}
 			<Box pb={20} px={8}>
 				<Steps.RootProvider value={steps} colorPalette="yellow">
 					<Box w="75%" h="150px" mb={-12} mt={-20} mx="auto"

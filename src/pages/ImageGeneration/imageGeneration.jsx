@@ -6,6 +6,7 @@ import { useAuth } from "../../contexts/AuthContext";
 import ShowToast from "@/Extensions/ShowToast";
 import server from "../../../networking";
 import RegenerateDesignInput from "@/components/existingHomeOwner/RegenerateDesignInput";
+import FurnitureSelector from "@/components/existingHomeOwner/FurnitureSelector";
 
 function ImageGeneration() {
 	const { user } = useAuth();
@@ -18,37 +19,30 @@ function ImageGeneration() {
 	const [loadError, setLoadError] = useState(null);
 
 	const [isGenerating, setIsGenerating] = useState(false);
-	// Eagerly read sessionStorage so results view renders immediately on back-navigation,
-	// before the async fetchUserData even completes
 	const [generatedImage, setGeneratedImage] = useState(null);
+	const [generatedImageId, setGeneratedImageId] = useState(null);
 	const [generationError, setGenerationError] = useState(null);
 	const [isRestoredImage, setIsRestoredImage] = useState(false);
 
-	// State for regeneration UI
+	const [preGenStep, setPreGenStep] = useState("preview");
+
+	const [selectedFurnitureUrls, setSelectedFurnitureUrls] = useState([]);
+	const [selectedFurnitureDescriptions, setSelectedFurnitureDescriptions] = useState([]);
+
+	const [lastUsedFurnitureUrls, setLastUsedFurnitureUrls] = useState([]);
+	const [lastUsedFurnitureDescriptions, setLastUsedFurnitureDescriptions] = useState([]);
+
 	const [showRegenerateInput, setShowRegenerateInput] = useState(false);
 
-	// Ref for scrolling to images section
-	const imagesSectionRef = useRef(null);
+	const [designHistory, setDesignHistory] = useState([]);
+	const [showHistory, setShowHistory] = useState(false);
+	const [lightboxUrl, setLightboxUrl] = useState(null);
 
-	// Ref for scrolling to regenerate input section
+	const imagesSectionRef = useRef(null);
 	const regenerateInputRef = useRef(null);
 
-	// Define available styles (matching styleSelector.jsx for consistency)
 	const availableStyles = ["Boutique", "Classical", "Contemporary", "Country", "Electic", "Industrial", "Japanese", "Luxury", "Minimalist", "Modern", "Persian", "Scandinavian", "Vintage", "Wabi Sabi", "Japandi", "Peranakan", "Boho"];
 
-	// Eagerly restore generated image from sessionStorage
-	// Runs as soon as user is available, before fetchUserData completes,
-	// so the results view renders immediately on back-navigation
-	useEffect(() => {
-		if (!user) return;
-		const savedImage = sessionStorage.getItem(`generatedImage_${user.uid}`);
-		if (savedImage) {
-			setIsRestoredImage(true);
-			setGeneratedImage(savedImage);
-		}
-	}, [user]);
-
-	// Fetch data from database on mount
 	useEffect(() => {
 		const fetchUserData = async () => {
 			if (!user) {
@@ -61,13 +55,11 @@ function ImageGeneration() {
 				setIsLoading(true);
 				setLoadError(null);
 
-				// Fetch preferences from database
 				const response = await server.get(`/existingHomeOwners/styleClassification/getPreferences/${user.uid}`);
 
 				if (response.data.success && response.data.result) {
 					const data = response.data.result;
 
-					// Set preferences
 					setPreferences({
 						propertyType: data.property_type,
 						unitType: data.unit_type,
@@ -75,53 +67,22 @@ function ImageGeneration() {
 						budgetMax: data.budget_max
 					});
 
-					// Set analysis results (detected_style comes from Preferences node)
-					setAnalysisResults({
-						detected_style: data.detected_style
-					});
-
-					// Set selected styles
+					setAnalysisResults({ detected_style: data.detected_style });
 					setSelectedStyles(data.selected_styles || []);
-
-					// Set original image URL (fetched from Style Analysis node by backend)
 					setOriginalImageUrl(data.original_image_url || null);
+					fetchHistory();
 				} else {
 					setLoadError("No preferences found. Please complete the setup first.");
 				}
 			} catch (err) {
-				if (err?.response?.data?.detail) {
-					if (err.response.data.detail.startsWith("UERROR: ")) {
-						const errorMessage = err.response.data.detail.substring("UERROR: ".length);
-						setLoadError(errorMessage);
-						console.error("Failed to fetch user data: ", errorMessage);
-						ShowToast("error", errorMessage, "Check console for more details.");
-					} else if (err.response.data.detail.startsWith("ERROR: ")) {
-						const errorMessage = err.response.data.detail.substring("ERROR: ".length);
-						setLoadError(errorMessage);
-						console.error("Failed to fetch user data: ", errorMessage);
-						ShowToast("error", errorMessage, "Check console for more details.");
-					} else {
-						console.error("Failed to fetch user data: ", err.response.data.detail);
-						ShowToast("error", "Failed to fetch user data", "Check console for more details.");
-					}
-				} else if (err?.response?.data?.error) {
-					if (err.response.data.error.startsWith("UERROR: ")) {
-						const errorMessage = err.response.data.error.substring("UERROR: ".length);
-						setLoadError(errorMessage);
-						console.error("Failed to fetch user data: ", errorMessage);
-						ShowToast("error", errorMessage, "Check console for more details.");
-					} else if (err.response.data.error.startsWith("ERROR: ")) {
-						const errorMessage = err.response.data.error.substring("ERROR: ".length);
-						setLoadError(errorMessage);
-						console.error("Failed to fetch user data: ", errorMessage);
-						ShowToast("error", errorMessage, "Check console for more details.");
-					} else {
-						console.error("Failed to fetch user data: ", err.response.data.error);
-						ShowToast("error", "Failed to fetch user data", "Check console for more details.");
-					}
+				const errDetail = err?.response?.data?.detail || err?.response?.data?.error;
+				if (errDetail) {
+					const clean = errDetail.replace(/^(UERROR|ERROR):\s*/, "");
+					setLoadError(clean);
+					console.error("Failed to fetch user data: ", clean);
 				} else {
 					console.error("Failed to fetch user data: ", err?.response);
-					ShowToast("error", "An unexpected error occurred", "Check console for more details.");
+					setLoadError("An unexpected error occurred while fetching your data.");
 				}
 			} finally {
 				setIsLoading(false);
@@ -131,147 +92,134 @@ function ImageGeneration() {
 		fetchUserData();
 	}, [user]);
 
-	// Auto-scroll to images when generated
 	useEffect(() => {
 		if (generatedImage && imagesSectionRef.current && !isRestoredImage) {
 			setTimeout(() => {
-				imagesSectionRef.current.scrollIntoView({
-					behavior: "smooth",
-					block: "start"
-				});
+				imagesSectionRef.current.scrollIntoView({ behavior: "smooth", block: "start" });
 			}, 100);
 		}
 	}, [generatedImage]);
 
-	// Generate design handler (initial generation)
-	const handleGenerateDesign = async () => {
+	const handleErrorResponse = (err, context, setError) => {
+		const errDetail = err?.response?.data?.detail || err?.response?.data?.error;
+		if (errDetail) {
+			const clean = errDetail.replace(/^(UERROR|ERROR):\s*/, "");
+			if (setError) setError(clean);
+			console.error(`${context}: `, clean);
+			ShowToast("error", clean, "Check console for more details.");
+		} else {
+			console.error(`${context}: `, err?.response);
+			ShowToast("error", "An unexpected error occurred", "Check console for more details.");
+		}
+	};
+
+	const fetchHistory = async () => {
+		try {
+			const response = await server.get("/image/history", {
+				headers: { "X-User-ID": user.uid }
+			});
+			if (response.data.success) {
+				setDesignHistory(response.data.designs || []);
+			}
+		} catch (err) {
+			console.error("Failed to fetch design history:", err);
+		}
+	};
+
+	const saveFinalSelection = async (imageUrl, generationId) => {
+		console.log("[saveFinalSelection] id:", generationId, "url:", imageUrl);
+		if (!generationId) return;
+		try {
+			await server.post("/image/selectFinal", { generation_id: generationId, image_url: imageUrl }, {
+				headers: { "X-User-ID": user.uid }
+			});
+		} catch (err) {
+			console.error("Failed to save final selection:", err);
+		}
+	};
+
+	const handleFurnitureConfirm = ({ urls, descriptions }) => {
+		setSelectedFurnitureUrls(urls);
+		setSelectedFurnitureDescriptions(descriptions);
+		handleGenerateDesign(urls, descriptions);
+	};
+
+	const buildFormData = (styles, furnitureUrls = [], furnitureDescriptions = [], userPrompt = null) => {
+		const formData = new FormData();
+		formData.append("styles", styles.join(", "));
+		if (furnitureUrls?.length > 0)
+			formData.append("furniture_urls", JSON.stringify(furnitureUrls));
+		if (furnitureDescriptions?.length > 0)
+			formData.append("furniture_descriptions", JSON.stringify(furnitureDescriptions));
+		if (userPrompt)
+			formData.append("user_prompt", userPrompt);
+		return formData;
+	};
+
+	const handleGenerateDesign = async (furnitureUrls = [], furnitureDescriptions = []) => {
 		setIsGenerating(true);
 		setGenerationError(null);
 		setIsRestoredImage(false);
 
 		try {
-			const formData = new FormData();
-			formData.append("styles", selectedStyles.join(", "));
+			const formData = buildFormData(selectedStyles, furnitureUrls, furnitureDescriptions);
 
 			const response = await server.post("/image/generate", formData, {
-				headers: {
-					"Content-Type": "multipart/form-data",
-					"X-User-ID": user.uid
-				}
+				headers: { "Content-Type": "multipart/form-data", "X-User-ID": user.uid }
 			});
-			const { url, file_id, filename } = response.data;
+			const { url, generation_id } = response.data;
 
 			setGeneratedImage(url);
+			setGeneratedImageId(generation_id);
+			setLastUsedFurnitureUrls(furnitureUrls);
+			setLastUsedFurnitureDescriptions(furnitureDescriptions);
 			sessionStorage.setItem(`generatedImage_${user.uid}`, url);
+			sessionStorage.setItem(`generatedImageId_${user.uid}`, generation_id);
+			sessionStorage.setItem(`furnitureUrls_${user.uid}`, JSON.stringify(furnitureUrls));
+			sessionStorage.setItem(`furnitureDescs_${user.uid}`, JSON.stringify(furnitureDescriptions));
+			fetchHistory();
 		} catch (err) {
-			if (err?.response?.data?.detail) {
-				if (err.response.data.detail.startsWith("UERROR: ")) {
-					const errorMessage = err.response.data.detail.substring("UERROR: ".length);
-					setGenerationError(errorMessage);
-					console.error("Failed to generate design: ", errorMessage);
-					ShowToast("error", errorMessage, "Check console for more details.");
-				} else if (err.response.data.detail.startsWith("ERROR: ")) {
-					const errorMessage = err.response.data.detail.substring("ERROR: ".length);
-					setGenerationError(errorMessage);
-					console.error("Failed to generate design: ", errorMessage);
-					ShowToast("error", errorMessage, "Check console for more details.");
-				} else {
-					console.error("Failed to generate design: ", err.response.data.detail);
-					ShowToast("error", "Failed to generate design", "Check console for more details.");
-				}
-			} else if (err?.response?.data?.error) {
-				if (err.response.data.error.startsWith("UERROR: ")) {
-					const errorMessage = err.response.data.error.substring("UERROR: ".length);
-					setGenerationError(errorMessage);
-					console.error("Failed to generate design: ", errorMessage);
-					ShowToast("error", errorMessage, "Check console for more details.");
-				} else if (err.response.data.error.startsWith("ERROR: ")) {
-					const errorMessage = err.response.data.error.substring("ERROR: ".length);
-					setGenerationError(errorMessage);
-					console.error("Failed to generate design: ", errorMessage);
-					ShowToast("error", errorMessage, "Check console for more details.");
-				} else {
-					console.error("Failed to generate design: ", err.response.data.error);
-					ShowToast("error", "Failed to generate design", "Check console for more details.");
-				}
-			} else {
-				console.error("Failed to generate design: ", err?.response);
-				ShowToast("error", "An unexpected error occurred", "Check console for more details.");
-			}
+			handleErrorResponse(err, "Failed to generate design", setGenerationError);
 		} finally {
 			setIsGenerating(false);
 		}
 	};
 
-	// Regenerate with custom options handler
-	const handleRegenerateDesign = async ({ prompt, styles }) => {
+	const handleRegenerateDesign = async ({ prompt, styles, furnitureUrls = [], furnitureDescriptions = [] }) => {
 		setIsGenerating(true);
 		setGenerationError(null);
 		setIsRestoredImage(false);
-		setShowRegenerateInput(false); // Hide input while generating
+		setShowRegenerateInput(false);
+
+		const urls = furnitureUrls.length > 0 ? furnitureUrls : selectedFurnitureUrls;
+		const descs = furnitureDescriptions.length > 0 ? furnitureDescriptions : selectedFurnitureDescriptions;
 
 		try {
-			const formData = new FormData();
-			formData.append("styles", styles.join(", "));
-
-			// Only add prompt if it exists
-			if (prompt) {
-				formData.append("user_prompt", prompt);
-			}
+			const formData = buildFormData(styles, urls, descs, prompt || null);
 
 			const response = await server.post("/image/generate", formData, {
-				headers: {
-					"Content-Type": "multipart/form-data",
-					"X-User-ID": user.uid
-				}
+				headers: { "Content-Type": "multipart/form-data", "X-User-ID": user.uid }
 			});
-			const { url, file_id, filename } = response.data;
+			const { url, generation_id } = response.data;
 
 			setGeneratedImage(url);
+			setGeneratedImageId(generation_id);
+			setLastUsedFurnitureUrls(urls);
+			setLastUsedFurnitureDescriptions(descs);
 			sessionStorage.setItem(`generatedImage_${user.uid}`, url);
-			setSelectedStyles(styles); // Update the selected styles
+			sessionStorage.setItem(`generatedImageId_${user.uid}`, generation_id);
+			sessionStorage.setItem(`furnitureUrls_${user.uid}`, JSON.stringify(urls));
+			sessionStorage.setItem(`furnitureDescs_${user.uid}`, JSON.stringify(descs));
+			setSelectedStyles(styles);
+			fetchHistory();
 		} catch (err) {
-			setShowRegenerateInput(true); // Re-show input if there's an error
-			if (err?.response?.data?.detail) {
-				if (err.response.data.detail.startsWith("UERROR: ")) {
-					const errorMessage = err.response.data.detail.substring("UERROR: ".length);
-					setGenerationError(errorMessage);
-					console.error("Failed to re-generate design: ", errorMessage);
-					ShowToast("error", errorMessage, "Check console for more details.");
-				} else if (err.response.data.detail.startsWith("ERROR: ")) {
-					const errorMessage = err.response.data.detail.substring("ERROR: ".length);
-					setGenerationError(errorMessage);
-					console.error("Failed to re-generate design: ", errorMessage);
-					ShowToast("error", errorMessage, "Check console for more details.");
-				} else {
-					console.error("Failed to re-generate design: ", err.response.data.detail);
-					ShowToast("error", "Failed to re-generate design", "Check console for more details.");
-				}
-			} else if (err?.response?.data?.error) {
-				if (err.response.data.error.startsWith("UERROR: ")) {
-					const errorMessage = err.response.data.error.substring("UERROR: ".length);
-					setGenerationError(errorMessage);
-					console.error("Failed to re-generate design: ", errorMessage);
-					ShowToast("error", errorMessage, "Check console for more details.");
-				} else if (err.response.data.error.startsWith("ERROR: ")) {
-					const errorMessage = err.response.data.error.substring("ERROR: ".length);
-					setGenerationError(errorMessage);
-					console.error("Failed to re-generate design: ", errorMessage);
-					ShowToast("error", errorMessage, "Check console for more details.");
-				} else {
-					console.error("Failed to re-generate design: ", err.response.data.error);
-					ShowToast("error", "Failed to re-generate design", "Check console for more details.");
-				}
-			} else {
-				console.error("Failed to re-generate design: ", err?.response);
-				ShowToast("error", "An unexpected error occurred", "Check console for more details.");
-			}
+			setShowRegenerateInput(true);
+			handleErrorResponse(err, "Failed to re-generate design", setGenerationError);
 		} finally {
 			setIsGenerating(false);
 		}
 	};
 
-	// Toggle regenerate input visibility
 	const handleShowRegenerateInput = () => {
 		const isOpening = !showRegenerateInput;
 		setShowRegenerateInput(isOpening);
@@ -279,124 +227,109 @@ function ImageGeneration() {
 
 		if (isOpening) {
 			setTimeout(() => {
-				regenerateInputRef.current?.scrollIntoView({
-					behavior: "smooth",
-					block: "start"
-				});
+				regenerateInputRef.current?.scrollIntoView({ behavior: "smooth", block: "start" });
 			}, 100);
 		}
 	};
 
-	// Download image handler
 	const handleDownloadImage = async () => {
 		try {
-			// Fetch the image as a blob
 			const response = await fetch(generatedImage);
 			const blob = await response.blob();
-
-			// Create a temporary URL for the blob
 			const blobUrl = window.URL.createObjectURL(blob);
-
-			// Create a temporary anchor element and trigger download
 			const link = document.createElement("a");
 			link.href = blobUrl;
 			link.download = `generated-design-${Date.now()}.png`;
 			document.body.appendChild(link);
 			link.click();
-
-			// Clean up
 			document.body.removeChild(link);
 			window.URL.revokeObjectURL(blobUrl);
 		} catch (error) {
 			console.error("Error downloading image:", error);
-			// Fallback: open image in new tab
 			window.open(generatedImage, "_blank");
 		}
 	};
 
-	// Loading state
+	const Background = () => (
+		<Box
+			style={{
+				position: "fixed", top: 0, left: 0, right: 0, bottom: 0,
+				backgroundImage: `linear-gradient(rgba(0,0,0,0.5), rgba(0,0,0,0.5)),url('/newHomeOwnerHero.png')`,
+				backgroundSize: "cover", backgroundPosition: "center",
+				backgroundRepeat: "no-repeat", zIndex: -1
+			}}
+		/>
+	);
+
 	if (isLoading) {
 		return (
 			<>
-				{/* Background */}
-				<Box
-					style={{
-						position: "fixed",
-						top: 0,
-						left: 0,
-						right: 0,
-						bottom: 0,
-						backgroundImage: `linear-gradient(rgba(0,0,0,0.5), rgba(0,0,0,0.5)),url('/newHomeOwnerHero.png')`,
-						backgroundSize: "cover",
-						backgroundPosition: "center",
-						backgroundRepeat: "no-repeat",
-						zIndex: -1
-					}}
-				/>
-
+				<Background />
 				<Container maxW="6xl" py={8}>
 					<Box bg="white" borderRadius="12px" p={8} textAlign="center" boxShadow="xl">
 						<Spinner size="xl" color="#D4AF37" thickness="4px" mb={4} />
-						<Text fontSize="lg" color="gray.600">
-							Loading your data...
-						</Text>
+						<Text fontSize="lg" color="gray.600">Loading your data...</Text>
 					</Box>
 				</Container>
 			</>
 		);
 	}
 
-	// Error state
 	if (loadError) {
 		return (
 			<>
-				{/* Background */}
-				<Box
-					style={{
-						position: "fixed",
-						top: 0,
-						left: 0,
-						right: 0,
-						bottom: 0,
-						backgroundImage: `linear-gradient(rgba(0,0,0,0.5), rgba(0,0,0,0.5)),url('/newHomeOwnerHero.png')`,
-						backgroundSize: "cover",
-						backgroundPosition: "center",
-						backgroundRepeat: "no-repeat",
-						zIndex: -1
-					}}
-				/>
-
+				<Background />
 				<Container maxW="6xl" py={8}>
 					<Box bg="red.50" border="2px solid" borderColor="red.400" borderRadius="12px" p={8} textAlign="center" boxShadow="xl">
-						<Text color="red.600" fontWeight="600" fontSize="xl">
-							⚠️ {loadError}
-						</Text>
+						<Text color="red.600" fontWeight="600" fontSize="xl">⚠️ {loadError}</Text>
 					</Box>
 				</Container>
 			</>
 		);
 	}
 
-	// Main content - Before generation
-	if (!generatedImage) {
+	if (!generatedImage && preGenStep === "furniture") {
 		return (
 			<>
-				{/* Background */}
-				<Box
-					style={{
-						position: "fixed",
-						top: 0,
-						left: 0,
-						right: 0,
-						bottom: 0,
-						backgroundImage: `linear-gradient(rgba(0,0,0,0.5), rgba(0,0,0,0.5)),url('/newHomeOwnerHero.png')`,
-						backgroundSize: "cover",
-						backgroundPosition: "center",
-						backgroundRepeat: "no-repeat",
-						zIndex: -1
-					}}
-				/>
+				<Background />
+				<Container maxW="6xl" py={8}>
+					<Box bg="white" borderRadius="12px" p={8} boxShadow="xl">
+						<Heading size="2xl" textAlign="center" mb={2} color="#D4AF37">
+							Choose Items to Include
+						</Heading>
+						<Text textAlign="center" fontSize="lg" color="gray.600" mb={8}>
+							Select saved recommendations to incorporate into your design
+						</Text>
 
+						{isGenerating ? (
+							<Box border="2px solid #D4AF37" borderRadius="12px" p={8} bg="#FFFDF7">
+								<Flex direction="column" align="center" gap={4}>
+									<Spinner size="xl" color="#D4AF37" thickness="4px" speed="0.65s" />
+									<Text fontSize="xl" fontWeight="600" color="#D4AF37">
+										✨ Creating Your Design Magic...
+									</Text>
+									<Text fontSize="md" color="gray.600" textAlign="center">
+										Our AI is crafting your personalized design based on your styles and selected items.
+										<br />This may take a few moments. Please wait.
+									</Text>
+								</Flex>
+							</Box>
+						) : (
+							<FurnitureSelector
+								onConfirm={handleFurnitureConfirm}
+								onBack={() => setPreGenStep("preview")}
+							/>
+						)}
+					</Box>
+				</Container>
+			</>
+		);
+	}
+
+	if (!generatedImage && preGenStep === "preview") {
+		return (
+			<>
+				<Background />
 				<Container maxW="6xl" py={8}>
 					<Box bg="white" borderRadius="12px" p={8} boxShadow="xl">
 						<Heading size="2xl" textAlign="center" mb={2} color="#D4AF37">
@@ -407,16 +340,12 @@ function ImageGeneration() {
 						</Text>
 
 						<Flex direction="column" gap={6}>
-							{/* AI-Detected Style Card */}
 							<Box border="2px solid #D4AF37" borderRadius="12px" p={6} bg="white" boxShadow="md">
 								<Flex align="center" justify="center" gap={3} mb={4}>
 									<FaPaintBrush color="#D4AF37" size={24} />
-									<Heading size="lg" color="#D4AF37">
-										AI-Detected Style
-									</Heading>
+									<Heading size="lg" color="#D4AF37">AI-Detected Style</Heading>
 								</Flex>
-
-								<Flex justify="center" align="center" flexDirection="column" gap={2}>
+								<Flex justify="center">
 									<Box bg="#D4AF37" color="white" px={8} py={3} borderRadius="full" fontSize="xl" fontWeight="700">
 										{analysisResults?.detected_style || "Unknown"}
 									</Box>
@@ -426,11 +355,8 @@ function ImageGeneration() {
 							<Box border="2px solid #D4AF37" borderRadius="12px" p={6} bg="white" boxShadow="md">
 								<Flex align="center" justify="center" gap={3} mb={4}>
 									<FaPalette color="#D4AF37" size={24} />
-									<Heading size="lg" color="#D4AF37">
-										Selected Design Themes
-									</Heading>
+									<Heading size="lg" color="#D4AF37">Selected Design Themes</Heading>
 								</Flex>
-
 								{selectedStyles.length > 0 ? (
 									<Flex justify="center" align="center" gap={3} flexWrap="wrap">
 										{selectedStyles.map((style, index) => (
@@ -440,64 +366,34 @@ function ImageGeneration() {
 										))}
 									</Flex>
 								) : (
-									<Text textAlign="center" color="gray.600">
-										No design themes selected yet.
-									</Text>
+									<Text textAlign="center" color="gray.600">No design themes selected yet.</Text>
 								)}
 							</Box>
 
-							{/* Original Image Preview */}
 							{originalImageUrl && (
 								<Box border="2px solid #D4AF37" borderRadius="12px" p={6} bg="white" boxShadow="md">
-									<Heading size="md" textAlign="center" mb={4} color="gray.700">
-										Your Room
-									</Heading>
+									<Heading size="md" textAlign="center" mb={4} color="gray.700">Your Room</Heading>
 									<Flex justify="center">
 										<Image src={originalImageUrl} borderRadius="12px" boxShadow="lg" maxW="380px" maxH="450px" w="100%" h="auto" objectFit="cover" border="2px solid #E2E8F0" />
 									</Flex>
 								</Box>
 							)}
 
-							{/* Generating State */}
-							{isGenerating && (
-								<Box border="2px solid #D4AF37" borderRadius="12px" p={8} bg="#FFFDF7">
-									<Flex direction="column" align="center" gap={4}>
-										<Spinner size="xl" color="#D4AF37" thickness="4px" speed="0.65s" />
-										<Text fontSize="xl" fontWeight="600" color="#D4AF37">
-											✨ Creating Your Design Magic...
-										</Text>
-										<Text fontSize="md" color="gray.600" textAlign="center">
-											Our AI is crafting your personalized design based on your selected styles.
-											<br />
-											This may take a few moments. Please wait.
-										</Text>
-									</Flex>
-								</Box>
-							)}
-
-							{/* Generate Button */}
-							{selectedStyles.length > 0 && !isGenerating && (
+							{selectedStyles.length > 0 && (
 								<Flex justify="center" mt={4}>
 									<Button
-										onClick={handleGenerateDesign}
-										size="xl"
-										borderRadius="md"
+										onClick={() => setPreGenStep("furniture")}
+										size="xl" borderRadius="md"
 										bg="linear-gradient(135deg, #D4AF37 0%, #C9A961 100%)"
-										color="white"
-										px={16}
-										py={7}
-										fontSize="xl"
-										fontWeight="700"
+										color="white" px={16} py={7} fontSize="xl" fontWeight="700"
 										leftIcon={<FaWandMagicSparkles />}
 										_hover={{
 											bg: "linear-gradient(135deg, #C9A961 0%, #B8984D 100%)",
-											transform: "translateY(-2px)",
-											boxShadow: "xl"
+											transform: "translateY(-2px)", boxShadow: "xl"
 										}}
-										transition="all 0.2s"
-										boxShadow="lg"
+										transition="all 0.2s" boxShadow="lg"
 									>
-										Generate Design ✨
+										Next: Select Items ✨
 									</Button>
 								</Flex>
 							)}
@@ -508,24 +404,59 @@ function ImageGeneration() {
 		);
 	}
 
-	// After generation - Results view
 	return (
 		<>
-			{/* Background */}
-			<Box
-				style={{
-					position: "fixed",
-					top: 0,
-					left: 0,
-					right: 0,
-					bottom: 0,
-					backgroundImage: `linear-gradient(rgba(0,0,0,0.5), rgba(0,0,0,0.5)),url('/newHomeOwnerHero.png')`,
-					backgroundSize: "cover",
-					backgroundPosition: "center",
-					backgroundRepeat: "no-repeat",
-					zIndex: -1
-				}}
-			/>
+			<Background />
+			{/* Lightbox Overlay */}
+			{lightboxUrl && (
+				<Box
+					position="fixed" top={0} left={0} right={0} bottom={0} zIndex={9999}
+					bg="blackAlpha.900"
+					display="flex" alignItems="center" justifyContent="center"
+					onClick={() => setLightboxUrl(null)}
+					cursor="zoom-out"
+				>
+					<Box onClick={(e) => e.stopPropagation()} display="flex" flexDirection="column" alignItems="center" gap={4}>
+						<Box position="relative">
+							<Image src={lightboxUrl} maxW="88vw" maxH="72vh" objectFit="contain"
+								borderRadius="12px" boxShadow="0 0 60px rgba(212,175,55,0.4)"
+								border="3px solid #D4AF37"
+							/>
+							<Button position="absolute" top="-14px" right="-14px"
+								borderRadius="full" size="sm" bg="#D4AF37" color="white"
+								_hover={{ bg: "#C9A961" }}
+								onClick={() => setLightboxUrl(null)}
+								minW="32px" h="32px" p={0} fontSize="md" fontWeight="700"
+							>
+								✕
+							</Button>
+						</Box>
+						{lightboxUrl !== generatedImage && (
+							<Button bg="linear-gradient(135deg, #D4AF37 0%, #C9A961 100%)"
+								color="white" px={8} py={6} fontSize="md" fontWeight="700"
+								borderRadius="md" leftIcon={<FaWandMagicSparkles />}
+								boxShadow="0 4px 20px rgba(0,0,0,0.5)"
+								_hover={{ bg: "linear-gradient(135deg, #C9A961 0%, #B8984D 100%)", transform: "translateY(-2px)" }}
+								transition="all 0.2s"
+								onClick={() => {
+									const selectedId = designHistory.find(d => d.url === lightboxUrl)?.id || null;
+									setGeneratedImage(lightboxUrl);
+									setGeneratedImageId(selectedId);
+									sessionStorage.setItem(`generatedImage_${user.uid}`, lightboxUrl);
+									if (selectedId) sessionStorage.setItem(`generatedImageId_${user.uid}`, selectedId);
+									saveFinalSelection(lightboxUrl, selectedId);
+									setLightboxUrl(null);
+									setTimeout(() => {
+										imagesSectionRef.current?.scrollIntoView({ behavior: "smooth", block: "start" });
+									}, 100);
+								}}
+							>
+								Use This Design
+							</Button>
+						)}
+					</Box>
+				</Box>
+			)}
 
 			<Container maxW="6xl" py={8}>
 				<Box bg="white" borderRadius="12px" p={8} boxShadow="xl">
@@ -537,16 +468,12 @@ function ImageGeneration() {
 					</Text>
 
 					<Flex direction="column" gap={6}>
-						{/* Applied Styles Card */}
 						{selectedStyles.length > 0 && (
 							<Box border="2px solid #D4AF37" borderRadius="12px" p={6} bg="white" boxShadow="md">
 								<Flex align="center" justify="center" gap={3} mb={4}>
 									<FaPalette color="#D4AF37" size={24} />
-									<Heading size="lg" color="#D4AF37">
-										Applied Design Themes
-									</Heading>
+									<Heading size="lg" color="#D4AF37">Applied Design Themes</Heading>
 								</Flex>
-
 								<Flex justify="center" align="center" gap={3} flexWrap="wrap">
 									{selectedStyles.map((style, index) => (
 										<Box key={index} bg="#F4E5B2" color="#8B7355" px={6} py={3} borderRadius="full" fontSize="lg" fontWeight="600" border="2px solid #D4AF37">
@@ -557,14 +484,12 @@ function ImageGeneration() {
 							</Box>
 						)}
 
-						{/* Image Comparison Card */}
 						<Box ref={imagesSectionRef} border="2px solid #D4AF37" borderRadius="12px" p={6} bg="white" boxShadow="md">
 							<Heading size="md" textAlign="center" mb={6} color="gray.700">
 								Before & After Transformation
 							</Heading>
 
 							<Flex gap={4} justify="center" align="start" flexWrap={{ base: "wrap", md: "nowrap" }}>
-								{/* Original Image */}
 								<Box flex="1" minW={{ base: "100%", md: "250px" }} maxW="380px">
 									<Text fontSize="lg" fontWeight="600" mb={3} textAlign="center" color="gray.600" bg="gray.100" py={2} borderRadius="md">
 										📸 Original Room
@@ -572,13 +497,12 @@ function ImageGeneration() {
 									{originalImageUrl ? (
 										<Image src={originalImageUrl} borderRadius="12px" boxShadow="lg" w="100%" h="auto" maxH="450px" objectFit="cover" border="2px solid #E2E8F0" />
 									) : (
-										<Box borderRadius="12px" boxShadow="lg" bg="gray.100" p={8} textAlign="center" minH="300px" display="flex" alignItems="center" justifyContent="center">
+										<Box borderRadius="12px" bg="gray.100" p={8} textAlign="center" minH="300px" display="flex" alignItems="center" justifyContent="center">
 											<Text color="gray.500">No original image available</Text>
 										</Box>
 									)}
 								</Box>
 
-								{/* Generated Image */}
 								<Box flex="1" minW={{ base: "100%", md: "250px" }} maxW="380px">
 									<Text fontSize="lg" fontWeight="600" mb={3} textAlign="center" color="white" bg="linear-gradient(135deg, #D4AF37 0%, #C9A961 100%)" py={2} borderRadius="md">
 										✨ AI Generated Design
@@ -586,149 +510,188 @@ function ImageGeneration() {
 									<Image src={generatedImage} borderRadius="12px" boxShadow="2xl" border="3px solid #D4AF37" w="100%" h="auto" maxH="450px" objectFit="cover" />
 								</Box>
 							</Flex>
+
+							{/* Furniture strip — full width below both images */}
+							{lastUsedFurnitureUrls.length > 0 && (
+								<Box mt={5} p={4} bg="#FFFDF7" borderRadius="10px" border="1px solid #F4E5B2">
+									<Flex align="center" gap={4} flexWrap="wrap">
+										<Text fontSize="xs" fontWeight="700" color="#8B7355" textTransform="uppercase" letterSpacing="wide" flexShrink={0}>
+											🛋️ Furniture Included
+										</Text>
+										<Flex gap={2} flexWrap="wrap" align="center" flex="1">
+											{lastUsedFurnitureUrls.map((url, idx) => (
+												<Box key={url} w="72px" h="72px" borderRadius="8px"
+													overflow="hidden" border="2px solid #D4AF37" flexShrink={0}
+													title={lastUsedFurnitureDescriptions[idx] || `Item ${idx + 1}`}
+													cursor="pointer" onClick={() => setLightboxUrl(url)}
+													_hover={{ opacity: 0.85, transform: "scale(1.05)" }}
+													transition="all 0.15s"
+												>
+													<Image src={url}
+														alt={lastUsedFurnitureDescriptions[idx] || `Furniture ${idx + 1}`}
+														w="100%" h="100%" objectFit="cover"
+													/>
+												</Box>
+											))}
+											{lastUsedFurnitureDescriptions.some(Boolean) && (
+												<Text fontSize="xs" color="gray.400" ml={1}>
+													{lastUsedFurnitureDescriptions.filter(Boolean).join(" · ")}
+												</Text>
+											)}
+										</Flex>
+									</Flex>
+								</Box>
+							)}
 						</Box>
 
-						{/* Error Display */}
 						{generationError && (
 							<Box bg="red.50" border="2px solid" borderColor="red.400" borderRadius="12px" p={4} textAlign="center">
-								<Text color="red.600" fontWeight="600">
-									⚠️ {generationError}
-								</Text>
+								<Text color="red.600" fontWeight="600">⚠️ {generationError}</Text>
 							</Box>
 						)}
 
-						{/* Regenerate Input Section */}
 						{showRegenerateInput && !isGenerating && (
 							<Box ref={regenerateInputRef}>
-								<RegenerateDesignInput onRegenerate={handleRegenerateDesign} onCancel={() => setShowRegenerateInput(false)} currentStyles={selectedStyles} availableStyles={availableStyles} isLoading={isGenerating} />
+								<RegenerateDesignInput onRegenerate={handleRegenerateDesign}
+									onCancel={() => setShowRegenerateInput(false)}
+									currentStyles={selectedStyles}
+									availableStyles={availableStyles}
+									isLoading={isGenerating}
+									initialFurnitureUrls={lastUsedFurnitureUrls}
+									initialFurnitureDescriptions={lastUsedFurnitureDescriptions}
+								/>
 							</Box>
 						)}
 
-						{/* Regenerating State */}
 						{isGenerating && (
 							<Box border="2px solid #D4AF37" borderRadius="12px" p={8} bg="#FFFDF7">
 								<Flex direction="column" align="center" gap={4}>
 									<Spinner size="xl" color="#D4AF37" thickness="4px" speed="0.65s" />
-									<Text fontSize="xl" fontWeight="600" color="#D4AF37">
-										✨ Creating Your New Design Magic...
-									</Text>
+									<Text fontSize="xl" fontWeight="600" color="#D4AF37">✨ Creating Your New Design Magic...</Text>
 									<Text fontSize="md" color="gray.600" textAlign="center">
 										Our AI is crafting your personalized design based on your selected styles.
-										<br />
-										This may take a few moments. Please wait.
+										<br />This may take a few moments. Please wait.
 									</Text>
 								</Flex>
 							</Box>
 						)}
 
-						{/* Action Buttons - New Flow */}
 						{!isGenerating && !showRegenerateInput && (
 							<Box>
-								{/* Satisfaction Question */}
 								<Box textAlign="center" mb={6}>
-									<Heading size="lg" color="gray.700" mb={2}>
-										How do you feel about this design?
-									</Heading>
-									<Text color="gray.600" fontSize="md">
-										Let us know so we can help you with the next steps
-									</Text>
+									<Heading size="lg" color="gray.700" mb={2}>How do you feel about this design?</Heading>
+									<Text color="gray.600" fontSize="md">Let us know so we can help you with the next steps</Text>
 								</Box>
 
-								{/* Two Path Options */}
 								<Flex direction={{ base: "column", md: "row" }} gap={6} justify="center" align="stretch">
-									{/* Happy Path - Left Side */}
 									<Box flex="1" maxW={{ base: "100%", md: "400px" }} border="2px solid #10B981" borderRadius="12px" p={6} bg="#F0FDF4" textAlign="center">
-										<Text fontSize="4xl" mb={3}>
-											😊
-										</Text>
-										<Heading size="md" color="#059669" mb={4}>
-											Love It!
-										</Heading>
+										<Text fontSize="4xl" mb={3}>😊</Text>
+										<Heading size="md" color="#059669" mb={4}>Love It!</Heading>
 										<Text fontSize="sm" color="gray.600" mb={6}>
 											Download your design and chat with our AI assistant to bring it to life
 										</Text>
-
 										<Flex direction="column" gap={3}>
-											<Button
-												onClick={handleDownloadImage}
-												size="lg"
-												bg="green.500"
-												color="white"
-												w="100%"
-												py={6}
-												fontSize="md"
-												fontWeight="700"
-												borderRadius="md"
+											<Button onClick={() => { saveFinalSelection(generatedImage, generatedImageId); handleDownloadImage(); }} size="lg" bg="green.500" color="white" w="100%" py={6} fontSize="md" fontWeight="700" borderRadius="md"
 												leftIcon={<Text fontSize="xl">📥</Text>}
-												_hover={{
-													bg: "green.600",
-													transform: "translateY(-2px)",
-													boxShadow: "lg"
-												}}
-												transition="all 0.2s"
-											>
+												_hover={{ bg: "green.600", transform: "translateY(-2px)", boxShadow: "lg" }}
+												transition="all 0.2s">
 												Download Image
 											</Button>
-
-											<Button
-												onClick={() => (window.location.href = "/lumen/chat")}
-												size="lg"
-												color="white"
-												w="100%"
-												py={6}
-												fontSize="md"
-												bg="linear-gradient(135deg, #3B82F6 0%, #2563EB 100%)"
-												fontWeight="700"
-												borderRadius="md"
+											<Button onClick={() => { saveFinalSelection(generatedImage, generatedImageId); window.location.href = "/lumen/chat"; }} size="lg" color="white" w="100%" py={6} fontSize="md"
+												bg="linear-gradient(135deg, #3B82F6 0%, #2563EB 100%)" fontWeight="700" borderRadius="md"
 												leftIcon={<Text fontSize="xl">💬</Text>}
-												_hover={{
-													bg: "linear-gradient(135deg, #2563EB 0%, #1D4ED8 100%)",
-													transform: "translateY(-2px)",
-													boxShadow: "lg"
-												}}
-												transition="all 0.2s"
-											>
+												_hover={{ bg: "linear-gradient(135deg, #2563EB 0%, #1D4ED8 100%)", transform: "translateY(-2px)", boxShadow: "lg" }}
+												transition="all 0.2s">
 												Chat with Lumen AI
 											</Button>
 										</Flex>
 									</Box>
 
-									{/* Unhappy Path - Right Side */}
 									<Box flex="1" maxW={{ base: "100%", md: "400px" }} border="2px solid #D4AF37" borderRadius="12px" p={6} bg="#FFFDF7" textAlign="center">
-										<Text fontSize="4xl" mb={3}>
-											🤔
-										</Text>
-										<Heading size="md" color="#D4AF37" mb={4}>
-											Want Changes?
-										</Heading>
+										<Text fontSize="4xl" mb={3}>🤔</Text>
+										<Heading size="md" color="#D4AF37" mb={4}>Want Changes?</Heading>
 										<Text fontSize="sm" color="gray.600" mb={6}>
-											No problem! Customize the design or try a different style
+											No problem! Customize the design or try a different furniture selection to see new variations
 										</Text>
-
 										<Button
-											onClick={handleShowRegenerateInput}
-											size="lg"
+											onClick={handleShowRegenerateInput} size="lg"
 											bg="linear-gradient(135deg, #D4AF37 0%, #C9A961 100%)"
-											color="white"
-											w="100%"
-											py={6}
-											fontSize="md"
-											fontWeight="700"
-											borderRadius="md"
+											color="white" w="100%" py={6} fontSize="md" fontWeight="700" borderRadius="md"
 											leftIcon={<FaWandMagicSparkles />}
-											_hover={{
-												bg: "linear-gradient(135deg, #C9A961 0%, #B8984D 100%)",
-												transform: "translateY(-2px)",
-												boxShadow: "lg"
-											}}
-											transition="all 0.2s"
-										>
-											{showRegenerateInput ? "Hide Options" : "Regenerate Design"}
+											_hover={{ bg: "linear-gradient(135deg, #C9A961 0%, #B8984D 100%)", transform: "translateY(-2px)", boxShadow: "lg" }}
+											transition="all 0.2s">
+												{showRegenerateInput ? "Hide Options" : "Regenerate Design"}
 										</Button>
 									</Box>
 								</Flex>
 							</Box>
 						)}
+
+						{/* Design History Panel */}
+						<Box border="2px solid #D4AF37" borderRadius="12px" bg="white" boxShadow="md" overflow="hidden">
+							<Flex
+								align="center" justify="space-between"
+								p={5} cursor="pointer" bg="#FFFDF7"
+								onClick={() => {
+									if (!showHistory && designHistory.length === 0) fetchHistory();
+									setShowHistory(!showHistory);
+								}}
+								_hover={{ bg: "#FFF8E7" }}
+								transition="background 0.2s"
+							>
+								<Flex align="center" gap={3}>
+									<Text fontSize="xl">🕐</Text>
+									<Heading size="md" color="#D4AF37">Design History</Heading>
+									{designHistory.length > 0 && (
+										<Box bg="#D4AF37" color="white" borderRadius="full" px={2} py={0.5} fontSize="sm" fontWeight="700">
+											{designHistory.length}
+										</Box>
+									)}
+								</Flex>
+								<Text color="#D4AF37" fontWeight="700" fontSize="lg">
+									{showHistory ? "▲" : "▼"}
+								</Text>
+							</Flex>
+
+							{showHistory && (
+								<Box p={5} borderTop="1px solid #F4E5B2">
+									{designHistory.length === 0 ? (
+										<Text textAlign="center" color="gray.500" py={4}>No previous designs yet.</Text>
+									) : (
+										<Flex gap={4} flexWrap="wrap" justify="flex-start">
+											{designHistory.map((design) => (
+												<Box key={design.id}
+													border={design.url === generatedImage ? "3px solid #D4AF37" : "2px solid #E2E8F0"}
+													borderRadius="10px" overflow="hidden" w={{ base: "100%", sm: "180px" }}
+													boxShadow={design.url === generatedImage ? "0 0 0 2px #D4AF37" : "sm"}
+													cursor="pointer" transition="all 0.2s"
+													_hover={{ transform: "translateY(-2px)", boxShadow: "md" }}
+													onClick={() => setLightboxUrl(design.url)}
+												>
+													<Image src={design.url} w="100%" h="140px" objectFit="cover"
+														fallback={<Box bg="gray.100" h="140px" display="flex" alignItems="center" 
+														justifyContent="center">
+														<Text color="gray.400" fontSize="sm">Loading...</Text>
+														</Box>}
+													/>
+													<Box p={2} bg={design.url === generatedImage ? "#FFFDF7" : "white"}>
+														<Text fontSize="xs" color="gray.500" noOfLines={1}>
+															{design.styles || "—"}
+														</Text>
+														<Text fontSize="xs" color="gray.400">
+															{design.created_at ? new Date(design.created_at).toLocaleDateString() : ""}
+														</Text>
+														{design.url === generatedImage && (
+															<Text fontSize="xs" color="#D4AF37" fontWeight="700">● Current</Text>
+														)}
+													</Box>
+												</Box>
+											))}
+										</Flex>
+									)}
+								</Box>
+							)}
+						</Box>
 					</Flex>
 				</Box>
 			</Container>
