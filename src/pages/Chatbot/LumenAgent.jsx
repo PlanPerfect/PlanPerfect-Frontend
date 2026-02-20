@@ -1212,15 +1212,31 @@ function AgentPage() {
 												<Flex align="stretch" gap={2} w="100%" justify="flex-end" maxW={{ base: "85%", md: "75%", lg: "65%", xl: "55%" }}>
 													{message.imagePreviewUrl && (
 														<Box
+															as="button"
+															type="button"
+															onClick={() =>
+																window.open(
+																	message.imagePreviewUrl,
+																	"_blank",
+																	"noopener,noreferrer"
+																)
+															}
 															flexShrink={0}
-															alignSelf="stretch"
-															style={{ aspectRatio: "1 / 1" }}
+															boxSize={{ base: "56px", md: "68px" }}
 															borderRadius="lg"
 															overflow="hidden"
 															border="1px solid rgba(255, 255, 255, 0.22)"
 															bg="rgba(255, 255, 255, 0.08)"
-															minW={{ base: "48px", md: "56px" }}
-															maxW={{ base: "78px", md: "90px" }}
+															cursor="zoom-in"
+															transition="transform 0.2s ease, border-color 0.2s ease"
+															_hover={{
+																transform: "translateY(-1px)",
+																borderColor: "rgba(255, 255, 255, 0.45)"
+															}}
+															_focusVisible={{
+																outline: "none",
+																boxShadow: "0 0 0 2px rgba(255, 215, 0, 0.4)"
+															}}
 														>
 															<Image src={message.imagePreviewUrl} alt="Uploaded image preview" w="100%" h="100%" objectFit="cover" />
 														</Box>
@@ -1439,6 +1455,8 @@ function AgentPage() {
 										onClick={handleSend}
 										bg={canSend ? "linear-gradient(135deg, #D4AF37, #FFD700)" : "rgba(255, 255, 255, 0.1)"}
 										px={4}
+										h={{ base: "42px", md: "46px" }}
+										alignSelf="flex-end"
 										borderRadius="xl"
 										cursor={canSend ? "pointer" : "not-allowed"}
 										opacity={canSend ? 1 : 0.4}
