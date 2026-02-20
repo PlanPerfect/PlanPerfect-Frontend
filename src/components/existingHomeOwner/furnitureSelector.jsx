@@ -2,6 +2,7 @@ import { Box, Flex, Heading, Text, Button, Image, Spinner, SimpleGrid, Badge } f
 import { FaCouch, FaCheckCircle, FaArrowRight } from "react-icons/fa";
 import { useState, useEffect } from "react";
 import { useAuth } from "../../contexts/AuthContext";
+import ShowToast from "@/Extensions/ShowToast";
 import server from "../../../networking";
 
 
@@ -29,13 +30,41 @@ function FurnitureSelector({ onConfirm, onBack, confirmLabel }) {
                     setLoadError("No recommendations found. You can still generate a design.");
                 }
             } catch (err) {
-                const msg =
-                    err?.response?.data?.detail ||
-                    err?.response?.data?.error ||
-                    "Failed to load recommendations.";
-                const clean = msg.replace(/^(UERROR|ERROR):\s*/, "");
-                setLoadError(clean);
-                console.error("[FurnitureSelector] load error:", err);
+                setLoadError("Failed to load recommendations.");
+                if (err?.response?.data?.detail) {
+                    if (err.response.data.detail.startsWith("UERROR: ")) {
+                        const errorMessage = err.response.data.detail.substring("UERROR: ".length);
+                        setLoadError(errorMessage);
+                        console.error("[FurnitureSelector] load error: ", errorMessage);
+                        ShowToast("error", errorMessage, "Check console for more details.");
+                    } else if (err.response.data.detail.startsWith("ERROR: ")) {
+                        const errorMessage = err.response.data.detail.substring("ERROR: ".length);
+                        setLoadError(errorMessage);
+                        console.error("[FurnitureSelector] load error: ", errorMessage);
+                        ShowToast("error", errorMessage, "Check console for more details.");
+                    } else {
+                        console.error("[FurnitureSelector] load error: ", err.response.data.detail);
+                        ShowToast("error", "Failed to load recommendations.", "Check console for more details.");
+                    }
+                } else if (err?.response?.data?.error) {
+                    if (err.response.data.error.startsWith("UERROR: ")) {
+                        const errorMessage = err.response.data.error.substring("UERROR: ".length);
+                        setLoadError(errorMessage);
+                        console.error("FurnitureSelector load error: ", errorMessage);
+                        ShowToast("error", errorMessage, "Check console for more details.");
+                    } else if (err.response.data.error.startsWith("ERROR: ")) {
+                        const errorMessage = err.response.data.error.substring("ERROR: ".length);
+                        setLoadError(errorMessage);
+                        console.error("[FurnitureSelector] load error: ", errorMessage);
+                        ShowToast("error", errorMessage, "Check console for more details.");
+                    } else {
+                        console.error("[FurnitureSelector] load error: ", err.response.data.error);
+                        ShowToast("error", "Failed to load recommendations.", "Check console for more details.");
+                    }
+                } else {
+                    console.error("[FurnitureSelector] load error: ", err?.response);
+                    ShowToast("error", "An unexpected error occurred", "Check console for more details.");
+                }
             } finally {
                 setIsLoading(false);
             }
