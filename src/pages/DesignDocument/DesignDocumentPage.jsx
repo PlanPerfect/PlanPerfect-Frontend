@@ -128,7 +128,7 @@ function DesignDocumentPage() {
 		}
 	};
 
-	const handleDownload = () => {
+	const handleDownload = async () => {
 		if (!generatedPdfUrl) return;
 
 		const timestamp = new Date().toISOString().replace(/[-:]/g, "").replace("T", "_").split(".")[0];
@@ -143,7 +143,12 @@ function DesignDocumentPage() {
 		link.click();
 		document.body.removeChild(link);
 
-		ShowToast("success", "Success!", "PDF downloaded successfully!");
+		const sendClientEmail = await server.post(`/designDocument/clientConfirmationEmail/${user.uid}`);
+		if (!sendClientEmail.data.success) {
+			console.error("Failed to send confirmation email:", sendClientEmail.data.message);
+		}
+
+		ShowToast("success", "Success!", "PDF downloaded successfully! An Confirmation email has also been sent to you, Please check your inbox (and spam folder just in case) for details on how to proceed with your design document.");
 	};
 
 	const handleRegenerate = () => {
@@ -357,7 +362,7 @@ function DesignDocumentPage() {
 											onClick={handleDownload}
 											leftIcon={<Download size={20} />}
 										>
-											Download PDF
+											Download PDF & Assign Me A Designer 
 										</Button>
 									</Flex>
 								</VStack>
