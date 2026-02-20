@@ -392,7 +392,36 @@ function AgentPage() {
 				}
 			} catch (err) {
 				if (!cancelled) {
-					console.warn("[AgentPage] Could not load session history:", err);
+					if (err?.response?.data?.detail) {
+						if (err.response.data.detail.startsWith("UERROR: ")) {
+							const errorMessage = err.response.data.detail.substring("UERROR: ".length);
+							console.error("Failed to load history: ", errorMessage);
+							ShowToast("error", errorMessage, "Check console for more details.");
+						} else if (err.response.data.detail.startsWith("ERROR: ")) {
+							const errorMessage = err.response.data.detail.substring("ERROR: ".length);
+							console.error("Failed to load history: ", errorMessage);
+							ShowToast("error", errorMessage, "Check console for more details.");
+						} else {
+							console.error("Failed to load history: ", err.response.data.detail);
+							ShowToast("error", "Failed to load history", "Check console for more details.");
+						}
+					} else if (err?.response?.data?.error) {
+						if (err.response.data.error.startsWith("UERROR: ")) {
+							const errorMessage = err.response.data.error.substring("UERROR: ".length);
+							console.error("Failed to load history: ", errorMessage);
+							ShowToast("error", errorMessage, "Check console for more details.");
+						} else if (err.response.data.error.startsWith("ERROR: ")) {
+							const errorMessage = err.response.data.error.substring("ERROR: ".length);
+							console.error("Failed to load history: ", errorMessage);
+							ShowToast("error", errorMessage, "Check console for more details.");
+						} else {
+							console.error("Failed to load history: ", err.response.data.error);
+							ShowToast("error", "Failed to load history", "Check console for more details.");
+						}
+					} else {
+						console.error("Failed to load history: ", err?.response);
+						ShowToast("error", "An unexpected error occurred", "Check console for more details.");
+					}
 				}
 			} finally {
 				if (!cancelled) {
@@ -418,6 +447,36 @@ function AgentPage() {
 			setCurrentAgentModel(response.data.model);
 		} catch (err) {
 			setCurrentAgentModel("");
+			if (err?.response?.data?.detail) {
+				if (err.response.data.detail.startsWith("UERROR: ")) {
+					const errorMessage = err.response.data.detail.substring("UERROR: ".length);
+					console.error("Failed to get current agent model: ", errorMessage);
+					ShowToast("error", errorMessage, "Check console for more details.");
+				} else if (err.response.data.detail.startsWith("ERROR: ")) {
+					const errorMessage = err.response.data.detail.substring("ERROR: ".length);
+					console.error("Failed to get current agent model: ", errorMessage);
+					ShowToast("error", errorMessage, "Check console for more details.");
+				} else {
+					console.error("Failed to get current agent model: ", err.response.data.detail);
+					ShowToast("error", "Failed to get current agent model", "Check console for more details.");
+				}
+			} else if (err?.response?.data?.error) {
+				if (err.response.data.error.startsWith("UERROR: ")) {
+					const errorMessage = err.response.data.error.substring("UERROR: ".length);
+					console.error("Failed to get current agent model: ", errorMessage);
+					ShowToast("error", errorMessage, "Check console for more details.");
+				} else if (err.response.data.error.startsWith("ERROR: ")) {
+					const errorMessage = err.response.data.error.substring("ERROR: ".length);
+					console.error("Failed to get current agent model: ", errorMessage);
+					ShowToast("error", errorMessage, "Check console for more details.");
+				} else {
+					console.error("Failed to get current agent model: ", err.response.data.error);
+					ShowToast("error", "Failed to get current agent model", "Check console for more details.");
+				}
+			} else {
+				console.error("Failed to get current agent model: ", err?.response);
+				ShowToast("error", "An unexpected error occurred", "Check console for more details.");
+			}
 		}
 	};
 
@@ -611,15 +670,36 @@ function AgentPage() {
 		} catch (err) {
 			setIsProcessing(false);
 
-			const detail = err?.response?.data?.detail || err?.response?.data?.error || "";
-			if (detail.startsWith("UERROR: ")) {
-				ShowToast("error", detail.substring("UERROR: ".length), "Check console for more details.");
-			} else if (detail.startsWith("ERROR: ")) {
-				ShowToast("error", detail.substring("ERROR: ".length), "Check console for more details.");
+			if (err?.response?.data?.detail) {
+				if (err.response.data.detail.startsWith("UERROR: ")) {
+					const errorMessage = err.response.data.detail.substring("UERROR: ".length);
+					console.error("Failed to send message: ", errorMessage);
+					ShowToast("error", errorMessage, "Check console for more details.");
+				} else if (err.response.data.detail.startsWith("ERROR: ")) {
+					const errorMessage = err.response.data.detail.substring("ERROR: ".length);
+					console.error("Failed to send message: ", errorMessage);
+					ShowToast("error", errorMessage, "Check console for more details.");
+				} else {
+					console.error("Failed to send message: ", err.response.data.detail);
+					ShowToast("error", "Failed to send message", "Check console for more details.");
+				}
+			} else if (err?.response?.data?.error) {
+				if (err.response.data.error.startsWith("UERROR: ")) {
+					const errorMessage = err.response.data.error.substring("UERROR: ".length);
+					console.error("Failed to send message: ", errorMessage);
+					ShowToast("error", errorMessage, "Check console for more details.");
+				} else if (err.response.data.error.startsWith("ERROR: ")) {
+					const errorMessage = err.response.data.error.substring("ERROR: ".length);
+					console.error("Failed to send message: ", errorMessage);
+					ShowToast("error", errorMessage, "Check console for more details.");
+				} else {
+					console.error("Failed to send message: ", err.response.data.error);
+					ShowToast("error", "Failed to send message", "Check console for more details.");
+				}
 			} else {
+				console.error("Failed to send message: ", err?.response);
 				ShowToast("error", "An unexpected error occurred", "Check console for more details.");
 			}
-			console.error("Failed to send message:", err?.response);
 		}
 	};
 
@@ -758,15 +838,36 @@ function AgentPage() {
 			setIsClearDialogOpen(false);
 			ShowToast("success", "Session cleared", "Your new session is ready.");
 		} catch (err) {
-			const detail = err?.response?.data?.detail || err?.response?.data?.error || "";
-			if (detail.startsWith("UERROR: ")) {
-				ShowToast("error", detail.substring("UERROR: ".length), "Check console for more details.");
-			} else if (detail.startsWith("ERROR: ")) {
-				ShowToast("error", detail.substring("ERROR: ".length), "Check console for more details.");
+			if (err?.response?.data?.detail) {
+				if (err.response.data.detail.startsWith("UERROR: ")) {
+					const errorMessage = err.response.data.detail.substring("UERROR: ".length);
+					console.error("Failed to clear session: ", errorMessage);
+					ShowToast("error", errorMessage, "Check console for more details.");
+				} else if (err.response.data.detail.startsWith("ERROR: ")) {
+					const errorMessage = err.response.data.detail.substring("ERROR: ".length);
+					console.error("Failed to clear session: ", errorMessage);
+					ShowToast("error", errorMessage, "Check console for more details.");
+				} else {
+					console.error("Failed to clear session: ", err.response.data.detail);
+					ShowToast("error", "Failed to clear session", "Check console for more details.");
+				}
+			} else if (err?.response?.data?.error) {
+				if (err.response.data.error.startsWith("UERROR: ")) {
+					const errorMessage = err.response.data.error.substring("UERROR: ".length);
+					console.error("Failed to clear session: ", errorMessage);
+					ShowToast("error", errorMessage, "Check console for more details.");
+				} else if (err.response.data.error.startsWith("ERROR: ")) {
+					const errorMessage = err.response.data.error.substring("ERROR: ".length);
+					console.error("Failed to clear session: ", errorMessage);
+					ShowToast("error", errorMessage, "Check console for more details.");
+				} else {
+					console.error("Failed to clear session: ", err.response.data.error);
+					ShowToast("error", "Failed to clear session", "Check console for more details.");
+				}
 			} else {
-				ShowToast("error", "Failed to clear session", "Check console for more details.");
+				console.error("Failed to clear session: ", err?.response);
+				ShowToast("error", "An unexpected error occurred", "Check console for more details.");
 			}
-			console.error("Failed to clear session:", err?.response || err);
 		} finally {
 			setIsClearingSession(false);
 		}
@@ -778,7 +879,7 @@ function AgentPage() {
 
 		const segments = normalized.split("/").filter(Boolean);
 		const modelName = segments[segments.length - 1] || normalized;
-		const hasOpenAIPrefix = segments.slice(0, -1).some((seg) => seg.toLowerCase() === "openai");
+		const hasOpenAIPrefix = segments.slice(0, -1).some(seg => seg.toLowerCase() === "openai");
 
 		const llamaMatch = modelName.match(/llama-(\d+(?:\.\d+)?)-(\d+b)/i);
 		if (llamaMatch) {
@@ -789,7 +890,7 @@ function AgentPage() {
 		if (geminiMatch) {
 			const geminiTier = geminiMatch[2]
 				.split("-")
-				.map((part) => part.charAt(0).toUpperCase() + part.slice(1))
+				.map(part => part.charAt(0).toUpperCase() + part.slice(1))
 				.join(" ");
 			return `Gemini ${geminiMatch[1]} ${geminiTier}`;
 		}
@@ -800,9 +901,7 @@ function AgentPage() {
 			return hasOpenAIPrefix ? `OpenAI ${display}` : display;
 		}
 
-		const prettified = modelName
-			.replace(/[-_]+/g, " ")
-			.replace(/\b\w/g, (char) => char.toUpperCase());
+		const prettified = modelName.replace(/[-_]+/g, " ").replace(/\b\w/g, char => char.toUpperCase());
 
 		return hasOpenAIPrefix ? `OpenAI ${prettified}` : prettified;
 	};
