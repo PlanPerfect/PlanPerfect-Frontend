@@ -1,4 +1,4 @@
-import { Box, Flex, Heading, Text, Button, Textarea, VStack } from "@chakra-ui/react";
+import { Box, Flex, Heading, Text, Button, Textarea, VStack, Image } from "@chakra-ui/react";
 import { FaWandMagicSparkles } from "react-icons/fa6";
 import { FaCouch } from "react-icons/fa";
 import { useState } from "react";
@@ -8,13 +8,15 @@ function RegenerateDesignInput({
 	onRegenerate, 
 	onCancel, 
 	currentStyles = [],
-	isLoading = false 
+	isLoading = false,
+	initialFurnitureUrls = [],
+	initialFurnitureDescriptions = []
 }) {
 	const [regeneratePrompt, setRegeneratePrompt] = useState("");
 	const [error, setError] = useState("");
 	const [showFurnitureSelector, setShowFurnitureSelector] = useState(false);
-	const [selectedFurnitureUrls, setSelectedFurnitureUrls] = useState([]);
-	const [selectedFurnitureDescriptions, setSelectedFurnitureDescriptions] = useState([]);
+	const [selectedFurnitureUrls, setSelectedFurnitureUrls] = useState(initialFurnitureUrls);
+	const [selectedFurnitureDescriptions, setSelectedFurnitureDescriptions] = useState(initialFurnitureDescriptions);
 
 	const handleRegenerate = () => {
 		onRegenerate({
@@ -31,6 +33,12 @@ function RegenerateDesignInput({
 		setShowFurnitureSelector(false);
 	};
 
+	const handleRemoveFurniture = (urlToRemove) => {
+		const idx = selectedFurnitureUrls.indexOf(urlToRemove);
+		setSelectedFurnitureUrls((prev) => prev.filter((u) => u !== urlToRemove));
+		setSelectedFurnitureDescriptions((prev) => prev.filter((_, i) => i !== idx));
+	};
+
 	if (showFurnitureSelector) {
 		return (
 			<FurnitureSelector
@@ -40,6 +48,8 @@ function RegenerateDesignInput({
 			/>
 		);
 	}
+
+	const hasFurniture = selectedFurnitureUrls.length > 0;
 
 	return (
 		<Box border="2px solid #D4AF37" borderRadius="12px" p={6} bg="#FFFDF7" boxShadow="md">
@@ -70,12 +80,13 @@ function RegenerateDesignInput({
 					/>
 				</Box>
 
+				{/* Furniture Selection Box */}
 				<Box border="1px solid #F4E5B2" borderRadius="10px" p={4} bg="white">
-					<Flex align="center" justify="space-between" flexWrap="wrap" gap={3}>
+					<Flex align="center" justify="space-between" flexWrap="wrap" gap={3} mb={hasFurniture ? 4 : 0}>
 						<Box>
 							<Text fontWeight="600" color="gray.700" fontSize="md">Furniture Selection</Text>
 							<Text fontSize="sm" color="gray.500">
-								{selectedFurnitureUrls.length > 0
+								{hasFurniture
 									? `${selectedFurnitureUrls.length} item${selectedFurnitureUrls.length > 1 ? "s" : ""} selected`
 									: "No furniture selected"}
 							</Text>
@@ -89,9 +100,53 @@ function RegenerateDesignInput({
 							_hover={{ bg: "#FFFDF7", borderColor: "#C9A961", color: "#C9A961" }}
 							isDisabled={isLoading}
 						>
-							{selectedFurnitureUrls.length > 0 ? "Change Furniture" : "Select Furniture"}
+							{hasFurniture ? "Change Furniture" : "Select Furniture"}
 						</Button>
 					</Flex>
+
+					{/* Furniture Preview Strip */}
+					{hasFurniture && (
+						<Flex gap={3} flexWrap="wrap">
+							{selectedFurnitureUrls.map((url, idx) => (
+								<Box key={url} position="relative" borderRadius="8px"
+									overflow="visible" border="2px solid #D4AF37"
+									boxShadow="sm" w="100px" h="100px"
+									flexShrink={0}
+								>
+									<Image src={url} alt={selectedFurnitureDescriptions[idx] || `Furniture ${idx + 1}`}
+										w="100%" h="100%" objectFit="cover" borderRadius="6px"
+									/>
+
+									{/* Tooltip label */}
+									{selectedFurnitureDescriptions[idx] && (
+										<Box position="absolute" bottom="-22px" left="50%"
+											transform="translateX(-50%)" bg="gray.700" color="white"
+											fontSize="9px" fontWeight="600" px={1.5} py={0.5}
+											borderRadius="4px" whiteSpace="nowrap" maxW="90px"
+											overflow="hidden" textOverflow="ellipsis"
+											pointerEvents="none"
+										>
+											{selectedFurnitureDescriptions[idx]}
+										</Box>
+									)}
+									{/* Remove button */}
+									<Button size="xs" position="absolute" top="-10px" 	 right="-10px"
+										borderRadius="full" bg="red.400" color="white" minW="22px"
+										h="22px" p={0} fontSize="10px" fontWeight="700" lineHeight="1"
+										_hover={{ bg: "red.500" }}
+										onClick={(e) => {
+											e.stopPropagation();
+											handleRemoveFurniture(url);
+										}}
+										isDisabled={isLoading}
+										aria-label="Remove furniture"
+									>
+										✕
+									</Button>
+								</Box>
+							))}
+						</Flex>
+					)}
 				</Box>
 
 				{error && (
@@ -104,7 +159,7 @@ function RegenerateDesignInput({
 					</Box>
 				)}
 
-				<Flex gap={3} justify="center" flexWrap="wrap" pt={2}>
+				<Flex gap={3} justify="center" flexWrap="wrap" pt={hasFurniture ? 4 : 2}>
 					<Button onClick={handleRegenerate} size="lg"
 						bg="linear-gradient(135deg, #D4AF37 0%, #C9A961 100%)"
 						color="white" px={8} py={6} fontSize="md"

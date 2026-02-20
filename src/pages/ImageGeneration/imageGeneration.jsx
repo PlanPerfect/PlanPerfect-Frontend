@@ -29,6 +29,9 @@ function ImageGeneration() {
 	const [selectedFurnitureUrls, setSelectedFurnitureUrls] = useState([]);
 	const [selectedFurnitureDescriptions, setSelectedFurnitureDescriptions] = useState([]);
 
+	const [lastUsedFurnitureUrls, setLastUsedFurnitureUrls] = useState([]);
+	const [lastUsedFurnitureDescriptions, setLastUsedFurnitureDescriptions] = useState([]);
+
 	const [showRegenerateInput, setShowRegenerateInput] = useState(false);
 
 	const [designHistory, setDesignHistory] = useState([]);
@@ -39,22 +42,6 @@ function ImageGeneration() {
 	const regenerateInputRef = useRef(null);
 
 	const availableStyles = ["Boutique", "Classical", "Contemporary", "Country", "Electic", "Industrial", "Japanese", "Luxury", "Minimalist", "Modern", "Persian", "Scandinavian", "Vintage", "Wabi Sabi", "Japandi", "Peranakan", "Boho"];
-
-	useEffect(() => {
-		if (!user) return;
-		const referrer = document.referrer;
-		const fromLumen = referrer.includes("/lumen/chat");
-		const savedImage = sessionStorage.getItem(`generatedImage_${user.uid}`);
-		const savedImageId = sessionStorage.getItem(`generatedImageId_${user.uid}`);
-		if (fromLumen && savedImage) {
-			setIsRestoredImage(true);
-			setGeneratedImage(savedImage);
-			if (savedImageId) setGeneratedImageId(savedImageId);
-		} else {
-			sessionStorage.removeItem(`generatedImage_${user.uid}`);
-			sessionStorage.removeItem(`generatedImageId_${user.uid}`);
-		}
-	}, [user]);
 
 	useEffect(() => {
 		const fetchUserData = async () => {
@@ -93,10 +80,10 @@ function ImageGeneration() {
 					const clean = errDetail.replace(/^(UERROR|ERROR):\s*/, "");
 					setLoadError(clean);
 					console.error("Failed to fetch user data: ", clean);
-					
 				} else {
 					console.error("Failed to fetch user data: ", err?.response);
-					setLoadError("An unexpected error occurred while fetching your data.");}
+					setLoadError("An unexpected error occurred while fetching your data.");
+				}
 			} finally {
 				setIsLoading(false);
 			}
@@ -184,8 +171,12 @@ function ImageGeneration() {
 
 			setGeneratedImage(url);
 			setGeneratedImageId(generation_id);
+			setLastUsedFurnitureUrls(furnitureUrls);
+			setLastUsedFurnitureDescriptions(furnitureDescriptions);
 			sessionStorage.setItem(`generatedImage_${user.uid}`, url);
 			sessionStorage.setItem(`generatedImageId_${user.uid}`, generation_id);
+			sessionStorage.setItem(`furnitureUrls_${user.uid}`, JSON.stringify(furnitureUrls));
+			sessionStorage.setItem(`furnitureDescs_${user.uid}`, JSON.stringify(furnitureDescriptions));
 			fetchHistory();
 		} catch (err) {
 			handleErrorResponse(err, "Failed to generate design", setGenerationError);
@@ -194,14 +185,17 @@ function ImageGeneration() {
 		}
 	};
 
-	const handleRegenerateDesign = async ({ prompt, styles }) => {
+	const handleRegenerateDesign = async ({ prompt, styles, furnitureUrls = [], furnitureDescriptions = [] }) => {
 		setIsGenerating(true);
 		setGenerationError(null);
 		setIsRestoredImage(false);
 		setShowRegenerateInput(false);
 
+		const urls = furnitureUrls.length > 0 ? furnitureUrls : selectedFurnitureUrls;
+		const descs = furnitureDescriptions.length > 0 ? furnitureDescriptions : selectedFurnitureDescriptions;
+
 		try {
-			const formData = buildFormData(styles, selectedFurnitureUrls, selectedFurnitureDescriptions, prompt || null);
+			const formData = buildFormData(styles, urls, descs, prompt || null);
 
 			const response = await server.post("/image/generate", formData, {
 				headers: { "Content-Type": "multipart/form-data", "X-User-ID": user.uid }
@@ -210,8 +204,12 @@ function ImageGeneration() {
 
 			setGeneratedImage(url);
 			setGeneratedImageId(generation_id);
+			setLastUsedFurnitureUrls(urls);
+			setLastUsedFurnitureDescriptions(descs);
 			sessionStorage.setItem(`generatedImage_${user.uid}`, url);
 			sessionStorage.setItem(`generatedImageId_${user.uid}`, generation_id);
+			sessionStorage.setItem(`furnitureUrls_${user.uid}`, JSON.stringify(urls));
+			sessionStorage.setItem(`furnitureDescs_${user.uid}`, JSON.stringify(descs));
 			setSelectedStyles(styles);
 			fetchHistory();
 		} catch (err) {
@@ -512,6 +510,38 @@ function ImageGeneration() {
 									<Image src={generatedImage} borderRadius="12px" boxShadow="2xl" border="3px solid #D4AF37" w="100%" h="auto" maxH="450px" objectFit="cover" />
 								</Box>
 							</Flex>
+
+							{/* Furniture strip — full width below both images */}
+							{lastUsedFurnitureUrls.length > 0 && (
+								<Box mt={5} p={4} bg="#FFFDF7" borderRadius="10px" border="1px solid #F4E5B2">
+									<Flex align="center" gap={4} flexWrap="wrap">
+										<Text fontSize="xs" fontWeight="700" color="#8B7355" textTransform="uppercase" letterSpacing="wide" flexShrink={0}>
+											🛋️ Furniture Included
+										</Text>
+										<Flex gap={2} flexWrap="wrap" align="center" flex="1">
+											{lastUsedFurnitureUrls.map((url, idx) => (
+												<Box key={url} w="72px" h="72px" borderRadius="8px"
+													overflow="hidden" border="2px solid #D4AF37" flexShrink={0}
+													title={lastUsedFurnitureDescriptions[idx] || `Item ${idx + 1}`}
+													cursor="pointer" onClick={() => setLightboxUrl(url)}
+													_hover={{ opacity: 0.85, transform: "scale(1.05)" }}
+													transition="all 0.15s"
+												>
+													<Image src={url}
+														alt={lastUsedFurnitureDescriptions[idx] || `Furniture ${idx + 1}`}
+														w="100%" h="100%" objectFit="cover"
+													/>
+												</Box>
+											))}
+											{lastUsedFurnitureDescriptions.some(Boolean) && (
+												<Text fontSize="xs" color="gray.400" ml={1}>
+													{lastUsedFurnitureDescriptions.filter(Boolean).join(" · ")}
+												</Text>
+											)}
+										</Flex>
+									</Flex>
+								</Box>
+							)}
 						</Box>
 
 						{generationError && (
@@ -527,6 +557,8 @@ function ImageGeneration() {
 									currentStyles={selectedStyles}
 									availableStyles={availableStyles}
 									isLoading={isGenerating}
+									initialFurnitureUrls={lastUsedFurnitureUrls}
+									initialFurnitureDescriptions={lastUsedFurnitureDescriptions}
 								/>
 							</Box>
 						)}
