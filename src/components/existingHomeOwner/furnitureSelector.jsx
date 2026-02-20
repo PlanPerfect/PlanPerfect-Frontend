@@ -63,7 +63,7 @@ function FurnitureSelector({ onConfirm, onBack, confirmLabel }) {
         const selectedItems = furnitureItems.filter((i) => selectedUrls.includes(i.image_url));
         onConfirm({
             urls: selectedUrls,
-            descriptions: selectedItems.map((i) => i.description).filter(Boolean)
+            descriptions: selectedItems.map((i) => i.name).filter(Boolean)
         });
     };
 
