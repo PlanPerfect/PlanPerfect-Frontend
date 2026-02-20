@@ -250,7 +250,7 @@ function NewHomeOwnerPage() {
 						{/* Navigation Buttons */}
 						{showNavigationButtons && (
 							<Flex justify="center" gap={4}>
-								{steps.value > 0 && (
+								{steps.value > 0 || steps.value == 3 && (
 									<Steps.PrevTrigger asChild>
 										<Button
 											size="xl"
