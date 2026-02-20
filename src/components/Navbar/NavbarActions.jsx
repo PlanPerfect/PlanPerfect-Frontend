@@ -39,7 +39,7 @@ function NavbarActions() {
 		);
 	}
 
-	if (location.pathname === "/lumen/chat") {
+	if (location.pathname.startsWith("/lumen")) {
 		return (
 			<Button
 				bg="transparent"

@@ -1,8 +1,11 @@
-import { Flex, Spacer, useMediaQuery } from "@chakra-ui/react";
+import { Flex, HStack, Spacer, useMediaQuery } from "@chakra-ui/react";
 import { useLocation } from "react-router-dom";
+import { useState } from "react";
 import { motion } from "framer-motion";
 import LogoWithText from "./Navbar/LogoWithText";
 import NavbarActions from "./Navbar/NavbarActions";
+import Sidebar from "./Navbar/Sidebar";
+import { useAuth } from "../contexts/AuthContext";
 import { useRecommendations } from "../contexts/RecommendationsContext";
 
 const MotionFlex = motion.create(Flex);
@@ -10,16 +13,19 @@ const MotionFlex = motion.create(Flex);
 function Navbar() {
 	const location = useLocation();
 	const isHome = location.pathname === "/";
-	const isChatPage = location.pathname === "/lumen/chat";
+	const isChatPage = location.pathname.startsWith("/lumen");
 	const isRecommendationsPage = location.pathname === "/stylematch/reccomendations";
 	const { hasRecommendations } = useRecommendations();
+	const { user } = useAuth();
+	const [isSidebarOpen, setIsSidebarOpen] = useState(false);
 	const [isWide] = useMediaQuery("(min-width: 530px)");
 	const [isVisible] = useMediaQuery("(min-width: 325px)");
 
 	if (!isVisible) return null;
 
 	const showActions = (isHome && isWide) || isChatPage || (isRecommendationsPage && hasRecommendations);
-	const justify = showActions ? "space-between" : "center";
+	const showSidebarMenu = Boolean(user);
+	const justify = showActions || showSidebarMenu ? "space-between" : "center";
 
 	return (
 		<MotionFlex
@@ -32,9 +38,11 @@ function Navbar() {
 			p="10px"
 			overflow="visible"
 			position="relative"
+			visibility={isSidebarOpen ? "hidden" : "visible"}
+			pointerEvents={isSidebarOpen ? "none" : "auto"}
 			initial={{ opacity: 0, y: -10 }}
-			animate={{ opacity: 1, y: 0 }}
-			transition={{ duration: 0.8, ease: "easeOut", delay: 0.2 }}
+			animate={{ opacity: isSidebarOpen ? 0 : 1, y: 0 }}
+			transition={isSidebarOpen ? { duration: 0.2, ease: "easeOut" } : { duration: 0.8, ease: "easeOut", delay: 0.2 }}
 			key={location.pathname}
 			boxShadow="inset 0 1px 2px rgba(255, 255, 255, 0.3), inset 0 -1px 2px rgba(0, 0, 0, 0.5), 0 2px 4px rgba(0, 0, 0, 0.3)"
 			sx={{
@@ -56,7 +64,10 @@ function Navbar() {
 				}
 			}}
 		>
-			<LogoWithText />
+			<HStack gap={2}>
+				{showSidebarMenu && <Sidebar onDrawerOpenChange={setIsSidebarOpen} />}
+				<LogoWithText />
+			</HStack>
 
 			{showActions && (
 				<>

@@ -25,12 +25,25 @@ function ChatbotPage() {
 	const initialMessageCount = useRef(1);
 	const navigate = useNavigate();
 
-	const glassStyle = {
+	const glassPanelStyle = {
+		position: "relative",
+		isolation: "isolate",
 		background: "rgba(255, 255, 255, 0.1)",
-		backdropFilter: "blur(20px) saturate(180%)",
-		WebkitBackdropFilter: "blur(20px) saturate(180%)",
 		border: "1px solid rgba(255, 255, 255, 0.2)",
-		boxShadow: "0 8px 32px 0 rgba(31, 38, 135, 0.15), inset 0 1px 0 0 rgba(255, 255, 255, 0.3)"
+		boxShadow: "0 8px 32px 0 rgba(31, 38, 135, 0.15), inset 0 1px 0 0 rgba(255, 255, 255, 0.3)",
+		transform: "translateZ(0)",
+		backfaceVisibility: "hidden",
+		WebkitBackfaceVisibility: "hidden",
+		_before: {
+			content: '""',
+			position: "absolute",
+			inset: 0,
+			pointerEvents: "none",
+			borderRadius: "inherit",
+			backdropFilter: "blur(20px) saturate(170%)",
+			WebkitBackdropFilter: "blur(20px) saturate(170%)",
+			transform: "translateZ(0)"
+		}
 	};
 
 	useEffect(() => {
@@ -167,8 +180,21 @@ function ChatbotPage() {
 			/>
 
 			<Flex h="75vh" justify="center" align="center">
-				<Card.Root width="100%" height={{ base: "calc(100vh - 12rem)", md: "75vh" }} variant="elevated" borderRadius={{ base: 20, md: 35 }} style={glassStyle} overflow="hidden">
-					<Box borderBottom="1px solid rgba(255, 255, 255, 0.2)" p={{ base: 4, md: 6 }} bg="rgba(255, 255, 255, 0.05)">
+				<Card.Root
+					width="100%"
+					height={{ base: "calc(100vh - 12rem)", md: "75vh" }}
+					variant="elevated"
+					borderRadius={{ base: 20, md: 35 }}
+					{...glassPanelStyle}
+					overflow="hidden"
+				>
+					<Box
+						borderBottom="1px solid rgba(255, 255, 255, 0.2)"
+						p={{ base: 4, md: 6 }}
+						bg="rgba(255, 255, 255, 0.05)"
+						position="relative"
+						zIndex={1}
+					>
 						<Flex align="center" justify="space-between" gap={3}>
 							<Flex align="center" gap={3}>
 								<Box bg="rgba(255, 240, 189, 0.2)" p={2} borderRadius="full" animation="pulse 2s infinite">
@@ -189,7 +215,6 @@ function ChatbotPage() {
 								onClick={handleSwitchToAgentMode}
 								position="relative"
 								bg="linear-gradient(135deg, rgba(212, 175, 55, 0.25), rgba(255, 215, 0, 0.25))"
-								backdropFilter="blur(15px)"
 								border="1px solid rgba(212, 175, 55, 0.5)"
 								borderRadius="full"
 								px={{ base: 3, md: 5 }}
@@ -225,6 +250,8 @@ function ChatbotPage() {
 						p={{ base: 4, md: 6 }}
 						overflowY="auto"
 						flex="1"
+						position="relative"
+						zIndex={1}
 						css={{
 							"&::-webkit-scrollbar": {
 								width: "8px"
@@ -256,7 +283,6 @@ function ChatbotPage() {
 											<VStack align="start" gap={1}>
 												<Box
 													bg={message.role === "user" ? "#C9A227" : message.isError ? "rgba(255, 100, 100, 0.15)" : "rgba(255, 255, 255, 0.15)"}
-													backdropFilter="blur(10px)"
 													border={message.isError ? "1px solid rgba(255, 100, 100, 0.3)" : "1px solid rgba(255, 255, 255, 0.2)"}
 													borderRadius={20}
 													p={{ base: 3, md: 4 }}
@@ -291,7 +317,7 @@ function ChatbotPage() {
 										<Box bg="rgba(255, 240, 189, 0.3)" p={2} borderRadius="full" h="fit-content">
 											<Bot size={20} color="#fff0bd" />
 										</Box>
-										<Box bg="rgba(255, 255, 255, 0.15)" backdropFilter="blur(10px)" border="1px solid rgba(255, 255, 255, 0.2)" borderRadius={20} p={4}>
+										<Box bg="rgba(255, 255, 255, 0.15)" border="1px solid rgba(255, 255, 255, 0.2)" borderRadius={20} p={4}>
 											<Flex gap={1}>
 												<Box w="8px" h="8px" bg="rgba(255, 255, 255, 0.6)" borderRadius="full" animation="bounce 1.4s infinite" />
 												<Box w="8px" h="8px" bg="rgba(255, 255, 255, 0.6)" borderRadius="full" animation="bounce 1.4s infinite 0.2s" />
@@ -306,7 +332,13 @@ function ChatbotPage() {
 						</VStack>
 					</Card.Body>
 
-					<Box borderTop="1px solid rgba(255, 255, 255, 0.2)" p={{ base: 4, md: 6 }} bg="rgba(255, 255, 255, 0.05)">
+					<Box
+						borderTop="1px solid rgba(255, 255, 255, 0.2)"
+						p={{ base: 4, md: 6 }}
+						bg="rgba(255, 255, 255, 0.05)"
+						position="relative"
+						zIndex={1}
+					>
 						<HStack gap={3}>
 							<Input
 								ref={inputRef}
@@ -385,11 +417,9 @@ function ChatbotPage() {
 			@keyframes fadeInUp {
 				from {
 					opacity: 0;
-					transform: translateY(20px);
 				}
 				to {
 					opacity: 1;
-					transform: translateY(0);
 				}
 			}
           @keyframes bounce {

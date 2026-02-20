@@ -12,8 +12,18 @@ function Homepage() {
 	const navigate = useNavigate();
 
 	useEffect(() => {
-		if (location.state?.authRedirect) {
+		const hasLogoutToast = sessionStorage.getItem("showLogoutToast") === "1" || Boolean(location.state?.logoutSuccess);
+
+		if (hasLogoutToast) {
+			ShowToast("success", "Logged out", "You have been signed out successfully.");
+			sessionStorage.removeItem("showLogoutToast");
+		}
+
+		if (location.state?.authRedirect && !hasLogoutToast) {
 			ShowToast("warning", "You're signed out", "Please login first.");
+		}
+
+		if (location.state?.authRedirect || location.state?.logoutSuccess) {
 			navigate(location.pathname, { replace: true, state: {} });
 		}
 	}, [location.state, navigate, location.pathname]);
