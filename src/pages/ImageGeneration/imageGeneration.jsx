@@ -274,10 +274,6 @@ function ImageGeneration() {
 			setGeneratedImageId(generation_id);
 			setLastUsedFurnitureUrls(furnitureUrls);
 			setLastUsedFurnitureDescriptions(furnitureDescriptions);
-			sessionStorage.setItem(`generatedImage_${user.uid}`, url);
-			sessionStorage.setItem(`generatedImageId_${user.uid}`, generation_id);
-			sessionStorage.setItem(`furnitureUrls_${user.uid}`, JSON.stringify(furnitureUrls));
-			sessionStorage.setItem(`furnitureDescs_${user.uid}`, JSON.stringify(furnitureDescriptions));
 			fetchHistory();
 		} catch (err) {
 			handleErrorResponse(err, "Failed to generate design", setGenerationError);
@@ -307,10 +303,6 @@ function ImageGeneration() {
 			setGeneratedImageId(generation_id);
 			setLastUsedFurnitureUrls(urls);
 			setLastUsedFurnitureDescriptions(descs);
-			sessionStorage.setItem(`generatedImage_${user.uid}`, url);
-			sessionStorage.setItem(`generatedImageId_${user.uid}`, generation_id);
-			sessionStorage.setItem(`furnitureUrls_${user.uid}`, JSON.stringify(urls));
-			sessionStorage.setItem(`furnitureDescs_${user.uid}`, JSON.stringify(descs));
 			setSelectedStyles(styles);
 			fetchHistory();
 		} catch (err) {
@@ -527,8 +519,6 @@ function ImageGeneration() {
 									const selectedId = designHistory.find(d => d.url === lightboxUrl)?.id || null;
 									setGeneratedImage(lightboxUrl);
 									setGeneratedImageId(selectedId);
-									sessionStorage.setItem(`generatedImage_${user.uid}`, lightboxUrl);
-									if (selectedId) sessionStorage.setItem(`generatedImageId_${user.uid}`, selectedId);
 									saveFinalSelection(lightboxUrl, selectedId);
 									setLightboxUrl(null);
 									setTimeout(() => {
