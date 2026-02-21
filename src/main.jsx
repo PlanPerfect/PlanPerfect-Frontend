@@ -9,7 +9,7 @@ import Homepage from "./pages/Homepage.jsx"
 import Services from './pages/Onboarding/Services.jsx'
 import GetStarted from './pages/StyleMatch/GetStarted.jsx'
 import Reccomendations from './pages/StyleMatch/Reccomendations.jsx'
-import ExistingHomeOwner from './pages/ExistingHomeOwner/ExistingHomeOwner.jsx'
+import ExistingHomeOwner from './pages/ExistingHomeOwner/existingHomeOwner.jsx'
 import ChatbotPage from "./pages/Chatbot/ChatbotPage"
 import LumenAgent from "./pages/Chatbot/LumenAgent"
 import DesignDocumentPage from "./pages/DesignDocument/DesignDocumentPage"
