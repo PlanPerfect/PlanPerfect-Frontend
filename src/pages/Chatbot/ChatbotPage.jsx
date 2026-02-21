@@ -85,6 +85,24 @@ function ChatbotPage() {
 		messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
 	}, [messages, isTyping]);
 
+	useEffect(() => {
+		const handleGlobalKeyDown = e => {
+			const tag = document.activeElement?.tagName?.toLowerCase();
+			const isEditable = document.activeElement?.isContentEditable;
+			if (tag === "input" || tag === "textarea" || tag === "select" || isEditable) return;
+
+			if (e.ctrlKey || e.metaKey || e.altKey) return;
+			if (e.key.length > 1) return;
+
+			if (inputRef.current && !isTyping) {
+				inputRef.current.focus();
+			}
+		};
+
+		document.addEventListener("keydown", handleGlobalKeyDown);
+		return () => document.removeEventListener("keydown", handleGlobalKeyDown);
+	}, [isTyping]);
+
 	const handleSend = async () => {
 		if (!inputValue.trim()) return;
 
