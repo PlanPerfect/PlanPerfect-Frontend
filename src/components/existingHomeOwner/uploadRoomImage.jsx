@@ -2,8 +2,9 @@ import { Box, Flex, Heading, Text, IconButton, FileUpload, Image } from "@chakra
 import { useState } from "react";
 import { IoClose } from "react-icons/io5";
 
-function UploadRoomImage({ onFileChange }) {
+function UploadRoomImage({ onFileChange, onFileSelected }) {
 	const [uploadedFile, setUploadedFile] = useState(null);
+	const [confirmed, setConfirmed] = useState(false);
 	const [error, setError] = useState("");
 
 	const MAX_FILE_SIZE = 15 * 1024 * 1024; // 15MB in bytes
@@ -27,17 +28,23 @@ function UploadRoomImage({ onFileChange }) {
 		}
 
 		setError("");
+		setConfirmed(false);
 		setUploadedFile({
 			name: file.name,
 			size: formatFileSize(file.size),
 			preview: URL.createObjectURL(file),
 			file: file
 		});
+		onFileSelected?.(true); // notify parent a file is selected
+	};
+
+	const handleConfirm = () => {
+		setConfirmed(true);
 		onFileChange({
-			name: file.name,
-			size: formatFileSize(file.size),
-			preview: URL.createObjectURL(file),
-			file: file
+			name: uploadedFile.name,
+			size: uploadedFile.size,
+			preview: uploadedFile.preview,
+			file: uploadedFile.file
 		});
 	};
 
@@ -46,8 +53,10 @@ function UploadRoomImage({ onFileChange }) {
 			URL.revokeObjectURL(uploadedFile.preview);
 		}
 		setUploadedFile(null);
+		setConfirmed(false);
 		setError("");
 		onFileChange(null);
+		onFileSelected?.(false); // notify parent file was removed
 	};
 
 	const formatFileSize = bytes => {
@@ -113,30 +122,47 @@ function UploadRoomImage({ onFileChange }) {
 
 			{/* Uploaded File Display */}
 			{uploadedFile && (
-				<Box border="2px solid" borderColor="#D4AF37" borderRadius="10px" p={4} bg="white" mb={6}>
-					<Flex align="center" justify="space-between">
-						<Flex align="center" gap={3}>
-							{/* File Preview Thumbnail */}
-							<Box w="50px" h="50px" border="1px solid" borderColor="gray.300" borderRadius="8px" overflow="hidden" bg="gray.50">
-								<Image src={uploadedFile.preview} alt="Preview" width="100%" height="100%" objectFit="cover" />
-							</Box>
+				<Box>
+					{/* Full Image Preview */}
+					<Box border="2px solid" borderColor="#D4AF37" borderRadius="12px" overflow="hidden" mb={4} bg="white">
+						<Image src={uploadedFile.preview} alt="Room Preview" width="100%" maxH="400px" objectFit="contain" />
+					</Box>
 
-							{/* File Info */}
-							<Box textAlign="left">
-								<Text fontWeight="600" fontSize="md">
-									{uploadedFile.name}
-								</Text>
-								<Text fontSize="sm" color="gray.600">
-									{uploadedFile.size}
-								</Text>
+					{/* File info + remove row */}
+					<Box border="1px solid" borderColor="gray.200" borderRadius="10px" p={4} bg="white" mb={4}>
+						<Flex align="center" justify="space-between">
+							<Flex align="center" gap={3}>
+								<Box w="50px" h="50px" border="1px solid" borderColor="gray.300" borderRadius="8px" overflow="hidden" bg="gray.50">
+									<Image src={uploadedFile.preview} alt="Preview" width="100%" height="100%" objectFit="cover" />
+								</Box>
+								<Box textAlign="left">
+									<Text fontWeight="600" fontSize="md">{uploadedFile.name}</Text>
+									<Text fontSize="sm" color="gray.600">{uploadedFile.size}</Text>
+								</Box>
+							</Flex>
+							<IconButton onClick={handleRemoveFile} bg="red.500" color="white" borderRadius="full" size="sm" _hover={{ bg: "red.600" }}>
+								<IoClose size={20} />
+							</IconButton>
+						</Flex>
+					</Box>
+
+					{/* Confirm / confirmed state */}
+					{!confirmed ? (
+						<Flex justify="center">
+							<Box as="button" onClick={handleConfirm} bg="linear-gradient(135deg, #D4AF37 0%, #C9A961 100%)"
+								color="white" px={10} py={3} borderRadius="md" fontSize="md"
+								fontWeight="700" cursor="pointer"
+								_hover={{ opacity: 0.9, transform: "translateY(-2px)", boxShadow: "lg" }}
+								transition="all 0.2s"
+							>
+								Use This Photo ✨
 							</Box>
 						</Flex>
-
-						{/* Remove Button */}
-						<IconButton onClick={handleRemoveFile} bg="red.500" color="white" borderRadius="full" size="sm" _hover={{ bg: "red.600" }}>
-							<IoClose size={20} />
-						</IconButton>
-					</Flex>
+					) : (
+						<Flex justify="center">
+							<Text color="green.600" fontWeight="600" fontSize="md">✅ Photo confirmed — analysing your room style...</Text>
+						</Flex>
+					)}
 				</Box>
 			)}
 		</Box>

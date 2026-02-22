@@ -17,6 +17,7 @@ function ExistingHomeOwner() {
 	const [analysisResults, setAnalysisResults] = useState(null);
 	const [uploadedImageUrl, setUploadedImageUrl] = useState(null);
 	const [selectedStyles, setSelectedStyles] = useState([]);
+	const [fileSelected, setFileSelected] = useState(false); // NEW
 
 	const steps = useSteps({
 		defaultStep: 0,
@@ -31,6 +32,11 @@ function ExistingHomeOwner() {
 
 	const handleStylesChange = (styles) => {
 		setSelectedStyles(styles);
+	};
+
+	const handleFileChange = (file) => { // NEW
+		setUploadedRoomImage(file);
+		setFileSelected(!!file);
 	};
 
 	const items = [
@@ -59,7 +65,7 @@ function ExistingHomeOwner() {
 			) : uploadedRoomImage ? (
 				<StyleAnalysis file={uploadedRoomImage} onComplete={handleAnalysisComplete} />
 			) : (
-				<UploadRoomImage onFileChange={setUploadedRoomImage} />
+				<UploadRoomImage onFileChange={handleFileChange} onFileSelected={setFileSelected} />
 			)
 		},
 		{
@@ -106,40 +112,28 @@ function ExistingHomeOwner() {
 		(steps.value === 1 && !analysisResults) ||
 		(steps.value === 3 && selectedStyles.length === 0);
 
-	const showNavigationButtons = !(steps.value === 1 && uploadedRoomImage && !analysisResults) && steps.value !== 4;
+	const hideButtons = steps.value === 1 && fileSelected && !analysisResults;
+	const showNextButton = !hideButtons && steps.value !== 4;
+	const showBackButton = !hideButtons && steps.value !== 4;
 
 	return (
 		<>
-			<Box
-				style={{
-					position: "fixed",
-					top: 0,
-					left: 0,
-					right: 0,
-					bottom: 0,
+			<Box style={{ position: "fixed", top: 0, left: 0, right: 0, bottom: 0,
 					backgroundImage: `linear-gradient(rgba(0,0,0,0.5), rgba(0,0,0,0.5)),url('/newHomeOwnerHero.png')`,
-					backgroundSize: "cover",
-					backgroundPosition: "center",
-					backgroundRepeat: "no-repeat",
-					zIndex: -1
+					backgroundSize: "cover", backgroundPosition: "center",
+					backgroundRepeat: "no-repeat", zIndex: -1
 				}}
 			/>
 
-			<Box h="100vh" position="relative">
+			<Box h="100vh" position="relative" overflow="visible">
 				<Box h="100%">
 					<Container maxW="6xl" py={24}>
 						<Stack spacing={4} color="white">
 							<Heading fontSize="80px" lineHeight={1.5}>
 								Design Your Dream Room
 							</Heading>
-							<Heading
-								fontSize="80px"
-								mb={4}
-								lineHeight="1.5"
-								bgGradient="to-r"
-								gradientFrom="#F4E5B2"
-								gradientTo="#D4AF37"
-								bgClip="text"
+							<Heading fontSize="80px" mb={4} lineHeight="1.5" bgGradient="to-r"
+								gradientFrom="#F4E5B2" gradientTo="#D4AF37" bgClip="text"
 								color="transparent"
 							>
 								With Our Smart Assistant
@@ -196,9 +190,9 @@ function ExistingHomeOwner() {
 							<Steps.CompletedContent>All steps are complete!</Steps.CompletedContent>
 						</Box>
 
-						{showNavigationButtons && steps.value < 4 && (
+						{(showBackButton || showNextButton) && steps.value < 4 && (
 							<Flex justify="center" gap={4} mt={6}>
-								{steps.value > 0 && (
+								{showBackButton && steps.value > 0 && (
 									<Steps.PrevTrigger asChild>
 										<Button size="xl" borderRadius="md" bg="gray.300"
 											color="black"
@@ -208,7 +202,7 @@ function ExistingHomeOwner() {
 										</Button>
 									</Steps.PrevTrigger>
 								)}
-								{steps.value < 4 && (
+								{showNextButton && steps.value < 4 && (
 									<Steps.NextTrigger asChild>
 										<Button size="xl" borderRadius="md" bg="#D4AF37" color="white" 
 											disabled={isNextDisabled}
