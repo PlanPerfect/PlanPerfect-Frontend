@@ -26,3 +26,6 @@ dist-ssr
 # Project Level
 .vscode
 .env
+
+# Local Netlify folder
+.netlify
