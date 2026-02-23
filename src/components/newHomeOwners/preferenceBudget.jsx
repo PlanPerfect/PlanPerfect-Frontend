@@ -19,6 +19,7 @@ const designThemes = [
 	{ id: 14, name: "Wabi Sabi", icon: "⏳", color: "#E6D5B8" },
 	{ id: 15, name: "Japandi", icon: "🏯", color: "#FFE4B5" },
 	{ id: 16, name: "Peranakan", icon: "🏛️", color: "#98D8C8" },
+	{ id: 17, name: "Boho", icon: "🪶", color: "#FFFACD" },
 ];
 
 function PreferenceBudget({ onPreferenceChange, onBudgetChange }) {
