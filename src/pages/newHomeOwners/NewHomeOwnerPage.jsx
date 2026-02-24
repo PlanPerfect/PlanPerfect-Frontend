@@ -138,7 +138,7 @@ function NewHomeOwnerPage() {
 						color="white"
 					>
 						Complete the 5 steps below to get your personalized
-						design style guide and mood board now!
+						design documentation now!
 					</Text>
 				</Flex>
 			</Box>
