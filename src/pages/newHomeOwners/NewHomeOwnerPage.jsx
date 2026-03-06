@@ -4,11 +4,14 @@ import { RiFileUploadFill } from "react-icons/ri";
 import { IoSparkles, IoDocumentAttachSharp } from "react-icons/io5";
 import { LuFileCheck2 } from "react-icons/lu";
 import { FaCheck } from "react-icons/fa6";
+import { GiSofa } from "react-icons/gi";
 import PreferenceBudget from "@/components/newHomeOwners/preferenceBudget";
 import UploadFloorPlan from "@/components/newHomeOwners/uploadFloorPlan";
 import AiExtraction from "@/components/newHomeOwners/aiExtraction";
 import CheckResult from "@/components/newHomeOwners/checkResult";
-import GenerateDesignDocument from "@/components/newHomeOwners/generateDesignDocument";
+import FurnitureSelection from "@/components/newHomeOwners/furnitureSelection";
+// import GenerateDesignDocument from "@/components/newHomeOwners/generateDesignDocument";
+import GenerateFurnitureFloorPlanAndQuote from "@/components/newHomeOwners/generateFurnitureFloorPlanAndQuote";
 import { useState, useCallback } from "react";
 
 function NewHomeOwnerPage() {
@@ -17,10 +20,11 @@ function NewHomeOwnerPage() {
 	const [startExtraction, setStartExtraction] = useState(false);
 	const [preferences, setPreferences] = useState(null);
 	const [budget, setBudget] = useState(null);
+	const [selectedFurniture, setSelectedFurniture] = useState(null);
 
 	const steps = useSteps({
 		defaultStep: 0,
-		count: 5,
+		count: 6,
 	});
 
 	const handleExtractionComplete = useCallback((results) => {
@@ -39,6 +43,19 @@ function NewHomeOwnerPage() {
 	const handleBudgetChange = useCallback((budgetValue) => {
 		setBudget(budgetValue);
 	}, []);
+
+	const handleFurnitureChange = useCallback((furnitureData) => {
+		setSelectedFurniture(furnitureData);
+	}, []);
+
+	const handlePrevClick = () => {
+		// Skip AI Extraction step (step 2) when going back from Check Details (step 3)
+		if (steps.value === 3) {
+			steps.setStep(steps.value - 2);
+		} else {
+			steps.setStep(steps.value - 1);
+		}
+	};
 
 	const handleNextClick = () => {
 		// If on upload floor plan step, trigger extraction when user click on "Next" button
@@ -69,17 +86,29 @@ function NewHomeOwnerPage() {
 		{
 			title: "Check Details",
 			icon: <LuFileCheck2 />,
-			content: <CheckResult extractionResults={extractionResults} onUpdateExtractionResults={handleExtractionResultUpdate} />,
+			content: steps.value === 3
+				? <CheckResult extractionResults={extractionResults} onUpdateExtractionResults={handleExtractionResultUpdate} />
+				: null,
+		},
+		{
+			title: "Furniture",
+			icon: <GiSofa />,
+			content: steps.value === 4
+				? <FurnitureSelection extractionResults={extractionResults} onFurnitureChange={handleFurnitureChange} />
+				: null,
 		},
 		{
 			title: "Get Results!",
 			icon: <IoDocumentAttachSharp />,
-			content: <GenerateDesignDocument floorPlanFile={uploadedFloorPlan} preferences={preferences} budget={budget} extractionResults={extractionResults} />
+			content: steps.value === 5
+				// ? <GenerateDesignDocument floorPlanFile={uploadedFloorPlan} preferences={preferences} budget={budget} extractionResults={extractionResults} selectedFurniture={selectedFurniture} />
+				? <GenerateFurnitureFloorPlanAndQuote floorPlanFile={uploadedFloorPlan} preferences={preferences} budget={budget} extractionResults={extractionResults} selectedFurniture={selectedFurniture} />
+				: null,
 		},
 	];
 
 	const isNextDisabled = steps.value === 1 && uploadedFloorPlan === null;
-	const showNavigationButtons = steps.value !== 2 && steps.value !== 4;
+	const showNavigationButtons = steps.value !== 2 && steps.value !== 5;
 
 	return (
 		<>
@@ -137,7 +166,7 @@ function NewHomeOwnerPage() {
 						maxW="700px"
 						color="white"
 					>
-						Complete the 5 steps below to get your personalized
+						Complete the 6 steps below to get your personalized
 						design documentation now!
 					</Text>
 				</Flex>
@@ -250,7 +279,7 @@ function NewHomeOwnerPage() {
 						{/* Navigation Buttons */}
 						{showNavigationButtons && (
 							<Flex justify="center" gap={4}>
-								{steps.value > 0 || steps.value == 3 && (
+								{steps.value !== 0 && steps.value !== 3 && (
 									<Steps.PrevTrigger asChild>
 										<Button
 											size="xl"
@@ -258,10 +287,11 @@ function NewHomeOwnerPage() {
 											bg="gray.300"
 											color="black"
 											_hover={{ bg: "gray.400" }}
-										>
-											Prev
-										</Button>
-									</Steps.PrevTrigger>
+										onClick={handlePrevClick}
+									>
+										Prev
+									</Button>
+								</Steps.PrevTrigger>
 								)}
 								<Button
 									size="xl"
